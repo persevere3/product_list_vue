@@ -207,7 +207,7 @@
         </div>
 
         <div class="stepTwo" v-show="(cartsLength !== 0 )&& stepIndex === 2">
-          <div class="title">
+          <div class="title" @click="testData">
             填寫購買人資訊
           </div>
           <form class="info">
@@ -512,7 +512,7 @@
 
     <div class="main" v-if="showPage === 'main'">
       <div class="logo_name">
-        <img :src="store.Logo" class="logo" v-if="store.Logo">
+        <img :src="store.Logo" class="logo" v-if="store.Logo" @click="urlPush('/')">
       </div>
       <div class="categories">
         <ul>
@@ -722,6 +722,9 @@ export default {
 
       // timeAnalysis
       getUserIp_type: 0,
+
+      // ios
+      lastTouchEnd: 0,
 
       api: '',
       protocol: ''
@@ -1019,6 +1022,7 @@ export default {
       }      
       else{ // 重整or站內跳頁，繼續上次瀏覽  
         this.getUserIp_type = 1;  
+
       }    
     },
     getUserIp(){
@@ -1031,81 +1035,25 @@ export default {
         android: navigator.userAgent.indexOf('Android') > -1 || navigator.userAgent.indexOf('Linux') > -1,
       }
 
-      function getOSAndBrowser() {
-        var os = navigator.platform;
-        var userAgent = navigator.userAgent;
-        var info = {};
-        var tempArray = "";
-        if (os.indexOf("Win") > -1) {
-            if (userAgent.indexOf("Windows NT 5.0") > -1) {
-                info.os = "Windows 2000";
-            } else if (userAgent.indexOf("Windows NT 5.1") > -1) {
-                info.os = "Windows XP";
-            } else if (userAgent.indexOf("Windows NT 5.2") > -1) {
-                info.os = "Windows 2003";
-            } else if (userAgent.indexOf("Windows NT 6.0") > -1) {
-                info.os = "Windows Vista";
-            } else if (userAgent.indexOf("Windows NT 6.1") > -1 || userAgent.indexOf("Windows 7") > -1) {
-                info.os = "Windows 7";
-            } else if (userAgent.indexOf("Windows NT 6.2") > -1 || userAgent.indexOf("Windows NT 6.3") > -1 || userAgent.indexOf("Windows 8") > -1) {
-                info.os = "Windows 8";
-            } else if (userAgent.indexOf("Windows NT 6.4") > -1 || userAgent.indexOf("Windows NT 10") > -1) {
-                info.os = "Windows 10";
-            } else {
-                info.os = "Other";
-            }
-        } else if (os.indexOf("Mac") > -1) {
-            info.os = "Mac";
-        } else if (os.indexOf("X11") > -1) {
-            info.os = "Unix";
-        } else if (os.indexOf("Linux") > -1) {
-            info.os = "Linux";
-        } else {
-            info.os = "Other";
-        }
-        if (/[Ff]irefox(\/\d+\.\d+)/.test(userAgent)) {
-            tempArray = /([Ff]irefox)\/(\d+\.\d+)/.exec(userAgent);
-            info.browserName = tempArray[1];
-            info.browserVersion = tempArray[2];
-        } else if (/[Tt]rident(\/\d+\.\d+)/.test(userAgent)) {
-            tempArray = /([Tt]rident)\/(\d+\.\d+)/.exec(userAgent);
-            if (tempArray[2] === "7.0") {
-                tempArray[2] = "11";
-            } else if (tempArray[2] === "6.0") {
-                tempArray[2] = "10";
-            } else if (tempArray[2] === "5.0") {
-                tempArray[2] = "9";
-            } else if (tempArray[2] === "4.0") {
-                tempArray[2] = "8";
-            }
-            tempArray[1] = "IE";
-            info.browserName = tempArray[1];
-            info.browserVersion = tempArray[2];
-        } else if (/[Cc]hrome\/\d+/.test(userAgent)) {
-            tempArray = /([Cc]hrome)\/(\d+)/.exec(userAgent);
-            info.browserName=tempArray[1];
-            info.browserVersion=tempArray[2];
-        } else if (/[Vv]ersion\/\d+\.\d+\.\d+(\.\d)* *[Ss]afari/.test(userAgent)) {
-            tempArray = /[Vv]ersion\/(\d+\.\d+\.\d+)(\.\d)* *([Ss]afari)/.exec(userAgent);
-            info.browserName=tempArray[3];
-            info.browserVersion=tempArray[1];
-        } else if (/[Oo]pera.+[Vv]ersion\/\d+\.\d+/.test(userAgent)) {
-            tempArray = /([Oo]pera).+[Vv]ersion\/(\d+)\.\d+/.exec(userAgent);
-            info.browserName=tempArray[1];
-            info.browserVersion=tempArray[2];
-        } else {
-            info += "unknown";
-            info.browserName="unknown";
-            info.browserVersion="unknown";
-        }
-        return info;
+      function getBrowser() {
+        let userAgent = navigator.userAgent.toLowerCase();
+        let browser;
+        userAgent.match(/edge\/([\d.]+)/) ? browser = 'Edge' :
+        userAgent.match(/rv:([\d.]+)\) like gecko/) ? browser = 'IE' :
+        userAgent.match(/msie ([\d.]+)/) ? browser = 'IE' :
+        userAgent.match(/firefox\/([\d.]+)/) ? browser = 'Firefox' :
+        userAgent.match(/chrome\/([\d.]+)/) ? browser = 'Chrome' :
+        userAgent.match(/opera.([\d.]+)/) ? browser = 'Opera' :
+        userAgent.match(/version\/([\d.]+).*safari/) ? browser = 'Safari' : 
+        browser = 'other';
+        return browser;
       };
-      let browser = getOSAndBrowser();
+      let browser = getBrowser();
 
       let formData = new FormData();
       formData.append("sid", vm.site.Name);
       formData.append("device", device.ios ? "ios" : (device.android ? "android" : "pc"));
-      formData.append("browser", browser.browserName);
+      formData.append("browser", browser);
       formData.append("type", vm.getUserIp_type);
 
       const config = {
@@ -1577,16 +1525,15 @@ export default {
       this.clearCarts(); 
       this.isConfirm = false;
 
-      // window.location.href = this.payResult.payUrl;
-      // window.location.replace(this.payResult.payUrl);
       window.open(this.payResult.payUrl);
+
     },
     createOrder(){
       this.orderIng = true;
       let o = this.createCartsStr();
 
-      // let url = this.api === '192.168.80.239:5052' ? `${this.protocol}//${this.api}/Line/LinePayRequest` : `${this.protocol}//${this.api}/LineMK/Line/LinePayRequest`;
-      let url = `${this.protocol}//${this.api}/LineMK/Line/LinePayRequest`;
+      let url = this.api === '192.168.80.239:5052' ? `${this.protocol}//${this.api}/Line/LinePayRequest` : `${this.protocol}//${this.api}/LineMK/Line/LinePayRequest`;
+      // let url = `${this.protocol}//${this.api}/LineMK/Line/LinePayRequest`;
       
       let formData = new FormData();
       if(true){
@@ -2669,6 +2616,21 @@ export default {
       a = "" + a;
       return a.replace(/↵/g, '<br>');
     },
+
+    urlPush(url) {
+      window.location.href = url;
+    },
+
+    // test 
+    testData(){
+      this.transport = '3';// 一般宅配2 到店自取3
+      this.info.purchaser_email = 'test@gmail.com';
+      this.info.purchaser_name = 'test' + new Date().getTime();
+      this.info.purchaser_number = '0912123123';
+      this.info.receiver_name = 'test';
+      this.info.receiver_number = '0912123123';
+      this.invoice_type = '1';
+    }
   },
   created(){
     const vm = this;
@@ -2779,6 +2741,20 @@ export default {
         this.computedLiLength();
       }
     }
+
+    // document.addEventListener('touchstart', (event) => {
+    //   if (event.touches.length > 1) {
+    //     event.preventDefault();
+    //   }
+    // });
+    
+    // document.addEventListener('touchend', (event) => {
+    //   const now = (new Date()).getTime();
+    //   if (now - this.lastTouchEnd <= 300) {
+    //     event.preventDefault();
+    //   }
+    //   this.lastTouchEnd = now;
+    // }, false);
   }
 }
 </script>
