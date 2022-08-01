@@ -39,130 +39,134 @@
               <div class="th delete"></div>
             </div>
             <div class="tbody">
-              <template v-for=" (item, index) in carts " >
-                <!-- 有規格 -->
-                <template v-if="item.specArr">
-                  <div class="tr p-1" v-for="(spec, specIndex) in item.specArr " :key="spec.ID" v-show="spec.buyQty != 0 || spec.buyQty===''">
-                    <div class="td picName jcs">
-                      <div class="pic" :style="{backgroundImage :`url(${item.Img1})`}"></div>
-                      <div class="name">{{item.Name}}</div>
-                    </div>
-                    <div class="td spec"> 
-                      <div class="specButton" @click="cartsSpecCheckedId = cartsSpecCheckedId == spec.ID ? -1 : spec.ID"> 規格 <i :class="{iActive:cartsSpecCheckedId == spec.ID}" class="fa fa-caret-down" aria-hidden="true"></i>  </div>
-                      <div class="specText" :class="{specTextShow:cartsSpecCheckedId == spec.ID}"> {{spec.Name}} </div>
-                    </div>
-                    <div class="td price"> NT$ {{item.NowPrice}} </div>
-                    <div class="td qty">
-                      <div class="qtyBox" v-show="store.Enable === '1'">
-                        <div class="reduce" :class="{qtyDisabled:spec.buyQty<1}" @click="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, spec.buyQty-1, specIndex]);"><i class="fa fa-minus"></i></div>
-                        <input class="number" size="3" @blur="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, spec.buyQty, specIndex])" 
-                          @keyup.enter="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, spec.buyQty, specIndex])"
-                          type="text" maxlength="3" @input="numberInput(spec)" v-model="spec.buyQty">
-                        <div class="add" :class="{qtyDisabled:(spec.Enable == 1 && spec.buyQty > spec.Amount - 1) || spec.buyQty > 998 }" @click="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, spec.buyQty*1+1, specIndex]);"><i class="fa fa-plus"></i></div>
-                      </div>
-                      <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
-                    </div>
-                    <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{item.NowPrice * (isNaN(spec.buyQty) ? 0 : spec.buyQty) }} </div>  </div>
-                    <div class="td delete">
-                      <div class="deleteButton" @click="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, 0, specIndex]);">
-                        刪除
-                      </div>
-                    </div>
-                  </div>
-                </template>
-                <!-- 沒有規格 -->
-                <template v-if="!item.specArr">
-                  <div class="tr p-1" :key="item.ID" v-show="item.buyQty || item.buyQty===''">
-                    <div class="td picName jcs">
-                      <div class="pic" :style="{backgroundImage :`url(${item.Img1})`}"></div>
-                      <div class="name">{{item.Name}}</div>
-                    </div>
-                    <div class="td spec">
-
-                    </div>
-                    <div class="td price">  NT$ {{item.NowPrice}} </div>
-                    <div class="td qty"> 
-                      <div class="qtyBox" v-show="store.Enable === '1'">
-                        <div class="reduce" :class="{qtyDisabled:item.buyQty<1}" @click="getAmount( 1, item.ID, updateCartsBuyQty, [index, item.buyQty-1]);"><i class="fa fa-minus"></i></div>
-                        <input class="number" size="3" type="text" maxlength="3" @input="numberInput( item )"  @blur="getAmount( 1, item.ID, updateCartsBuyQty, [index, item.buyQty])" 
-                          @keyup.enter="getAmount( 1, item.ID, updateCartsBuyQty, [index, item.buyQty])"
-                          v-model="item.buyQty">
-                        <div class="add" :class="{qtyDisabled:(item.Enable == 1 && item.buyQty > item.Amount - 1) || item.buyQty > 998 }" @click="getAmount( 1,  item.ID, updateCartsBuyQty, [index, item.buyQty*1+1]);"><i class="fa fa-plus"></i></div>
-                      </div>
-                      <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
-                    </div>
-                    <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{item.NowPrice * (isNaN(item.buyQty) ? 0 : item.buyQty)}}</div>  </div>
-                    <div class="td delete">
-                      <div class="deleteButton" @click="getAmount( 1,  item.ID, updateCartsBuyQty, [index, 0]);">
-                        刪除
-                      </div>
-                    </div>
-                  </div>
-                </template>
-
-                <template v-for=" (item2, index2) in item.addPrice ">
+              <template>
+                <div v-for=" (item, index) in carts ">
                   <!-- 有規格 -->
-                  <template v-if="item2.specArr">
-                    <div class="tr p-1" v-for="(spec2, specIndex2) in item2.specArr" :key="spec2.ID" v-show="spec2.buyQty!=0 || spec2.buyQty===''">
+                  <template v-if="item.specArr">
+                    <div class="tr p-1" v-for="(spec, specIndex) in item.specArr " :key="spec.ID" v-show="spec.buyQty != 0 || spec.buyQty===''">
                       <div class="td picName jcs">
-                        <div class="pic" :style="{backgroundImage :`url(${item2.Img})`}">
-                          <div class="tag">加價購</div>
-                        </div>
-                        <div class="name">{{item2.Name}}</div>
+                        <div class="pic" :style="{backgroundImage :`url(${item.Img1})`}"></div>
+                        <div class="name">{{item.Name}}</div>
                       </div>
-                      <div class="td spec">
-                        <div class="specButton" @click="cartsSpecCheckedId = cartsSpecCheckedId == spec2.ID ? -1 : spec2.ID"> 規格 <i :class="{iActive:cartsSpecCheckedId == spec2.ID}" class="fa fa-caret-down" aria-hidden="true"></i>  </div> 
-                        <div class="specText" :class="{specTextShow:cartsSpecCheckedId == spec2.ID}"> {{spec2.Name}} </div>  
+                      <div class="td spec"> 
+                        <div class="specButton" @click="cartsSpecCheckedId = cartsSpecCheckedId == spec.ID ? -1 : spec.ID"> 規格 <i :class="{iActive:cartsSpecCheckedId == spec.ID}" class="fa fa-caret-down" aria-hidden="true"></i>  </div>
+                        <div class="specText" :class="{specTextShow:cartsSpecCheckedId == spec.ID}"> {{spec.Name}} </div>
                       </div>
-                      <div class="td price">  NT$ {{item2.Price}} </div>
+                      <div class="td price"> NT$ {{item.NowPrice}} </div>
                       <div class="td qty">
                         <div class="qtyBox" v-show="store.Enable === '1'">
-                          <div class="reduce" :class="{qtyDisabled:spec2.buyQty<1}" @click="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2,spec2.buyQty-1, specIndex2], item.ID);"><i class="fa fa-minus"></i></div>
-                          <input class="number" size="3" type="text" maxlength="3" @input="numberInput( spec2 )"  @blur="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2,spec2.buyQty, specIndex2], item.ID)" 
-                            @keyup.enter="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2,spec2.buyQty, specIndex2], item.ID)"
-                            v-model="spec2.buyQty">
-                          <div class="add" :class="{qtyDisabled: spec2.buyQty > itemTotalQty(item) - 1 || (spec2.Enable == 1 && spec2.buyQty> spec2.Amount - 1)  || spec2.buyQty > 998 }" @click="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2,spec2.buyQty*1+1, specIndex2], item.ID); "><i class="fa fa-plus"></i></div>
+                          <div class="reduce" :class="{qtyDisabled:spec.buyQty<1}" @click="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, spec.buyQty-1, specIndex]);"><i class="fa fa-minus"></i></div>
+                          <input class="number" size="3" @blur="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, spec.buyQty, specIndex])" 
+                            @keyup.enter="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, spec.buyQty, specIndex])"
+                            type="text" maxlength="3" @input="numberInput(spec)" v-model="spec.buyQty">
+                          <div class="add" :class="{qtyDisabled:(spec.Enable == 1 && spec.buyQty > spec.Amount - 1) || spec.buyQty > 998 }" @click="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, spec.buyQty*1+1, specIndex]);"><i class="fa fa-plus"></i></div>
                         </div>
                         <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
                       </div>
-                      <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{item2.Price * (isNaN(spec2.buyQty) ? 0 : spec2.buyQty) }} </div>  </div>
+                      <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{item.NowPrice * (isNaN(spec.buyQty) ? 0 : spec.buyQty) }} </div>  </div>
                       <div class="td delete">
-                        <div class="deleteButton" @click="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2, 0, specIndex2], item.ID); ">
+                        <div class="deleteButton" @click="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, 0, specIndex]);">
                           刪除
                         </div>
                       </div>
                     </div>
                   </template>
                   <!-- 沒有規格 -->
-                  <template v-if="!item2.specArr">
-                    <div class="tr p-1" :key="item2.ID" v-show="item2.Qty!=0 || item2.Qty===''">
+                  <template v-if="!item.specArr">
+                    <div class="tr p-1" :key="item.ID" v-show="item.buyQty || item.buyQty===''">
                       <div class="td picName jcs">
-                        <div class="pic" :style="{backgroundImage :`url(${item2.Img})`}">
-                          <div class="tag">加價購</div>
-                        </div>
-                        <div class="name"> {{item2.Name}} </div>
+                        <div class="pic" :style="{backgroundImage :`url(${item.Img1})`}"></div>
+                        <div class="name">{{item.Name}}</div>
                       </div>
-                      <div class="td spec"></div>
-                      <div class="td price"> NT$ {{item2.Price}} </div>
-                      <div class="td qty">
-                        <div class="qtyBox" v-show="store.Enable == 1">
-                          <div class="reduce" :class="{qtyDisabled:item2.Qty < 1}" @click="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, item2.Qty - 1], item.ID);"><i class="fa fa-minus"></i></div>
-                          <input class="number" size="3" type="text" maxlength="3" @input="numberInput( item2 )"  @blur="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, item2.Qty], item.ID)" 
-                            @keyup.enter="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, item2.Qty], item.ID)"
-                            v-model="item2.Qty">
-                          <div class="add" :class="{qtyDisabled:item2.Qty > itemTotalQty(item) - 1 || (item2.Enable == 1 && item2.Qty > item2.Amount - 1) || item2.Qty > 998 }" @click="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, item2.Qty*1 + 1], item.ID);"><i class="fa fa-plus"></i></div>
+                      <div class="td spec">
+
+                      </div>
+                      <div class="td price">  NT$ {{item.NowPrice}} </div>
+                      <div class="td qty"> 
+                        <div class="qtyBox" v-show="store.Enable === '1'">
+                          <div class="reduce" :class="{qtyDisabled:item.buyQty<1}" @click="getAmount( 1, item.ID, updateCartsBuyQty, [index, item.buyQty-1]);"><i class="fa fa-minus"></i></div>
+                          <input class="number" size="3" type="text" maxlength="3" @input="numberInput( item )"  @blur="getAmount( 1, item.ID, updateCartsBuyQty, [index, item.buyQty])" 
+                            @keyup.enter="getAmount( 1, item.ID, updateCartsBuyQty, [index, item.buyQty])"
+                            v-model="item.buyQty">
+                          <div class="add" :class="{qtyDisabled:(item.Enable == 1 && item.buyQty > item.Amount - 1) || item.buyQty > 998 }" @click="getAmount( 1,  item.ID, updateCartsBuyQty, [index, item.buyQty*1+1]);"><i class="fa fa-plus"></i></div>
                         </div>
                         <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
                       </div>
-                      <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{item2.Price * (isNaN(item2.Qty) ? 0 : item2.Qty) }} </div> </div>
+                      <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{item.NowPrice * (isNaN(item.buyQty) ? 0 : item.buyQty)}}</div>  </div>
                       <div class="td delete">
-                        <div class="deleteButton" @click="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, 0], item.ID);">
+                        <div class="deleteButton" @click="getAmount( 1,  item.ID, updateCartsBuyQty, [index, 0]);">
                           刪除
                         </div>
                       </div>
                     </div>
-                  </template> 
-                </template>
+                  </template>
+
+                  <template>
+                    <div v-for=" (item2, index2) in item.addPrice ">
+                      <!-- 有規格 -->
+                      <template v-if="item2.specArr">
+                        <div class="tr p-1" v-for="(spec2, specIndex2) in item2.specArr" :key="spec2.ID" v-show="spec2.buyQty!=0 || spec2.buyQty===''">
+                          <div class="td picName jcs">
+                            <div class="pic" :style="{backgroundImage :`url(${item2.Img})`}">
+                              <div class="tag">加價購</div>
+                            </div>
+                            <div class="name">{{item2.Name}}</div>
+                          </div>
+                          <div class="td spec">
+                            <div class="specButton" @click="cartsSpecCheckedId = cartsSpecCheckedId == spec2.ID ? -1 : spec2.ID"> 規格 <i :class="{iActive:cartsSpecCheckedId == spec2.ID}" class="fa fa-caret-down" aria-hidden="true"></i>  </div> 
+                            <div class="specText" :class="{specTextShow:cartsSpecCheckedId == spec2.ID}"> {{spec2.Name}} </div>  
+                          </div>
+                          <div class="td price">  NT$ {{item2.Price}} </div>
+                          <div class="td qty">
+                            <div class="qtyBox" v-show="store.Enable === '1'">
+                              <div class="reduce" :class="{qtyDisabled:spec2.buyQty<1}" @click="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2,spec2.buyQty-1, specIndex2], item.ID);"><i class="fa fa-minus"></i></div>
+                              <input class="number" size="3" type="text" maxlength="3" @input="numberInput( spec2 )"  @blur="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2,spec2.buyQty, specIndex2], item.ID)" 
+                                @keyup.enter="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2,spec2.buyQty, specIndex2], item.ID)"
+                                v-model="spec2.buyQty">
+                              <div class="add" :class="{qtyDisabled: spec2.buyQty > itemTotalQty(item) - 1 || (spec2.Enable == 1 && spec2.buyQty> spec2.Amount - 1)  || spec2.buyQty > 998 }" @click="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2,spec2.buyQty*1+1, specIndex2], item.ID); "><i class="fa fa-plus"></i></div>
+                            </div>
+                            <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
+                          </div>
+                          <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{item2.Price * (isNaN(spec2.buyQty) ? 0 : spec2.buyQty) }} </div>  </div>
+                          <div class="td delete">
+                            <div class="deleteButton" @click="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2, 0, specIndex2], item.ID); ">
+                              刪除
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+                      <!-- 沒有規格 -->
+                      <template v-if="!item2.specArr">
+                        <div class="tr p-1" :key="item2.ID" v-show="item2.Qty!=0 || item2.Qty===''">
+                          <div class="td picName jcs">
+                            <div class="pic" :style="{backgroundImage :`url(${item2.Img})`}">
+                              <div class="tag">加價購</div>
+                            </div>
+                            <div class="name"> {{item2.Name}} </div>
+                          </div>
+                          <div class="td spec"></div>
+                          <div class="td price"> NT$ {{item2.Price}} </div>
+                          <div class="td qty">
+                            <div class="qtyBox" v-show="store.Enable == 1">
+                              <div class="reduce" :class="{qtyDisabled:item2.Qty < 1}" @click="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, item2.Qty - 1], item.ID);"><i class="fa fa-minus"></i></div>
+                              <input class="number" size="3" type="text" maxlength="3" @input="numberInput( item2 )"  @blur="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, item2.Qty], item.ID)" 
+                                @keyup.enter="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, item2.Qty], item.ID)"
+                                v-model="item2.Qty">
+                              <div class="add" :class="{qtyDisabled:item2.Qty > itemTotalQty(item) - 1 || (item2.Enable == 1 && item2.Qty > item2.Amount - 1) || item2.Qty > 998 }" @click="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, item2.Qty*1 + 1], item.ID);"><i class="fa fa-plus"></i></div>
+                            </div>
+                            <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
+                          </div>
+                          <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{item2.Price * (isNaN(item2.Qty) ? 0 : item2.Qty) }} </div> </div>
+                          <div class="td delete">
+                            <div class="deleteButton" @click="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, 0], item.ID);">
+                              刪除
+                            </div>
+                          </div>
+                        </div>
+                      </template> 
+                    </div>
+                  </template>
+                </div>
               </template>
             </div>
           </div>
@@ -207,7 +211,7 @@
         </div>
 
         <div class="stepTwo" v-show="(cartsLength !== 0 )&& stepIndex === 2">
-          <div class="title" @click="testData">
+          <div class="title">
             填寫購買人資訊
           </div>
           <form class="info">
@@ -470,7 +474,7 @@
     <div class="flyImg" :style="`top: ${flyImgTop}px; left: ${flyImgLeft}px`" v-if="pageFilterProduct[flyImgIndex]" v-show="showflyImg">
       <img :src="pageFilterProduct[flyImgIndex].Img1" alt="">
     </div>
-    <div class="cartIcon" :class="{cartIconScale:cartIconScale}"  v-show="showPage === 'main'" @click="getProducts(); showPage = 'cart'; showCart()">
+    <div class="cartIcon" :class="{cartIconScale:cartIconScale}"  v-show="showPage === 'main'" @click="getProducts(); showPage = 'cart';">
       <i class="fa fa-shopping-cart fa-2x" aria-hidden="true"></i>
       <div class="num">
         {{cartsLength}}
@@ -718,20 +722,8 @@ export default {
       liWidth: 0,
       picWidth: 0,
 
-      watchItem: {},
-
-      // timeAnalysis
-      getUserIp_type: 0,
-
-      // ios
-      lastTouchEnd: 0,
-
       api: '',
       protocol: ''
-
-      // api:'192.168.80.239:5052', // 14 6
-      // api:'192.168.80.239:5053', // 14 6 預覽
-      // api:'192.168.80.239:8080', // 10 
     }
   },
   watch:{
@@ -841,10 +833,6 @@ export default {
         vm.getStore();
         vm.getCategories();
         vm.getProducts('', true);
-
-        vm.OpenPage();
-        vm.initTimeAnalysis();
-        vm.getUserIp();
       })
       .catch((err) => { 
         console.error(err);
@@ -967,109 +955,6 @@ export default {
       .catch((err) => {
         console.error(err);
         vm.login(vm.getProducts, [type]);
-      });
-    },
-
-    OpenPage(){
-      let vm = this;
-
-      let page = 'cart/index.html';
-      const url = `${vm.protocol}//${vm.api}/interface/store/OpenPage`;
-
-      let formData = new FormData();
-      formData.append("id", vm.site.Name);
-      formData.append("page", page);
-
-      const config = {
-        headers: {
-          // 'Content-Type': 'application/x-www-form-urlencoded',
-          'Content-Type': 'multipart/form-data',
-        }
-      };
-
-      this.$http.post(url, formData, config).then((res) => {
-        if(res.data.errormessage){
-          return;
-        }
-      })
-      .catch((err) => { 
-        console.error(err);
-      });
-    },
-    initTimeAnalysis(){
-      let activePages = localStorage.getItem('activePages') || 0 ;
-
-      let lastTimeAnalysis = JSON.parse(localStorage.getItem('timeAnalysis'));
-
-      let now = new Date().getTime();
-
-      // 另開分頁
-      if(activePages > 1){
-        this.getUserIp_type = 1;
-        return;
-      }
-
-      // 第一次進站 or 新一次瀏覽
-      if(!lastTimeAnalysis || parseInt((now - lastTimeAnalysis.endTime)/1000) > 5 ){
-        let timeAnalysis = {
-          startTime: new Date().getTime(),
-          endTime: '',
-          stayTime: '',
-        }
-        localStorage.setItem('timeAnalysis', JSON.stringify(timeAnalysis));
-        localStorage.setItem('failureProbabilityType', 0);
-        localStorage.setItem('isActiveUser', 0);
-      }      
-      else{ // 重整or站內跳頁，繼續上次瀏覽  
-        this.getUserIp_type = 1;  
-
-      }    
-    },
-    getUserIp(){
-      let vm = this;
-
-      const url = `${vm.protocol}//${vm.api}/interface/store/getUserIp`;
-
-      let device = {
-        ios: !!navigator.userAgent.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/),
-        android: navigator.userAgent.indexOf('Android') > -1 || navigator.userAgent.indexOf('Linux') > -1,
-      }
-
-      function getBrowser() {
-        let userAgent = navigator.userAgent.toLowerCase();
-        let browser;
-        userAgent.match(/edge\/([\d.]+)/) ? browser = 'Edge' :
-        userAgent.match(/rv:([\d.]+)\) like gecko/) ? browser = 'IE' :
-        userAgent.match(/msie ([\d.]+)/) ? browser = 'IE' :
-        userAgent.match(/firefox\/([\d.]+)/) ? browser = 'Firefox' :
-        userAgent.match(/chrome\/([\d.]+)/) ? browser = 'Chrome' :
-        userAgent.match(/opera.([\d.]+)/) ? browser = 'Opera' :
-        userAgent.match(/version\/([\d.]+).*safari/) ? browser = 'Safari' : 
-        browser = 'other';
-        return browser;
-      };
-      let browser = getBrowser();
-
-      let formData = new FormData();
-      formData.append("sid", vm.site.Name);
-      formData.append("device", device.ios ? "ios" : (device.android ? "android" : "pc"));
-      formData.append("browser", browser);
-      formData.append("type", vm.getUserIp_type);
-
-      const config = {
-        headers: {
-          // 'Content-Type': 'application/x-www-form-urlencoded',
-          'Content-Type': 'multipart/form-data',
-        }
-      };
-
-      this.$http.post(url, formData, config).then((res) => {
-        if(res.data.errormessage){
-          return;
-        }
-      })
-      .catch((err) => { 
-        console.error(err);
       });
     },
     
@@ -1448,42 +1333,7 @@ export default {
               vm.showMessage( '預覽模式不開放完成訂單', false);
               return;
             }
-            localStorage.setItem('failureProbabilityType', 3);
             vm.createOrder();
-
-            if( false ){
-              // if(vm.useCodeSuccess){
-              //   const url = `${vm.protocol}//${vm.api}/interface/store/DiscountCodeCheckEmail`;
-              //   const params = `code=${vm.discountCode}&email=${vm.info.purchaser_email}`;
-              //   const config = {
-              //     headers: {
-              //       'Content-Type': 'application/x-www-form-urlencoded'
-              //     }
-              //   };
-              //   this.$http.post(url, params, config).then((res) => {
-              //     if(res.data.errormessage){
-              //       vm.login(vm.checkOrder);
-              //       return;
-              //     }
-              //     if(res.data.data[0].status === '0'){
-              //       vm.isConfirm2 = true;
-              //     } 
-              //     else {
-              //       vm.createOrder();
-              //       // console.log('有使用折扣碼，email沒用過折扣碼');
-              //     }
-              //   })
-              //   .catch((err) => {
-              //     console.error(err);
-              //     vm.login();
-              //     vm.showMessage('完成訂單異常，請稍後再試', false);
-              //   });
-              // } 
-              // else {
-              //   vm.createOrder();
-              //   // console.log('沒有使用折扣碼');
-              // }
-            }
           }
         });
       }
@@ -1571,21 +1421,6 @@ export default {
 
         formData.append('Preview' , this.site.Preview);
       }
-      if(false){
-        // let data = `
-        //   Site=${this.site.Site}&StoreName=${this.site.Name}
-        //   &ProductIdList=${o.id}&PriceList=${o.price}&AmountList=${o.qry}
-        //   &ExtraProductIdList=${o.additionalid}&ExtraPriceList=${o.additionalprice}&ExtraAmountList=${o.additionalqry}
-        //   &SendWay=${this.transport*1}
-        //   &Email=${this.info.purchaser_email}&Name=${this.info.purchaser_name}&Phone=${this.info.purchaser_number}
-        //   &Receiver=${this.info.receiver_name}&ReceiverPhone=${this.info.receiver_number}&Address=${this.info.receiver_address}
-        //   &Message=${this.info.info_message}
-        //   &Discount=${this.total.Discount * 1}&Shipping=${this.total.Shipping * 1}&Total=${this.total.Sum * 1}
-        //   &DiscountPrice=${this.total.DiscountCode*1}&DiscountCode=${this.useCodeSuccess}
-        //   &LogoUrl=${this.store.PayLogo}
-        //   &Type=${this.invoice_type*1}&Title=${this.invoice_title}&UniNumber=${this.invoice_uniNumber}
-        // `;
-      } 
       const config = {
         headers: {
           // 'Content-Type': 'application/x-www-form-urlencoded'
@@ -1604,61 +1439,6 @@ export default {
 
           if(res.data.message === '商品數量不足' || res.data.message === '加價商品數量不足'){
             vm.clearCarts();
-
-            if(false){
-              // let type_arr = res.data.type.split(',');
-              // let id_arr = res.data.id.split(',');
-              // for ( let i = 0; i < type_arr.length; i++){
-              //   if(type_arr[i] === '1'){
-              //     // 一般
-              //     for ( let j = 0; j < vm.carts.length; j++){
-              //       if(id_arr[i] === vm.carts[j].ID){
-              //         vm.updateCartsBuyQty(j, 0);
-              //         vm.getProducts();
-              //         break;
-              //       }
-              //     }
-              //   } 
-              //   else if(type_arr[i] === '2'){
-              //     // 加價購
-              //     for ( let j = 0; j < vm.carts.length; j++){
-              //       for ( let k = 0; k < vm.carts[j].addPrice.length ; k++){
-              //         if(id_arr[i] === vm.carts[j].addPrice[k].ID){
-              //           vm.updateCartsAddpriceQty(vm.carts[j], k, 0);
-              //           vm.getProducts();
-              //           break;
-              //         }
-              //       }
-              //     }
-              //   }
-              //   else if(type_arr[i] === '3'){
-              //     // 主商品 規格
-              //     for ( let j = 0; j < vm.carts.length; j++){
-              //       for( let k = 0; k < vm.carts[j].specArr.length; k++){
-              //         if(vm.carts[j].specArr[k].ID == id_arr[i]){
-              //           vm.updateCartsBuyQty_spec(j, 0, k);
-              //           vm.getProducts();
-              //           break;
-              //         }
-              //       }
-              //     }
-              //   }
-              //   else if(type_arr[i] === '4'){
-              //     // 加價購 規格
-              //     for ( let j = 0; j < vm.carts.length; j++){
-              //       for( let l = 0; l < vm.carts[j].addPrice.length; l++){
-              //         for( let k = 0; k < vm.carts[j].addPrice[l].specArr.length; k++){
-              //           if(vm.carts[j].addPrice[l].specArr[k].ID == id_arr[i]){
-              //             vm.updateCartsAddpriceQty_spec( vm.carts[j], l, 0, k);
-              //             vm.getAddPrice(vm.carts[j].ID, vm.carts[j]);
-              //             break;
-              //           }
-              //         }
-              //       }
-              //     }
-              //   }
-              // }
-            }
           }
 
           vm.orderIng = false;
@@ -1793,52 +1573,10 @@ export default {
       return totalQty;
     },
 
-    getAmountTest(type, id, pid){
-      const vm = this;
-      return new Promise((resolve, reject) => {
-        const url = `${vm.protocol}//${vm.api}/interface/store/GetProductQty`;
-      
-        let formData = new FormData();
-        formData.append('id' , id);
-        formData.append('type' , type);
-        if(pid){
-          formData.append('pid' , pid);
-        }
-        formData.append('Preview' , this.site.Preview);
-
-        const config = {
-          headers: {
-            // 'Content-Type': 'application/x-www-form-urlencoded'
-            'Content-Type': 'multipart/form-data'
-          }
-        };
-
-        vm.$http.post(url, formData, config).then((res) => {
-          if(res.data.errormessage){
-            vm.login(vm.getAmountTest, [type, id, pid]);
-          }
-          else{
-            let data = res.data.data[0];
-            resolve(data);
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-          vm.login(vm.getAmountTest, [type, id, pid]);
-        });
-      })
-    },
-
     // 沒有規格
     // carts.buyQty change => update products => set carts
     updateCartsBuyQty(i, qty, data){
       let vm = this;
-
-      // let dataTest;
-      // vm.getAmountTest(1, vm.carts[i].ID)
-      // .then(function(result){
-      //   dataTest = result;
-      // })
 
       let validate = vm.updateBuyQtyValidate(vm.carts[i], qty, data, '商品');
       if(!validate){
@@ -2438,15 +2176,6 @@ export default {
       this.allPicUlleft = 0;
     }, 
 
-
-    showCart(){
-      let failureProbabilityType = localStorage.getItem('failureProbabilityType') 
-                              ? JSON.parse(localStorage.getItem('failureProbabilityType'))  
-                              : 0;
-      if(failureProbabilityType < 1){
-        localStorage.setItem('failureProbabilityType', 1)
-      }
-    },
     // carts step
     stepOneToTwo(){
       if( false ){
@@ -2456,13 +2185,6 @@ export default {
       this.getProducts('1');
       this.stepIndex = 2;
       this.$refs.cartScroll.scrollTop = 0;
-
-      let failureProbabilityType = localStorage.getItem('failureProbabilityType') 
-                              ? JSON.parse(localStorage.getItem('failureProbabilityType'))  
-                              : 0;
-      if(failureProbabilityType < 2){
-        localStorage.setItem('failureProbabilityType', 2)
-      }
     },
     // carts info
     pInput(){
@@ -2620,117 +2342,11 @@ export default {
     urlPush(url) {
       window.location.href = url;
     },
-
-    // test 
-    testData(){
-      this.transport = '3';// 一般宅配2 到店自取3
-      this.info.purchaser_email = 'test@gmail.com';
-      this.info.purchaser_name = 'test' + new Date().getTime();
-      this.info.purchaser_number = '0912123123';
-      this.info.receiver_name = 'test';
-      this.info.receiver_number = '0912123123';
-      this.invoice_type = '1';
-    }
   },
   created(){
     const vm = this;
     vm.api = location.host;
     vm.protocol = location.protocol;
-
-    // timeAnalysis activePages
-    let activePages = localStorage.getItem('activePages') || 0 ;
-    activePages ++;
-    localStorage.setItem('activePages', activePages);
-    
-    // timeAnalysis ajax
-    function leave(){
-      // activePages
-      let activePages = localStorage.getItem('activePages') || 0 ;
-      +activePages --;
-      localStorage.setItem('activePages', activePages);
-
-      if(activePages > 0) {
-        return;
-      }
-
-      let isGetSite = localStorage.getItem('isGetSite') ;
-      let timeAnalysis = JSON.parse(localStorage.getItem('timeAnalysis'));
-      if(isGetSite){
-        timeAnalysis.endTime = new Date().getTime();
-        timeAnalysis.stayTime = Math.floor( (timeAnalysis.endTime - timeAnalysis.startTime) / 1000 );
-        localStorage.setItem('timeAnalysis', JSON.stringify(timeAnalysis));
-      }
-      else { // getSite 失敗 ， 沒有執行 initTimeAnalysis
-        return;
-      }
-
-      const url = `${vm.protocol}//${vm.api}/interface/store/ClosePage`;
-
-      // user
-      let user = localStorage.getItem('isActiveUser') 
-                              ? JSON.parse(localStorage.getItem('isActiveUser'))  
-                              : 0;
-
-      // type
-      // 失敗率 failureProbabilityType
-      let failureProbabilityType = localStorage.getItem('failureProbabilityType') 
-                              ? JSON.parse(localStorage.getItem('failureProbabilityType'))  
-                              : 0;
-      // isShowCartPage false: type0
-      // isShowCartPage true: type1
-      // isClickNext true: type2
-      // isClickFinishOrder true: type3
-      let type;
-      switch(failureProbabilityType){
-        case 0:
-          type = 3;
-          break;
-        case 1:
-          type = 1;
-          break;
-        case 2:
-          type = 2;
-          break;
-        case 3:
-          type = 0;
-          break;
-      }
-      
-      // page
-      let page = 'cart/index.html';
-
-      let formData = new FormData();
-      formData.append('id', vm.site.Name + '');
-      formData.append('stayTime', timeAnalysis.stayTime + '');
-      formData.append('user', user);
-      formData.append('type', type);
-      formData.append('page', page);
-      
-      const config = {
-        headers: {
-          // 'Content-Type': 'application/x-www-form-urlencoded'
-          'Content-Type': 'multipart/form-data'
-        }
-      };
-      
-      vm.$http.post(url, formData, config).then((res) => {
-        if(res.data.errormessage){
-          console.error(res.data.errormessage);
-          return
-        }
-        else{
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-    }
-    if('onbeforeunload' in window){
-      window.addEventListener('beforeunload', leave);
-    }
-    else{
-      window.addEventListener('pagehide', leave);
-    }
   },
   mounted(){
     this.getSite();
@@ -2741,20 +2357,6 @@ export default {
         this.computedLiLength();
       }
     }
-
-    // document.addEventListener('touchstart', (event) => {
-    //   if (event.touches.length > 1) {
-    //     event.preventDefault();
-    //   }
-    // });
-    
-    // document.addEventListener('touchend', (event) => {
-    //   const now = (new Date()).getTime();
-    //   if (now - this.lastTouchEnd <= 300) {
-    //     event.preventDefault();
-    //   }
-    //   this.lastTouchEnd = now;
-    // }, false);
   }
 }
 </script>
