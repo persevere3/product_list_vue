@@ -249,8 +249,15 @@
                 <option value="1" v-if="store.Shipping === '1' || store.Shipping === '2'" selected>一般宅配</option>
                 <option value="2" v-if="store.Shipping === '1' || store.Shipping === '3'" selected>到店自取</option>
               </select>
-
               <div class="prompt" v-if="transport === '0'"> 請選擇配送方式 </div>
+
+              <label for="pay_type">支付方式</label>
+              <select id="pay_type" v-model="pay_type" name="支付方式" :class="{inputError:pay_type === '0'}">
+                <option value="0" disabled >=== 請選擇支付方式 ===</option>
+                <option value="1" v-if="store.LinePay == 1" selected>LINE Pay</option>
+                <option value="2" v-if="store.ECPay == 1" selected>綠界科技 ECPay</option>
+              </select>
+              <div class="prompt" v-if="pay_type === '0'"> 請選擇支付方式 </div>
 
               <template v-if="transport == '1'">
                 <label for="raddress">收件地址</label>
@@ -694,6 +701,7 @@ export default {
       total: {},
       isSame: false,
       transport: '0',// 一般宅配2 到店自取3
+      pay_type: '0', // 支付方式 1: Line 2: EC
       info: {
         purchaser_email:'',
         purchaser_name:'',
@@ -1238,20 +1246,26 @@ export default {
         'additionalprice':'',
         'additionalqry':'',
         'specificationid':'',
-        'specificationqty':''
+        'specificationqty':'',
+        'ItemName': '',
       };
       this.carts.forEach(function(c,i){
         if(c.buyQty){
           o.id += ( o.id ==='' ? `${c.ID}`  : `,${c.ID}` );
           o.price += ( o.price ==='' ? `${c.NowPrice}`  : `,${c.NowPrice}` );
           o.qry += ( o.qry ==='' ? `${c.buyQty}`  : `,${c.buyQty}` );
-        } 
+          o.ItemName +=  o.ItemName ? '#' : '';
+          o.ItemName += `${c.Name} ${c.NowPrice} 元 x ${c.buyQty}`;
+        }
         else{
           for(let j = 0; j < c.specArr.length; j ++){
             if( c.specArr[j].buyQty != 0){
               o.specificationid += ( o.specificationid ==='' ? `${c.specArr[j].ID}`  : `,${c.specArr[j].ID}` );
               // o.specificationprice += ( o.specificationprice ==='' ? `${c.NowPrice}`  : `,${c.NowPrice}` );
               o.specificationqty += ( o.specificationqty ==='' ? `${c.specArr[j].buyQty}`  : `,${c.specArr[j].buyQty}` );
+
+              o.ItemName +=  o.ItemName ? '#' : '';
+              o.ItemName += `${c.Name} ${c.specArr[j].Name} NT$${c.NowPrice} x ${c.specArr[j].buyQty}`;
             }
           }
         }
@@ -1264,6 +1278,9 @@ export default {
                 o.additionalid += ( o.additionalid === "" ? `${item.ID}`  : `,${item.ID}` );
                 o.additionalprice += ( o.additionalprice === "" ? `${item.Price}`  : `,${item.Price}` );
                 o.additionalqry += ( o.additionalqry === "" ? `${item.Qty}`  : `,${item.Qty}` );
+                
+                o.ItemName +=  o.ItemName ? '#' : '';
+                o.ItemName += `${item.Name} ${item.NowPrice} 元 x ${item.buyQty}`;
               }
             }
             else {
@@ -1272,6 +1289,9 @@ export default {
                   o.specificationid += ( o.specificationid ==='' ? `${item.specArr[k].ID}`  : `,${item.specArr[k].ID}` );
                   // o.specificationprice += ( o.specificationprice ==='' ? `${c.NowPrice}`  : `,${c.NowPrice}` );
                   o.specificationqty += ( o.specificationqty ==='' ? `${item.specArr[k].buyQty}`  : `,${item.specArr[k].buyQty}` );
+                
+                  o.ItemName +=  o.ItemName ? '#' : '';
+                  o.ItemName += `${item.Name} ${item.specArr[k].Name} NT$${item.NowPrice} x ${item.specArr[k].buyQty}`;
                 }
               }
             }
@@ -1396,12 +1416,15 @@ export default {
         formData.append('ExtraProductIdList' , o.additionalid);
         formData.append('ExtraPriceList' , o.additionalprice);
         formData.append('ExtraAmountList' , o.additionalqry);
+        formData.append('ItemName' , o.ItemName);
 
         formData.append('SizeIdList' , o.specificationid);
         // formData.append('SpecPriceList' , o.specificationprice);
         formData.append('SizeAmountList' , o.specificationqty);
 
-        formData.append('SendWay' , this.transport*1);
+        formData.append('SendWay' , this.transport * 1);
+        formData.append('PayType' , this.pay_type * 1);
+
         formData.append('Email' , this.info.purchaser_email);
         formData.append('Name' , this.info.purchaser_name);
         formData.append('Phone' , this.info.purchaser_number);
@@ -1415,7 +1438,7 @@ export default {
         formData.append('DiscountPrice' , this.total.DiscountCode*1);
         formData.append('DiscountCode' , this.useCodeSuccess);
         formData.append('LogoUrl' , this.store.PayLogo);
-        formData.append('Type' , this.invoice_type*1);
+        formData.append('Type' , this.invoice_type * 1);
         formData.append('Title' , this.invoice_title);
         formData.append('UniNumber' , this.invoice_uniNumber);
 
