@@ -1168,6 +1168,13 @@ input:focus, textarea:focus, select:focus{
       }
     }
 
+    .ECPay_form_container{
+      position: absolute;
+      top: 0;
+      opacity: 0;
+      z-index: -1;
+    }
+
     .footer{
       .top{
 

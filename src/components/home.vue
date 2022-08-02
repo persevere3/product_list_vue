@@ -321,6 +321,8 @@
           </div>
         </div>
 
+        <div class="ECPay_form_container" v-html="ECPay_form"></div>
+
         <div class="noItem" v-show="cartsLength === 0">
           <p>購物車沒有內容</p>  
           <div class="button" @click="showPage='main'">back</div>
@@ -719,6 +721,8 @@ export default {
       isConfirm: false,
       isConfirm2: false,
       payResult: {},
+
+      ECPay_form: '',
       
       //  
       innerHeight: 0,
@@ -1255,7 +1259,7 @@ export default {
           o.price += ( o.price ==='' ? `${c.NowPrice}`  : `,${c.NowPrice}` );
           o.qry += ( o.qry ==='' ? `${c.buyQty}`  : `,${c.buyQty}` );
           o.ItemName +=  o.ItemName ? '#' : '';
-          o.ItemName += `${c.Name} ${c.NowPrice} 元 x ${c.buyQty}`;
+          o.ItemName += `${c.Name} NT$${c.NowPrice} x ${c.buyQty}`;
         }
         else{
           for(let j = 0; j < c.specArr.length; j ++){
@@ -1265,7 +1269,7 @@ export default {
               o.specificationqty += ( o.specificationqty ==='' ? `${c.specArr[j].buyQty}`  : `,${c.specArr[j].buyQty}` );
 
               o.ItemName +=  o.ItemName ? '#' : '';
-              o.ItemName += `${c.Name} ${c.specArr[j].Name} NT$${c.NowPrice} x ${c.specArr[j].buyQty}`;
+              o.ItemName += `${c.Name} (${c.specArr[j].Name}) NT$${c.NowPrice} x ${c.specArr[j].buyQty}`;
             }
           }
         }
@@ -1280,7 +1284,7 @@ export default {
                 o.additionalqry += ( o.additionalqry === "" ? `${item.Qty}`  : `,${item.Qty}` );
                 
                 o.ItemName +=  o.ItemName ? '#' : '';
-                o.ItemName += `${item.Name} ${item.NowPrice} 元 x ${item.buyQty}`;
+                o.ItemName += `加價購 ${item.Name} NT$${item.Price} x ${item.buyQty}`;
               }
             }
             else {
@@ -1291,7 +1295,7 @@ export default {
                   o.specificationqty += ( o.specificationqty ==='' ? `${item.specArr[k].buyQty}`  : `,${item.specArr[k].buyQty}` );
                 
                   o.ItemName +=  o.ItemName ? '#' : '';
-                  o.ItemName += `${item.Name} ${item.specArr[k].Name} NT$${item.NowPrice} x ${item.specArr[k].buyQty}`;
+                  o.ItemName += `加價購 ${item.Name} (${item.specArr[k].Name}) NT$${item.Price} x ${item.specArr[k].buyQty}`;
                 }
               }
             }
@@ -1395,8 +1399,27 @@ export default {
       this.clearCarts(); 
       this.isConfirm = false;
 
-      window.open(this.payResult.payUrl);
-
+      if(this.payResult.payUrl){
+        window.open(this.payResult.payUrl);
+      }
+      else {
+        this.ECPay_form = `<form id="ECPay_form" action="https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post" target="_blank">`
+        for(let item in this.payResult){
+          if(item === 'url' || item === 'success' || item === 'message') continue
+          this.ECPay_form += `<input type="${item == 'EncryptType' || item == 'TotalAmount' || item == 'ExpireDate' ? 'number' : 'text'}" name="${item}" value="${this.payResult[item]}">`;
+        }
+        this.ECPay_form += `</form>`;
+        let submit_interval = setInterval(()=>{
+          let ECPay_form = document.querySelector('#ECPay_form');
+          if(ECPay_form){
+            clearInterval(submit_interval);
+            console.log('submit');
+            ECPay_form.submit();
+          } else {
+            console.log('submit fail');
+          }
+        }, 1000)
+      }
     },
     createOrder(){
       this.orderIng = true;
