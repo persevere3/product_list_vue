@@ -945,6 +945,17 @@ export default {
         }
 
         vm.category = '0';
+
+        //
+        let RtnMsg = location.href.split('RtnMsg=')[1];
+        if(RtnMsg !== undefined){
+          if(RtnMsg == 'Succeeded'){
+            localStorage.removeItem(`${vm.site.Site}@carts`);
+            vm.showMessage('付款成功', true)
+          }
+        }
+        window.history.replaceState({}, document.title, "/cart/");
+
         vm.getCarts(type, '1');
 
         // 
@@ -1396,14 +1407,13 @@ export default {
       this.currentPage = 1;
     }, 
     toPay(){
-      this.clearCarts(); 
       this.isConfirm = false;
 
       if(this.payResult.payUrl){
-        window.open(this.payResult.payUrl);
+        location.href = this.payResult.payUrl;
       }
       else {
-        this.ECPay_form = `<form id="ECPay_form" action="https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post" target="_blank">`
+        this.ECPay_form = `<form id="ECPay_form" action="https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
         for(let item in this.payResult){
           if(item === 'url' || item === 'success' || item === 'message') continue
           this.ECPay_form += `<input type="${item == 'EncryptType' || item == 'TotalAmount' || item == 'ExpireDate' ? 'number' : 'text'}" name="${item}" value="${this.payResult[item]}">`;
