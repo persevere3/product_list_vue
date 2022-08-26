@@ -251,13 +251,17 @@
               </select>
               <div class="prompt" v-if="transport === '0'"> 請選擇配送方式 </div>
 
-              <label for="pay_type">支付方式</label>
-              <select id="pay_type" v-model="pay_type" name="支付方式" :class="{inputError:pay_type === '0'}">
+              <label for="pay_method">支付方式</label>
+              <select id="pay_method" v-model="pay_method" name="支付方式" :class="{inputError:pay_method === '0'}">
                 <option value="0" disabled >=== 請選擇支付方式 ===</option>
-                <option value="1" v-if="store.LinePay == 1" selected>LINE Pay</option>
-                <option value="2" v-if="store.ECPay == 1" selected>綠界科技 ECPay</option>
+                <option value="CreditCard" v-if="store.CreditCard != 0" selected>信用卡</option>
+                <option value="ATM" v-if="store.ATM != 0" selected>ATM/網路ATM</option>
+                <option value="PayCode" v-if="store.PayCode != 0" selected>超商代碼</option>
+                <option value="PayBarCode" v-if="store.PayBarCode != 0" selected>超商條碼</option>
+                <option value="PayOnDelivery" v-if="store.PayOnDelivery != 0" selected>超商取貨付款</option>
+                <option value="LinePay" v-if="store.LinePay == 1" selected>LINE Pay</option>
               </select>
-              <div class="prompt" v-if="pay_type === '0'"> 請選擇支付方式 </div>
+              <div class="prompt" v-if="pay_method === '0'"> 請選擇支付方式 </div>
 
               <template v-if="transport == '1'">
                 <label for="raddress">收件地址</label>
@@ -505,8 +509,8 @@
         <i class="fa fa-check-circle fa-2x" aria-hidden="true"></i>
         <div class="message"> 訂單完成，按確定前往付款頁面 </div>
         <div class="buttonGroup">
-          <!-- <div class="button cancel" @click="clearCarts(); isConfirm = false;"> 取消  </div> -->
-          <div class="button determine" @click="toPay()"> 確定  </div>
+          <!-- <div class="button cancel" @click="clearCarts(); isConfirm = false;"> 取消 </div> -->
+          <div class="button determine" @click="toPay()"> 確定 </div>
         </div>
       </div>
     </div>
@@ -519,6 +523,23 @@
         <div class="buttonGroup">
           <div class="button cancel" @click=" isConfirm2 = false;"> 取消 </div>
           <div class="button determine" @click="cancelDiscountCodeCreateOrder()"> 確定  </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="confirm" v-if="isConfirm3">
+      <div class="frame">
+        <div class="border"></div>
+        <i class="fa fa-check-circle fa-2x" aria-hidden="true"></i>
+        <div class="message"> 
+          <div> {{bank_code}} {{bank[bank_code]}}</div>
+          <div class="bank_account">
+            <input type="text" id="copy_input" readonly v-model="bank_account">
+            <div class="copy" @click="copy(bank_account)"> <i class="fas fa-copy"></i> </div>
+          </div>
+        </div>
+        <div class="buttonGroup">
+          <div class="button determine" @click="isConfirm3 = false"> 確定 </div>
         </div>
       </div>
     </div>
@@ -548,12 +569,6 @@
         <div class="icon"
           :class="{iconActive:arrangement==1}"
           @click="arrangement=1"
-        >
-          <i class="fa fa-th-list" aria-hidden="true"></i>
-        </div>
-        <div class="icon"
-          style=" opacity:0 "
-          @dblclick="isConfirm=true"
         >
           <i class="fa fa-th-list" aria-hidden="true"></i>
         </div>
@@ -703,7 +718,7 @@ export default {
       total: {},
       isSame: false,
       transport: '0',// 一般宅配2 到店自取3
-      pay_type: '0', // 支付方式 1: Line 2: EC
+      pay_method: '0',
       info: {
         purchaser_email:'',
         purchaser_name:'',
@@ -720,7 +735,14 @@ export default {
 
       isConfirm: false,
       isConfirm2: false,
+      isConfirm3: false,
       payResult: {},
+
+      //
+      bank: '',
+      // bank: require('../assets/bank.json'),
+      bank_code: '',
+      bank_account: '',
 
       ECPay_form: '',
       
@@ -1405,38 +1427,42 @@ export default {
       this.getProducts();
       this.category = '0';
       this.currentPage = 1;
-    }, 
+    },
     toPay(){
+      this.clearCarts();
+
       this.isConfirm = false;
 
-      if(this.payResult.payUrl){
+      // LinePay
+      if(this.pay_method == 'LinePay'){
         location.href = this.payResult.payUrl;
       }
+      // company account
+      else if(this.pay_method == 'ATM' && this.store.ATM == 1){
+        this.bank = require('../assets/bank.json');
+        this.isConfirm3 = true;
+      }
+      // ecpay
       else {
         this.ECPay_form = `<form id="ECPay_form" action="https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
         for(let item in this.payResult){
-          if(item === 'url' || item === 'success' || item === 'message') continue
+          if(item === 'success' || item === 'message') continue
+          // EncryptType TotalAmount item: number，other: string
           this.ECPay_form += `<input type="${item == 'EncryptType' || item == 'TotalAmount' || item == 'ExpireDate' ? 'number' : 'text'}" name="${item}" value="${this.payResult[item]}">`;
         }
         this.ECPay_form += `</form>`;
-        let submit_interval = setInterval(()=>{
+
+        this.$nextTick(()=>{
           let ECPay_form = document.querySelector('#ECPay_form');
-          if(ECPay_form){
-            clearInterval(submit_interval);
-            console.log('submit');
-            ECPay_form.submit();
-          } else {
-            console.log('submit fail');
-          }
-        }, 1000)
+          ECPay_form.submit();
+        })
       }
     },
     createOrder(){
       this.orderIng = true;
       let o = this.createCartsStr();
 
-      let url = this.api === '192.168.80.239:5052' ? `${this.protocol}//${this.api}/Line/LinePayRequest` : `${this.protocol}//${this.api}/LineMK/Line/LinePayRequest`;
-      // let url = `${this.protocol}//${this.api}/LineMK/Line/LinePayRequest`;
+      let url = `${this.protocol}//${this.api}/LineMK/Line/OrderPayRequest`;
       
       let formData = new FormData();
       if(true){
@@ -1456,7 +1482,8 @@ export default {
         formData.append('SizeAmountList' , o.specificationqty);
 
         formData.append('SendWay' , this.transport * 1);
-        formData.append('PayType' , this.pay_type * 1);
+        formData.append('PayMethod' , this.pay_method);
+        formData.append('PayType' , this.store[this.pay_method]);
 
         formData.append('Email' , this.info.purchaser_email);
         formData.append('Name' , this.info.purchaser_name);
@@ -2397,6 +2424,13 @@ export default {
 
     urlPush(url) {
       window.location.href = url;
+    },
+
+    copy(text){
+      let copy_input = document.querySelector('#copy_input');
+      copy_input.value = text;
+      copy_input.select();
+      document.execCommand('copy');
     },
   },
   created(){

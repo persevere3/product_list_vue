@@ -2124,10 +2124,46 @@ input:focus, textarea:focus, select:focus{
       margin-bottom: 5px;
     }
     .message{
-      padding: 0px 30px;
+      padding: 10px 30px;
       margin-bottom: 5px;
       font-size: 18px;
       z-index: 2;
+
+      .bank_account{
+        margin-top: 10px;
+        position: relative;
+
+        input{
+          height: 30px;
+          line-height: 30px;
+          border: none;
+          outline: none;
+          font-size: 18px;
+
+          &:focus{
+            box-shadow: none;
+          }
+        }
+
+        .copy{
+          height: 100%;
+          display: flex;
+          align-items: center;
+
+          font-size: 20px;
+          color: rgba(63, 135, 166, 0.8);
+
+          position: absolute;
+          top: 0;
+          right: 0px;
+
+          cursor: pointer;
+
+          i{
+            margin: 0;
+          }
+        }
+      }
     }
     .buttonGroup{
       display: flex;
