@@ -532,10 +532,10 @@
         <div class="border"></div>
         <i class="fa fa-check-circle fa-2x" aria-hidden="true"></i>
         <div class="message"> 
-          <div> {{bank_code}} {{bank[bank_code]}}</div>
+          <div> {{store.SelfAtmBankId}} {{bank[store.SelfAtmBankId]}}</div>
           <div class="bank_account">
-            <input type="text" id="copy_input" readonly v-model="bank_account">
-            <div class="copy" @click="copy(bank_account)"> <i class="fas fa-copy"></i> </div>
+            <input type="text" id="copy_input" readonly v-model="store.SelfAtmId">
+            <div class="copy" @click="copy(store.SelfAtmId)"> <i class="fas fa-copy"></i> </div>
           </div>
         </div>
         <div class="buttonGroup">
@@ -741,8 +741,6 @@ export default {
       //
       bank: '',
       // bank: require('../assets/bank.json'),
-      bank_code: '',
-      bank_account: '',
 
       ECPay_form: '',
       
