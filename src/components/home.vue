@@ -1,5 +1,5 @@
 <template>
-  <div class="productContainer">
+  <div class="productContainer" @click.stop="is_favorite_hover = false">
 
     <div class="notice_page" :style="`height:${innerHeight}px`" v-show="showPage === 'Content' || showPage === 'Description' || showPage === 'PrivacyPolicy'">
       <div class="background" >
@@ -52,7 +52,7 @@
                         <div class="specButton" @click="cartsSpecCheckedId = cartsSpecCheckedId == spec.ID ? -1 : spec.ID"> 規格 <i :class="{iActive:cartsSpecCheckedId == spec.ID}" class="fa fa-caret-down" aria-hidden="true"></i>  </div>
                         <div class="specText" :class="{specTextShow:cartsSpecCheckedId == spec.ID}"> {{spec.Name}} </div>
                       </div>
-                      <div class="td price"> NT$ {{item.NowPrice}} </div>
+                      <div class="td price"> NT$ {{numberThousands(item.NowPrice)}} </div>
                       <div class="td qty">
                         <div class="qtyBox" v-show="store.Enable === '1'">
                           <div class="reduce" :class="{qtyDisabled:spec.buyQty<1}" @click="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, spec.buyQty-1, specIndex]);"><i class="fa fa-minus"></i></div>
@@ -63,7 +63,7 @@
                         </div>
                         <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
                       </div>
-                      <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{item.NowPrice * (isNaN(spec.buyQty) ? 0 : spec.buyQty) }} </div>  </div>
+                      <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{numberThousands(item.NowPrice * (isNaN(spec.buyQty) ? 0 : spec.buyQty))}} </div>  </div>
                       <div class="td delete">
                         <div class="deleteButton" @click="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, 0, specIndex]);">
                           刪除
@@ -81,7 +81,7 @@
                       <div class="td spec">
 
                       </div>
-                      <div class="td price">  NT$ {{item.NowPrice}} </div>
+                      <div class="td price">  NT$ {{numberThousands(item.NowPrice)}} </div>
                       <div class="td qty"> 
                         <div class="qtyBox" v-show="store.Enable === '1'">
                           <div class="reduce" :class="{qtyDisabled:item.buyQty<1}" @click="getAmount( 1, item.ID, updateCartsBuyQty, [index, item.buyQty-1]);"><i class="fa fa-minus"></i></div>
@@ -92,7 +92,7 @@
                         </div>
                         <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
                       </div>
-                      <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{item.NowPrice * (isNaN(item.buyQty) ? 0 : item.buyQty)}}</div>  </div>
+                      <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{numberThousands(item.NowPrice * (isNaN(item.buyQty) ? 0 : item.buyQty))}}</div>  </div>
                       <div class="td delete">
                         <div class="deleteButton" @click="getAmount( 1,  item.ID, updateCartsBuyQty, [index, 0]);">
                           刪除
@@ -116,7 +116,7 @@
                             <div class="specButton" @click="cartsSpecCheckedId = cartsSpecCheckedId == spec2.ID ? -1 : spec2.ID"> 規格 <i :class="{iActive:cartsSpecCheckedId == spec2.ID}" class="fa fa-caret-down" aria-hidden="true"></i>  </div> 
                             <div class="specText" :class="{specTextShow:cartsSpecCheckedId == spec2.ID}"> {{spec2.Name}} </div>  
                           </div>
-                          <div class="td price">  NT$ {{item2.Price}} </div>
+                          <div class="td price">  NT$ {{numberThousands(item2.Price)}} </div>
                           <div class="td qty">
                             <div class="qtyBox" v-show="store.Enable === '1'">
                               <div class="reduce" :class="{qtyDisabled:spec2.buyQty<1}" @click="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2,spec2.buyQty-1, specIndex2], item.ID);"><i class="fa fa-minus"></i></div>
@@ -127,7 +127,7 @@
                             </div>
                             <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
                           </div>
-                          <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{item2.Price * (isNaN(spec2.buyQty) ? 0 : spec2.buyQty) }} </div>  </div>
+                          <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{numberThousands(item2.Price * (isNaN(spec2.buyQty) ? 0 : spec2.buyQty))}} </div>  </div>
                           <div class="td delete">
                             <div class="deleteButton" @click="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2, 0, specIndex2], item.ID); ">
                               刪除
@@ -145,7 +145,7 @@
                             <div class="name"> {{item2.Name}} </div>
                           </div>
                           <div class="td spec"></div>
-                          <div class="td price"> NT$ {{item2.Price}} </div>
+                          <div class="td price"> NT$ {{numberThousands(item2.Price)}} </div>
                           <div class="td qty">
                             <div class="qtyBox" v-show="store.Enable == 1">
                               <div class="reduce" :class="{qtyDisabled:item2.Qty < 1}" @click="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, item2.Qty - 1], item.ID);"><i class="fa fa-minus"></i></div>
@@ -156,7 +156,7 @@
                             </div>
                             <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
                           </div>
-                          <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{item2.Price * (isNaN(item2.Qty) ? 0 : item2.Qty) }} </div> </div>
+                          <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{numberThousands(item2.Price * (isNaN(item2.Qty) ? 0 : item2.Qty))}} </div> </div>
                           <div class="td delete">
                             <div class="deleteButton" @click="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, 0], item.ID);">
                               刪除
@@ -186,27 +186,22 @@
             <ul>
               <li>
                 <div class="before">商品金額</div>
-                <div class="after">NT$ {{total.Total}}</div>
+                <div class="after">NT$ {{numberThousands(total.Total)}}</div>
               </li>
-              <!-- <li>
-                <div class="before">+ 運費</div>
-                <div class="after">NT$ {{total.Shipping}}</div>
-              </li> -->
               <li>
                 <div class="before">- 折扣</div>
-                <div class="after">NT$ {{total.Discount}}</div>
+                <div class="after">NT$ {{numberThousands(total.Discount)}}</div>
               </li>
               <li>
                 <div class="before">- 折扣碼優惠</div>
-                <div class="after">NT$ {{total.DiscountCode}}</div>
+                <div class="after">NT$ {{numberThousands(total.DiscountCode)}}</div>
               </li>
               <li>
                 <div class="before">= 金額總計</div>
-                <div class="after">NT$ {{total.Sum}}</div>
+                <div class="after">NT$ {{numberThousands(total.Sum)}}</div>
               </li>
             </ul>
           </div>
-          <!-- transport = store.Shipping==='0' ? '0' : store.Shipping==='3' ? '2' : '1' ; -->
           <div class="next" @click="stepOneToTwo()">下一步</div>
         </div>
 
@@ -217,20 +212,20 @@
           <form class="info">
             <div class="left">
               <label for="email">購買人Email</label>
-              <input type="text" id="email" name="email" v-validate="'required|email'" placeholder="email"
+              <input type="text" :readonly="userInfo.Email" id="email" name="email" v-validate="'required|email'" placeholder="email"
                 :class="{inputError:errors.first('email')}" v-model="info.purchaser_email"
               >
               <div class="prompt">{{ errors.first('email') }}</div>
               <label for="name">購買人姓名</label>
-              <input type="text" id="name" name="姓名" :class="{inputError:errors.first('姓名')}" v-validate="'required'" placeholder="姓名" v-model="info.purchaser_name" @change="pInput">
+              <input type="text" :readonly="userInfo.Name" id="name" name="姓名" :class="{inputError:errors.first('姓名')}" v-validate="'required'" placeholder="姓名" v-model="info.purchaser_name" @change="pInput">
               <div class="prompt">{{ errors.first('姓名') }}</div>
-              <label for="phone">購買人聯絡電話</label>
-              <input type="text" id="phone" name="聯絡電話" :class="{inputError:errors.first('聯絡電話')}" v-validate="'required'" placeholder="聯絡電話" v-model="info.purchaser_number" @change="pInput">
-              <div class="prompt">{{ errors.first('聯絡電話') }}</div>
+              <label for="phone">購買人手機號碼</label>
+              <input type="text" :readonly="userInfo.Phone" id="phone" name="購買人手機號碼" :class="{inputError:errors.first('購買人手機號碼')}" v-validate="'required'" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput">
+              <div class="prompt">{{ errors.first('購買人手機號碼') }}</div>
 
               <div class="box">
                 <input type="checkbox" id="isSame" v-model="isSame">
-                <label for="isSame">購買人同收件人資料</label>
+                <label for="isSame">收件人同購買人資料</label>
               </div>
               
               <label for="rname">收件人姓名</label>
@@ -244,15 +239,15 @@
 
             <div class="right">
               <label for="transport">運送方式</label>
-              <select id="transport" v-model="transport" name="運送方式" :class="{inputError:transport === '0'}">
+              <select id="transport" v-model="transport" name="運送方式" :class="{inputError:is_click_finish_order && transport === '0'}">
                 <option value="0" disabled >=== 請選擇配送方式 ===</option>
                 <option value="1" v-if="store.Shipping === '1' || store.Shipping === '2'" selected>一般宅配</option>
                 <option value="2" v-if="store.Shipping === '1' || store.Shipping === '3'" selected>到店自取</option>
               </select>
-              <div class="prompt" v-if="transport === '0'"> 請選擇配送方式 </div>
+              <div class="prompt" v-if="is_click_finish_order && transport === '0'"> 請選擇配送方式 </div>
 
               <label for="pay_method">支付方式</label>
-              <select id="pay_method" v-model="pay_method" name="支付方式" :class="{inputError:pay_method === '0'}">
+              <select id="pay_method" v-model="pay_method" name="支付方式" :class="{inputError:is_click_finish_order && pay_method === '0'}">
                 <option value="0" disabled >=== 請選擇支付方式 ===</option>
                 <option value="CreditCard" v-if="store.CreditCard != 0" selected>信用卡</option>
                 <option value="ATM" v-if="store.ATM != 0" selected>ATM/網路ATM</option>
@@ -261,12 +256,21 @@
                 <option value="PayOnDelivery" v-if="store.PayOnDelivery != 0" selected>超商取貨付款</option>
                 <option value="LinePay" v-if="store.LinePay == 1" selected>LINE Pay</option>
               </select>
-              <div class="prompt" v-if="pay_method === '0'"> 請選擇支付方式 </div>
+              <div class="prompt" v-if="is_click_finish_order && pay_method === '0'"> 請選擇支付方式 </div>
 
               <template v-if="transport == '1'">
                 <label for="raddress">收件地址</label>
                 <input type="text" id="raddress" name="收件地址" :class="{inputError:errors.first('收件地址')}" v-validate="'required'" placeholder="收件地址" v-model="info.receiver_address">
                 <div class="prompt">{{ errors.first('收件地址') }}</div>
+
+                <div class="address">
+                  <ul>
+                    <li v-for="(item, key) in userInfo.address_obj" :key="key" @click="info.receiver_address = item.address"> {{ }} 
+                      {{ item.address }}  
+                      <i class="fa fa-check" v-if="item.address == info.receiver_address.trim()"></i>
+                    </li>
+                  </ul>
+                </div>
               </template>
               <label for="feedback">留言給我們</label>
               <textarea name="" id="feedback" cols="30" rows="5" placeholder="留言給我們" v-model="info.info_message" @input="info_message_input"></textarea>
@@ -290,31 +294,65 @@
                   <div class="prompt" v-if="invoice_uniNumber === ''"> 請填寫統一編號 </div>
                 </template>
               </template>
-
             </div>
           </form>
+
+          <!--  有點數 或 有設定回饋% -->
+          <template v-if="total_bonus * 1 || bonus_array.length">
+            <div class="title">
+              購物金 
+              <span v-if="bonus_array.length">
+                (<span v-if="!user_account" > 會員 </span>
+                <span> 付款成功後 </span>
+                <template v-for="(item, index) in bonus_array" :key="index">，滿 NT${{ numberThousands(item.lower) }} 送 {{ item.shipping }}% 購物金 </template>)
+              </span>
+            </div>
+            <div class="info" v-if="user_account">
+              <div class="left">
+                <div class="bonus_container">
+                  購物金餘額: <span class="bonus"> {{numberThousands(total_bonus)}} 點 </span>
+                </div>
+                <div class="box" v-if="total_bonus * 1">
+                  <input type="checkbox" id="is_use_bonus" v-model="is_use_bonus" @change="getTotal(0)"> 
+                  <label for="is_use_bonus" > 使用購物金 </label>
+                  <input type="number" placeholder="購物金" v-model="use_bonus" @input="use_bonus = (Math.min(total_bonus, use_bonus, total.Total) != use_bonus ? Math.min(total_bonus, use_bonus, total.Total) : use_bonus * 1)" @change="is_use_bonus ? getTotal(0) : ''">
+                </div>
+              </div>
+              <div class="right"></div>
+            </div>
+            <div class="info login" v-else>
+              請先 <span class="a" @click="urlPush('/user.html')"> 登入會員 </span>
+            </div>
+          </template>
 
           <div class="total">
             <ul>
               <li>
                 <div class="before">商品金額</div>
-                <div class="after">NT$ {{total.Total}}</div>
+                <div class="after">NT$ {{numberThousands(total.Total)}}</div>
+              </li>
+              <li v-if="is_use_bonus">
+                <div class="before">- 購物金</div>
+                <div class="after">NT$ {{numberThousands(!use_bonus ? 0 : use_bonus)}}</div>
               </li>
               <li>
                 <div class="before">- 折扣</div>
-                <div class="after">NT$ {{total.Discount}}</div>
+                <div class="after">NT$ {{numberThousands(total.Discount)}}</div>
               </li>
               <li>
                 <div class="before">- 折扣碼優惠</div>
-                <div class="after">NT$ {{total.DiscountCode}}</div>
+                <div class="after">NT$ {{numberThousands(total.DiscountCode)}}</div>
               </li>
               <li>
                 <div class="before">+ 運費</div>
-                <div class="after">NT$ {{total.Shipping}}</div>
+                <div class="after">NT$ {{numberThousands(total.Shipping)}}</div>
               </li>
               <li>
                 <div class="before">= 金額總計</div>
-                <div class="after">NT$ {{total.Sum}}</div>
+                <div class="after">NT$ {{numberThousands(total.Sum)}}</div>
+              </li>
+              <li v-if="user_account && total && bonus_percent * 1">
+                付款成功後獲得 NT${{ numberThousands(member_bonus) }} 購物金
               </li>
             </ul>
           </div>
@@ -365,8 +403,8 @@
           </div>
           <div class="content">
               <div class="title">{{selectProduct.Name}}</div>
-              <div class="price" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{selectProduct.Price}}</div>
-              <div class="price">NT$ {{selectProduct.NowPrice}}</div>
+              <div class="price" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{numberThousands(selectProduct.Price)}}</div>
+              <div class="price">NT$ {{numberThousands(selectProduct.NowPrice)}}</div>
               <div class="title"> <div v-html="unescapeEnter(selectProduct.Content)"></div> </div>
 
               <!-- 有規格 -->
@@ -414,7 +452,20 @@
 
               <div class="goToCart" v-if="(selectProduct.specArr && selectProduct.selectSpecIndex != -1 && selectProduct.selectSpecItem.buyQty != 0 ) || (!selectProduct.specArr && selectProduct.buyQty != 0)" @click="getProducts(); showPage='cart'">
                 加入購物車
+                <i class="fa fa-shopping-cart" aria-hidden="true"></i>
               </div>
+
+              <div class="addTo_favorite_btn" @click.stop="toggleFavorite(selectProduct.ID)">
+                加入我的最愛 
+                <i class="fas fa-heart" :class="{is_favorite : favorite[selectProduct.ID]}"></i>
+              </div>
+
+              <div class="share_link" @click="click_share_link">
+                Share
+                <i class="fas fa-link"></i>
+              </div>
+
+              <input type="text" id="copy_input2" readonly>
           </div>
         </div>
 
@@ -428,7 +479,7 @@
               </div>
               <div class="content">
                 <div class="title">{{item.Name}}</div>
-                <div class="price">NT$ {{item.Price}}</div>
+                <div class="price">NT$ {{numberThousands(item.Price)}}</div>
                 
                 <!-- 有規格 -->
                 <template v-if="item.specArr">
@@ -481,6 +532,27 @@
           <div class="title">商品詳情</div>
           <div class="content ql-editor" ref='selectProduct_detail_content' v-html="unescapeHTML(selectProduct.Detail)"></div>
         </div>
+
+        <div class="others">
+          <div class="title">相關商品</div>
+          <div class="products">
+            <ul>
+              <li v-for="(item, index) in products" :key="item.ID" v-show="index < 4" >
+                <div class="pic_div">
+                  <div class="pic" ref='picWidth' :style="{backgroundImage :`url(${item.Img1})`, height:`${picHeight}px`}" @click="showSelect(item, index)">
+                    <div class="detailButton">查看詳情</div>
+                  </div>
+                </div>
+
+                <div class="content">
+                  <div class="title">{{item.Name}}</div>
+                  <div class="price" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{numberThousands(item.Price)}}</div>
+                  <div class="price">NT$ {{numberThousands(item.NowPrice)}}</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -492,6 +564,32 @@
       <div class="num">
         {{cartsLength}}
       </div>
+    </div>
+
+    <div class="favoriteIcon" v-show="showPage === 'main' && Object.keys(favorite).length" @click.stop="is_favorite_hover = !is_favorite_hover">
+      <i class="fas fa-heart fa-2x"></i>
+      <div class="num">
+        {{Object.keys(favorite).length}}
+      </div>
+    </div>
+
+    <div class="favorite_container" v-show="showPage === 'main' && Object.keys(favorite).length" :class="{hover : is_favorite_hover}">
+      <ul class="favorite_items">
+        <template v-for="item in favorite" :key="item.ID">
+          <li @click.stop="showFavorite(item.ID)">
+            <div class="img_and_name">
+              <div class="img" :style="{backgroundImage: `url(${item.Img1})`}"></div>
+              <div class="name"> {{ item.Name }} </div>
+            </div>
+            <div class="price_and_delete">
+              <div class="price"> NT${{numberThousands(item.NowPrice)}} </div>
+              <div class="delete" @click.stop="toggleFavorite(item.ID)">
+                <i class="fas fa-trash-alt"></i>
+              </div>
+            </div>
+          </li>
+        </template>
+      </ul>
     </div>
 
     <div class="message_container">
@@ -506,11 +604,10 @@
     <div class="confirm" v-if="isConfirm">
       <div class="frame">
         <div class="border"></div>
-        <i class="fa fa-check-circle fa-2x" aria-hidden="true"></i>
-        <div class="message"> 訂單完成，按確定前往付款頁面 </div>
+        <i class="title_icon fa fa-check-circle fa-2x" aria-hidden="true"></i>
+        <div class="message"> 訂單完成，前往付款頁面 </div>
         <div class="buttonGroup">
-          <!-- <div class="button cancel" @click="clearCarts(); isConfirm = false;"> 取消 </div> -->
-          <div class="button determine" @click="toPay()"> 確定 </div>
+          <div class="button determine" @click="isConfirm = false; toPay()"> 確定 </div>
         </div>
       </div>
     </div>
@@ -518,7 +615,7 @@
     <div class="confirm" v-if="isConfirm2">
       <div class="frame">
         <div class="border"></div>
-        <i class="fa fa-question-circle fa-2x" aria-hidden="true"></i>
+        <i class="title_icon fa fa-question-circle fa-2x" aria-hidden="true"></i>
         <div class="message"> 該mail已使用過折扣碼，按確定取消折扣碼優惠直接完成訂單，按取消重新輸入email或折扣碼 </div>
         <div class="buttonGroup">
           <div class="button cancel" @click=" isConfirm2 = false;"> 取消 </div>
@@ -530,16 +627,126 @@
     <div class="confirm" v-if="isConfirm3">
       <div class="frame">
         <div class="border"></div>
-        <i class="fa fa-check-circle fa-2x" aria-hidden="true"></i>
+        <i class="title_icon fa fa-check-circle fa-2x" aria-hidden="true"></i>
         <div class="message"> 
           <div> {{store.SelfAtmBankId}} {{bank[store.SelfAtmBankId]}}</div>
           <div class="bank_account">
             <input type="text" id="copy_input" readonly v-model="store.SelfAtmId">
-            <div class="copy" @click="copy(store.SelfAtmId)"> <i class="fas fa-copy"></i> </div>
+            <div class="copy" @click="copy(store.SelfAtmId, '#copy_input')"> <i class="fas fa-copy"></i> </div>
+          </div>
+        </div>
+        <div class="tip">
+          <i class="fas fa-exclamation-circle"></i>
+          請在匯款成功後前往 <div class="a" @click="urlPush('/order.html', true)"> 訂單列表 </div>
+          輸入匯款帳戶末6碼，工作人員確認後將儘快為您安排出貨
+        </div>
+
+        <div class="buttonGroup">
+          <div class="button determine" @click="isConfirm3 = false"> 確定 </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="confirm" v-if="isConfirm4">
+      <div class="frame">
+        <div class="border"></div>
+        <i class="title_icon fa fa-check-circle fa-2x" aria-hidden="true"></i>
+        <div class="message"> 
+          訂單完成，請問是否要註冊成為會員
+        </div>
+        <div class="buttonGroup">
+          <div class="button cancel" @click="isConfirm4 = false; toPay()"> 否，前往付款頁面 </div>
+          <div class="button determine" @click="isConfirm4 = false; auto_info();isConfirm5 = true"> 是，填寫註冊資料 </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="confirm" v-if="isConfirm5">
+      <div class="frame">
+        <div class="border"></div>
+        <i class="title_icon fas fa-registered"></i>
+        <div class="form">
+          <div class="input_container" :class="{ error: r_name.is_error }">
+            <input type="text" readonly placeholder="* 請輸入姓名" v-model.trim="r_name.value" @blur="verify(r_name)">
+            <div class="error message">
+              <i class="error_icon fas fa-exclamation-circle"></i> {{  r_name.message  }}
+            </div>
+          </div>
+          <div class="input_container" :class="{ error: r_mail.is_error }">
+            <input type="text" readonly placeholder="* 請輸入電子信箱" v-model.trim="r_mail.value" @blur="verify(r_mail)">
+            <div class="error message">
+              <i class="error_icon fas fa-exclamation-circle"></i> {{  r_mail.message  }}
+            </div>
+          </div>
+          <div class="input_container" :class="{ error: r_birthday.is_error }">
+            <date-picker placeholder="* 請輸入生日" format="YYYY/MM/DD" v-model="r_birthday.value" @close="verify(r_birthday)"
+              @clear="verify(r_birthday)"></date-picker>
+            <div class="error message">
+              <i class="error_icon fas fa-exclamation-circle"></i> {{  r_birthday.message  }}
+            </div>
+          </div>
+          <div class="radio_container">
+            <div class="radio">
+              <input type="radio" name="sex" id="male" value="male" v-model="sex">
+              <div class="circle" v-show="sex == 'male'"> </div>
+            </div>
+            <label for="male"> 男 </label>
+            <div class="radio">
+              <input type="radio" name="sex" id="female" value="female" v-model="sex">
+              <div class="circle" v-show="sex == 'female'"> </div>
+            </div>
+            <label for="female"> 女 </label>
+          </div>
+          <div class="input_container" :class="{ error: r_account.is_error }">
+            <input type="number" readonly placeholder="* 請輸入手機(帳號)" v-model.trim="r_account.value" @blur="verify(r_account)">
+            <div class="error message">
+              <i class="error_icon fas fa-exclamation-circle"></i> {{  r_account.message  }}
+            </div>
+          </div>
+          <div class="input_container verify" :class="{ error: r_verify_code.is_error }">
+            <input type="text" placeholder="* 請輸入驗證碼" v-model.trim="r_verify_code.value" @blur="verify(r_verify_code)"> 
+            <div class="button" @click="send_verify_code"> 獲取驗證碼 <span v-if="second > 0"> ( {{second}}s ) </span> </div>
+            <div class="error message">
+              <i class="error_icon fas fa-exclamation-circle"></i> {{  r_verify_code.message  }}
+            </div>
+          </div>
+          <div class="input_container" :class="{ error: r_password.is_error }">
+            <input :type="r_password_type" placeholder="* 請輸入密碼" v-model.trim="r_password.value"
+              @blur="verify(r_password)" autocomplete="false">
+            <div class="eyes_icon"
+              @click.stop="r_password_type == 'password' ? r_password_type = 'text' : r_password_type = 'password'">
+              <i class="fas fa-eye" v-if="r_password_type == 'text'"></i>
+              <i class="fas fa-eye-slash" v-else></i>
+            </div>
+            <div class="error message">
+              <i class="error_icon fas fa-exclamation-circle"></i> {{  r_password.message  }}
+            </div>
+          </div>
+          <div class="input_container" :class="{ error: r_confirm_password.is_error }">
+            <input :type="r_confirm_password_type" placeholder="* 請再次輸入密碼" v-model.trim="r_confirm_password.value"
+              @blur="verify(r_confirm_password)" autocomplete="false">
+            <div class="eyes_icon"
+              @click.stop="r_confirm_password_type == 'password' ? r_confirm_password_type = 'text' : r_confirm_password_type = 'password'">
+              <i class="fas fa-eye" v-if="r_confirm_password_type == 'text'"></i>
+              <i class="fas fa-eye-slash" v-else></i>
+            </div>
+            <div class="error message">
+              <i class="error_icon fas fa-exclamation-circle"></i> {{  r_confirm_password.message  }}
+            </div>
+          </div>
+
+          <div class="agree_container">
+            <div class="checkbox">
+              <input type="checkbox" name="" id="agree" v-model="r_is_agree">
+              <i class="fas fa-check" v-show="r_is_agree"></i>
+            </div>
+            <label for="agree"> 我已同意 </label>
+            <div class="modal_text" @click="is_userModal = true"> 會員條款與隱私權政策 </div>
           </div>
         </div>
         <div class="buttonGroup">
-          <div class="button determine" @click="isConfirm3 = false"> 確定 </div>
+          <div class="button cancel" @click="isConfirm5 = false; toPay()"> 前往付款頁面 </div>
+          <div class="button determine" :class="{ disabled: !r_is_agree }" @click="register"> 註冊 </div>
         </div>
       </div>
     </div>
@@ -585,8 +792,8 @@
 
             <div class="content">
               <div class="title">{{item.Name}}</div>
-              <div class="price" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{item.Price}}</div>
-              <div class="price">NT$ {{item.NowPrice}}</div>
+              <div class="price" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{numberThousands(item.Price)}}</div>
+              <div class="price">NT$ {{numberThousands(item.NowPrice)}}</div>
               <!-- 有規格 -->
               <template v-if="item.specArr">
                 <div class="spec">
@@ -669,11 +876,26 @@
         </ul>
       </div>
     </div>
+
+    <div class="user_modal_container" v-if="is_userModal">
+      <div class="close" @click="is_userModal = false;">
+        <i class="fas fa-times"></i>
+      </div>
+      <div class="user_modal">
+        <div class="content" v-html="unescapeHTML(site.TermsNotices)"></div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import DatePicker from 'vue2-datepicker';
+import 'vue2-datepicker/index.css';
+
 export default {
+  components: {
+    DatePicker
+  },
   data() {
     return {
       site: {},
@@ -681,9 +903,16 @@ export default {
       categories: [],
       products: [],
 
+      //
+      user_account: '',
+      userInfo: {},
+
       productCompleted: false,
 
       carts: [],
+
+      favorite: {},
+      is_favorite_hover: false,
 
       category: '',
       arrangement: 0,
@@ -719,6 +948,7 @@ export default {
       isSame: false,
       transport: '0',// 一般宅配2 到店自取3
       pay_method: '0',
+      is_click_finish_order: false,
       info: {
         purchaser_email:'',
         purchaser_name:'',
@@ -736,7 +966,108 @@ export default {
       isConfirm: false,
       isConfirm2: false,
       isConfirm3: false,
+      isConfirm4: false,
+      isConfirm5: false,
+
+      is_userModal: false,
+
       payResult: {},
+
+      // register
+      r_name: {
+        value: '',
+        rules: {
+          required: {
+            message: '此項目為必填'
+          },
+        },
+        is_error: false,
+        message: '',
+      },
+      r_mail: {
+        value: '',
+        rules: {
+          required: {
+            message: '此項目為必填'
+          },
+          mail: {
+            message: 'email格式不符',
+          }
+        },
+        is_error: false,
+        message: '',
+      },
+      r_birthday: {
+        value: '',
+        rules: {
+          required: {
+            message: '此項目為必填'
+          },
+        },
+        is_error: false,
+        message: '',
+      },
+      sex: 'male',
+      r_account: {
+        value: '',
+        rules: {
+          required: {
+            message: '此項目為必填'
+          },
+          cellphone: {
+            message: '手機格式錯誤'
+          }
+        },
+        is_error: false,
+        message: '',
+      },
+      r_verify_code: {
+        value: '',
+        rules: {
+          required: {
+            message: '此項目為必填'
+          },
+          length: {
+            min: 6,
+            max: 6,
+            message: '驗證碼為6位',
+          }
+        },
+        is_error: false,
+        message: '',
+      },
+      second: 0,
+      r_password: {
+        value: '',
+        rules: {
+          required: {
+            message: '此項目為必填'
+          },
+          length: {
+            min: 8,
+            message: '不得少於8位',
+          }
+        },
+        is_error: false,
+        message: '',
+      },
+      r_confirm_password: {
+        value: '',
+        rules: {
+          required: {
+            message: '此項目為必填'
+          },
+          confirm: {
+            password: 'r_password',
+            message: '密碼不正確',
+          }
+        },
+        is_error: false,
+        message: '',
+      },
+      r_password_type: 'password',
+      r_confirm_password_type: 'password',
+      r_is_agree: false,
 
       //
       bank: '',
@@ -753,6 +1084,13 @@ export default {
       allPicUlleft: 0,
       liWidth: 0,
       picWidth: 0,
+
+      //
+      total_bonus: 0,
+      bonus_percent: 0,
+      bonus_array: [],
+      use_bonus: 0,
+      is_use_bonus: false,
 
       api: '',
       protocol: ''
@@ -820,6 +1158,10 @@ export default {
       })
       return arr;
     },
+
+    member_bonus() {
+      return Math.floor(this.total.Sum * 1 * (this.bonus_percent / 100))
+    }
   },
   methods: {
     login(func, arr){
@@ -846,14 +1188,12 @@ export default {
     getSite(){
       const vm = this;
 
-      localStorage.setItem('isGetSite', false);
       const url = `${vm.protocol}//${vm.api}/interface/store/GetSite`;
       this.$http.get(url).then((res) => {
         if(res.data.errormessage){
           vm.login(vm.getSite);
           return;
         }
-        localStorage.setItem('isGetSite', true);
 
         vm.site = res.data.data[0];
         if(!vm.site){
@@ -861,10 +1201,18 @@ export default {
         }
 
         localStorage.setItem('site', JSON.stringify(vm.site));
+        
+        vm.user_account = localStorage.getItem('user_account');
+        
+        if(vm.site.FeedbackFund) {
+          vm.bonus_array = JSON.parse(vm.site.FeedbackFund);
+        }
 
         vm.getStore();
         vm.getCategories();
         vm.getProducts('', true);
+
+        if(vm.user_account) vm.getUserInfo();
       })
       .catch((err) => { 
         console.error(err);
@@ -964,31 +1312,36 @@ export default {
           vm.$set(p, 'isShowOption', 0);
         }
 
+        vm.getFavorite();
+
         vm.category = '0';
 
         //
         let RtnMsg = location.href.split('RtnMsg=')[1];
-        if(RtnMsg !== undefined){
-          if(RtnMsg == 'Succeeded'){
-            localStorage.removeItem(`${vm.site.Site}@carts`);
-            vm.showMessage('付款成功', true)
-          }
+        if(RtnMsg && RtnMsg == 'Succeeded'){
+          window.history.replaceState({}, document.title, "/cart/");
+          localStorage.removeItem(`${vm.site.Name}@carts`);
+          vm.showMessage('付款成功', true)
         }
-        window.history.replaceState({}, document.title, "/cart/");
 
         vm.getCarts(type, '1');
 
         // 
-        if(isOpen){
-          let id = location.href.split('?id=')[1] || -1;
-          if(id > -1){
-            for(let i = 0; i < vm.products.length; i++){
-              if(vm.products[i].ID == id){
-                vm.showSelect( vm.products[i], i);
-              }
+        let id = location.href.split('id=')[1];
+        if(id){
+          for(let i = 0; i < vm.products.length; i++){
+            if(vm.products[i].ID == id){
+              window.history.replaceState({}, document.title, "/cart/");
+              vm.showSelect( vm.products[i], i);
             }
           }
+        }
+
+        //
+        let is_open_carts = location.href.split('open_carts=')[1];
+        if(is_open_carts){
           window.history.replaceState({}, document.title, "/cart/");
+          vm.showPage = 'cart'
         }
 
         vm.$nextTick(() => {
@@ -998,6 +1351,56 @@ export default {
       .catch((err) => {
         console.error(err);
         vm.login(vm.getProducts, [type]);
+      });
+    },
+    getUserInfo(){
+      let vm = this;
+
+      const url = `${vm.protocol}//${vm.api}/interface/WebMember/GetMemberInfo`;
+      let formData = new FormData();
+      formData.append("storeid", vm.site.Name);
+      formData.append("phone", vm.user_account);
+      const config = {
+        headers: {
+          // 'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'multipart/form-data'
+        }
+      };
+      this.$http.post(url, formData, config).then((res) => {
+        if(res.data.status){
+          vm.userInfo = res.data.datas[0][0];
+
+          vm.total_bonus = vm.userInfo.Wallet * 1
+
+          vm.info.purchaser_email = vm.userInfo.Email;
+          vm.info.purchaser_name = vm.userInfo.Name;
+          vm.info.purchaser_number = vm.userInfo.Phone;
+          vm.total_bonus = vm.userInfo.Wallet;
+
+          let address_obj = {};
+          let address_arr = vm.userInfo.Adress.split('_#_');
+          address_arr.length = address_arr.length - 1;
+          for(let address of address_arr){
+            let item = address.split('_ _');
+            address_obj[item[0]] = {
+              id: item[0],
+              address: `${item[1]} ${item[2]} ${item[3]}`,
+            }
+          }
+          vm.userInfo.address_obj = address_obj;
+        }
+        else {
+          if( res.data.msg == '請先登入會員' ||
+              res.data.msg == '閒置逾時，請重新登入' ||
+              res.data.msg == '已登出，請重新登入'
+          ) {
+            localStorage.removeItem('user_account');
+            vm.user_account = '';
+          }
+        }
+      })
+      .catch((err) => { 
+        console.error(err);
       });
     },
     
@@ -1053,7 +1456,7 @@ export default {
     },
     
     getCarts(type, type2){ // type '0' '1'getTotal type2 '0' '1'
-      this.carts = localStorage.getItem(`${this.site.Site}@carts`);
+      this.carts = localStorage.getItem(`${this.site.Name}@carts`);
       this.carts = this.carts ? JSON.parse(this.carts) : [];
 
       let isGetTotal = 0;
@@ -1219,8 +1622,122 @@ export default {
       }
     },
     setCarts(){
-      localStorage.setItem(`${this.site.Site}@carts`, JSON.stringify(this.carts));
+      localStorage.setItem(`${this.site.Name}@carts`, JSON.stringify(this.carts));
       this.computedCartsLength();
+    },
+
+    //
+    getFavorite() {
+      let vm = this;
+
+      vm.user_account = localStorage.getItem('user_account');
+      if(vm.user_account) {
+        let formData = new FormData();
+        formData.append("storeid", vm.site.Name);
+        formData.append("phone", vm.user_account);
+
+        let xhr = new XMLHttpRequest();
+        xhr.withCredentials = true;
+        xhr.open('post',`${vm.protocol}//${vm.api}/interface/WebMember/FavoriteInfo`, true);
+        xhr.send(formData);
+        xhr.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            if(!JSON.parse(xhr.response).status) {
+              if(JSON.parse(xhr.response).msg == '請先登入會員') {
+                localStorage.removeItem('user_account');
+                vm.getFavorite()
+              }
+              else {
+                vm.favorite = {};
+              }
+              return
+            }
+
+            let favorite_list = JSON.parse(xhr.response).datas[0];
+            vm.favorite = {};
+            for(let favorite of favorite_list){
+              let id = favorite.Product;
+              let index = vm.products.map((item) => item.ID).indexOf('' + id);
+              if(index > -1){
+                vm.$set(vm.favorite, id, vm.products[index])
+              }
+            }
+          }
+        }
+      }
+      else {
+        vm.favorite = JSON.parse(localStorage.getItem(`${vm.site.Name}@favorite`)) || {};
+        
+        for(let key in vm.favorite) {
+          let favorite = vm.favorite[key];
+          let index = vm.products.map((item) => item.ID).indexOf(favorite.ID)
+          favorite = vm.products[index];
+        }
+      }
+    },
+    toggleFavorite(id) {
+      let vm = this;
+
+      if(vm.user_account) {
+        // delete
+        if(vm.favorite[id]){
+          let formData = new FormData();
+          formData.append("storeid", vm.site.Name);
+          formData.append("phone", vm.user_account);
+          formData.append("productid[]", id);
+
+          let xhr = new XMLHttpRequest();
+          xhr.withCredentials = true;
+          xhr.open('post',`${vm.protocol}//${vm.api}/interface/WebMember/DeleteFavorite`, true);
+          xhr.send(formData);
+          xhr.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              if(!JSON.parse(xhr.response).status) {
+                if(JSON.parse(xhr.response).msg == '請先登入會員') {
+                  localStorage.removeItem('user_account');
+                }
+              }
+              vm.getFavorite();
+            }
+          }
+        }
+        // add
+        else {
+          let formData = new FormData();
+          formData.append("storeid", vm.site.Name);
+          formData.append("phone", vm.user_account);
+          formData.append("productid[]", id);
+
+          let xhr = new XMLHttpRequest();
+          xhr.withCredentials = true;
+          xhr.open('post',`${vm.protocol}//${vm.api}/interface/WebMember/AddFavorite`, true);
+          xhr.send(formData);
+          xhr.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              if(!JSON.parse(xhr.response).status) {
+                if(JSON.parse(xhr.response).msg == '請先登入會員') {
+                  localStorage.removeItem('user_account');
+                }
+              }
+              vm.getFavorite();
+            }
+          }
+        }
+      }
+      else {
+        if(vm.favorite[id]){
+          vm.$delete(vm.favorite, id)
+        }
+        else {
+          vm.products.forEach((item) => {
+            if(item.ID === id){
+              vm.$set(vm.favorite, id, item)
+            }
+          })
+        }
+
+        localStorage.setItem(`${vm.site.Name}@favorite`, JSON.stringify(vm.favorite))
+      }
     },
 
     discount(){
@@ -1273,6 +1790,7 @@ export default {
     },
     
     createCartsStr(){
+      let vm = this;
       let o = {
         'id': '',
         'price': '',
@@ -1285,12 +1803,13 @@ export default {
         'ItemName': '',
       };
       this.carts.forEach(function(c,i){
+        let c_NowPrice = vm.numberThousands(c.NowPrice);
         if(c.buyQty){
           o.id += ( o.id ==='' ? `${c.ID}`  : `,${c.ID}` );
           o.price += ( o.price ==='' ? `${c.NowPrice}`  : `,${c.NowPrice}` );
           o.qry += ( o.qry ==='' ? `${c.buyQty}`  : `,${c.buyQty}` );
           o.ItemName +=  o.ItemName ? '#' : '';
-          o.ItemName += `${c.Name} NT$${c.NowPrice} x ${c.buyQty}`;
+          o.ItemName += `${c.Name} NT$${c_NowPrice} x ${c.buyQty}`;
         }
         else{
           for(let j = 0; j < c.specArr.length; j ++){
@@ -1300,7 +1819,7 @@ export default {
               o.specificationqty += ( o.specificationqty ==='' ? `${c.specArr[j].buyQty}`  : `,${c.specArr[j].buyQty}` );
 
               o.ItemName +=  o.ItemName ? '#' : '';
-              o.ItemName += `${c.Name} (${c.specArr[j].Name}) NT$${c.NowPrice} x ${c.specArr[j].buyQty}`;
+              o.ItemName += `${c.Name} (${c.specArr[j].Name}) NT$${c_NowPrice} x ${c.specArr[j].buyQty}`;
             }
           }
         }
@@ -1308,6 +1827,7 @@ export default {
         if(c.addPrice){
           for( let j = 0; j < c.addPrice.length; j++){
             let item = c.addPrice[j];
+            let item_Price = vm.numberThousands(item.Price);
             if(item.Qty || item.Qty == 0){
               if(item.Qty != 0){
                 o.additionalid += ( o.additionalid === "" ? `${item.ID}`  : `,${item.ID}` );
@@ -1315,7 +1835,7 @@ export default {
                 o.additionalqry += ( o.additionalqry === "" ? `${item.Qty}`  : `,${item.Qty}` );
                 
                 o.ItemName +=  o.ItemName ? '#' : '';
-                o.ItemName += `加價購 ${item.Name} NT$${item.Price} x ${item.buyQty}`;
+                o.ItemName += `加價購 ${item.Name} NT$${item_Price} x ${item.buyQty}`;
               }
             }
             else {
@@ -1326,7 +1846,7 @@ export default {
                   o.specificationqty += ( o.specificationqty ==='' ? `${item.specArr[k].buyQty}`  : `,${item.specArr[k].buyQty}` );
                 
                   o.ItemName +=  o.ItemName ? '#' : '';
-                  o.ItemName += `加價購 ${item.Name} (${item.specArr[k].Name}) NT$${item.Price} x ${item.specArr[k].buyQty}`;
+                  o.ItemName += `加價購 ${item.Name} (${item.specArr[k].Name}) NT$${item_Price} x ${item.specArr[k].buyQty}`;
                 }
               }
             }
@@ -1343,7 +1863,7 @@ export default {
       }
       this.site = JSON.parse(localStorage.getItem('site')) || [] ;
       const url = `${vm.protocol}//${vm.api}/interface/store/GetProductTotal?`;
-      const params = `id=${o.id}&qry=${o.qry}&additionalid=${o.additionalid}&additionalqry=${o.additionalqry}&specificationid=${o.specificationid}&specificationqty=${o.specificationqty}&code=${vm.useCodeSuccess}&shipping=${vm.transport == 0 ? 0 : vm.transport * 1 + 1}&type=${type}&Preview=${this.site.Preview}`;
+      const params = `id=${o.id}&qry=${o.qry}&additionalid=${o.additionalid}&additionalqry=${o.additionalqry}&specificationid=${o.specificationid}&specificationqty=${o.specificationqty}&code=${vm.useCodeSuccess}&shipping=${vm.transport == 0 ? 0 : vm.transport * 1 + 1}&type=${type}&Preview=${this.site.Preview}&memberWallet=${this.is_use_bonus ? this.use_bonus : 0}`;
       const config = {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -1359,6 +1879,14 @@ export default {
         }
 
         vm.total = res.data.data[0];
+
+        for(let item of vm.bonus_array) {
+          if(vm.total.Sum >= item.lower) {
+            vm.bonus_percent = item.shipping;
+          }
+        }
+
+        vm.use_bonus = (Math.min(vm.total_bonus, vm.use_bonus, vm.total.Total) != vm.use_bonus ? Math.min(vm.total_bonus, vm.use_bonus, vm.total.Total) : vm.use_bonus * 1)
 
       }).catch((err) => {
         console.error(err)
@@ -1382,8 +1910,9 @@ export default {
       if(vm.orderIng){
         return;
       } else {
+        vm.is_click_finish_order = true;
         vm.$validator.validate().then((result) => {
-          if (result && vm.transport !== '0' && (vm.store.Receipt === '0' || (vm.store.Receipt === '1' && (vm.invoice_type==='1' || (vm.invoice_type==='2' && (vm.invoice_title!=='' && vm.invoice_uniNumber!=='' )))))){
+          if (result && vm.transport !== '0' && vm.pay_method !== '0' && (vm.store.Receipt === '0' || (vm.store.Receipt === '1' && (vm.invoice_type==='1' || (vm.invoice_type==='2' && (vm.invoice_title!=='' && vm.invoice_uniNumber!=='' )))))){
             if ( vm.site.Preview == 2 ){
               vm.showMessage( '預覽模式不開放完成訂單', false);
               return;
@@ -1399,19 +1928,19 @@ export default {
       this.carts = [];
       this.setCarts();
 
-      this.info = {
-        purchaser_email:'',
-        purchaser_name:'',
-        purchaser_number:'',
-        receiver_name:'',
-        receiver_number:'',
-        receiver_address:'',
-        info_message:''
-      };
+      // this.info = {
+      //   purchaser_email:'',
+      //   purchaser_name:'',
+      //   purchaser_number:'',
+      //   receiver_name:'',
+      //   receiver_number:'',
+      //   receiver_address:'',
+      //   info_message:''
+      // };
 
-      this.invoice_type = '0';
-      this.invoice_title = '';
-      this.invoice_uniNumber = '';
+      // this.invoice_type = '0';
+      // this.invoice_title = '';
+      // this.invoice_uniNumber = '';
 
       this.discountCode = '';
       this.useCodeSuccess = '';
@@ -1433,7 +1962,7 @@ export default {
 
       // LinePay
       if(this.pay_method == 'LinePay'){
-        location.href = this.payResult.payUrl;
+        this.urlPush(this.payResult.payUrl)
       }
       // company account
       else if(this.pay_method == 'ATM' && this.store.ATM == 1){
@@ -1455,6 +1984,185 @@ export default {
           ECPay_form.submit();
         })
       }
+    },
+
+    // register
+    required_verify(item) {
+      if(!item.hasOwnProperty('value')){
+        if (!item.city || !item.district || !item.detail ) {
+          item.is_error = true;
+          item.message = item.rules.required.message;
+          return false;
+        }
+        else {
+          item.is_error = false;
+          item.message = '';
+          return true;
+        }
+      }
+      else {
+        if (!item.value) {
+          item.is_error = true;
+          item.message = item.rules.required.message;
+          return false;
+        }
+        else {
+          item.is_error = false;
+          item.message = '';
+          return true;
+        }
+      }
+    },
+    cellphone_verify(item) {
+      let rep = /^(09)[0-9]{8}$/;
+      if (!rep.test(item.value)) {
+        item.is_error = true;
+        item.message = item.rules.cellphone.message;
+        return false;
+      }
+      else {
+        item.is_error = false;
+        item.message = '';
+        return true;
+      }
+    },
+    length_verify(item) {
+      if (item.value.length < item.rules.length.min || item.value.length > item.rules.length.max) {
+        item.is_error = true;
+        item.message = item.rules.length.message;
+        return false;
+      }
+      else {
+        item.is_error = false;
+        item.message = '';
+        return true;
+      }
+    },
+    mail_verify(item) {
+      let rep = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+      if (!rep.test(item.value)) {
+        item.is_error = true;
+        item.message = item.rules.mail.message;
+        return false;
+      }
+      else {
+        item.is_error = false;
+        item.message = '';
+        return true;
+      }
+    },
+    confirm_verify(item) {
+      if (item.value != this[item.rules.confirm.password].value) {
+        item.is_error = true;
+        item.message = item.rules.confirm.message;
+        return false;
+      }
+      else {
+        item.is_error = false;
+        item.message = '';
+        return true;
+      }
+    },
+    send_verify_code(){
+      if(!this.verify(this.r_account) || this.second > 0){
+        return
+      }
+
+      let vm = this;
+
+      let formData = new FormData();
+      formData.append("phone", this.r_account.value.trim());
+      formData.append("storeName", this.store.Name);
+      formData.append("storeid", this.site.Name);
+
+      let xhr = new XMLHttpRequest();
+      xhr.withCredentials = true;
+      xhr.open('POST', `${vm.protocol}//${vm.api}/interface/WebMember/SendValidateMessage`, true);
+      xhr.send(formData);
+      xhr.onreadystatechange = function(){
+        if (this.readyState == 4 && this.status == 200) {
+          if(JSON.parse(xhr.response).status){
+            vm.second = 300;
+            let interval =  setInterval(() => {
+              vm.second -= 1;
+              if(vm.second < 1){
+                clearInterval(interval);
+              }
+            }, 1000)
+            vm.showMessage(JSON.parse(xhr.response).msg, true)
+          } else {
+            vm.showMessage(JSON.parse(xhr.response).msg, false)
+          }
+        }
+      }
+    },
+    verify(...arr) {
+      let is_valid = true;
+      for (let item of arr) {
+        for (let rule in item.rules) {
+          if (!this[`${rule}_verify`](item)) {
+            is_valid = false;
+            break
+          }
+        }
+      }
+      return is_valid;
+    },
+    register(){
+      if (!this.r_is_agree) {
+        return
+      }
+      if (!this.verify(this.r_name, this.r_mail, this.r_birthday, this.r_account, this.r_verify_code, this.r_password, this.r_confirm_password)) {
+        return
+      }
+
+      let vm = this;
+      
+      let formData = new FormData();
+      formData.append("storeid", this.site.Name);
+      formData.append("phone", this.r_account.value);
+      formData.append("validate", this.r_verify_code.value);
+      formData.append("password", this.r_password.value);
+      formData.append("name", this.r_name.value);
+      let b = this.r_birthday.value
+      let birthday = `${b.getFullYear()}/${b.getMonth() + 1 < 10  ? '0' : '' }${b.getMonth() + 1}/${b.getDate() < 10  ? '0' : '' }${b.getDate()}`
+      formData.append("birthday", birthday);
+      formData.append("gender", this.sex == 'male' ? 1 : 0 );
+      formData.append("email", this.r_mail.value);
+      formData.append("recommender", '');
+
+      const config = {
+        headers: {
+          // 'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'multipart/form-data'
+        }
+      };
+
+      const url = `${vm.protocol}//${vm.api}/interface/WebMember/MemberRegister`;
+      this.$http.post(url, formData, config).then((res) => {
+        if(res.data.errormessage){
+          return;
+        }
+        if(res.data.status){
+          vm.showMessage(res.data.msg, true)
+          setTimeout(function(){
+            vm.isConfirm5 = false; 
+            vm.toPay()
+          }, 3000)
+        }
+        else{
+          vm.showMessage(res.data.msg, false)
+        }
+      })
+      .catch((err) => { 
+        console.error(err);
+        vm.login(vm.register);
+      });
+    },
+    auto_info(){
+      this.r_account.value = this.info.purchaser_number;
+      this.r_name.value = this.info.purchaser_name;
+      this.r_mail.value = this.info.purchaser_email;
     },
     createOrder(){
       this.orderIng = true;
@@ -1495,10 +2203,13 @@ export default {
         formData.append('Total' , this.total.Sum * 1);
         formData.append('DiscountPrice' , this.total.DiscountCode*1);
         formData.append('DiscountCode' , this.useCodeSuccess);
-        formData.append('LogoUrl' , this.store.PayLogo);
+        formData.append('LogoUrl' , this.protocol + '//' + this.api + this.store.PayLogo);
         formData.append('Type' , this.invoice_type * 1);
         formData.append('Title' , this.invoice_title);
         formData.append('UniNumber' , this.invoice_uniNumber);
+
+        formData.append('MemberWallet' , this.use_bonus);
+        formData.append('MemberBonus' , this.member_bonus);
 
         formData.append('Preview' , this.site.Preview);
       }
@@ -1530,7 +2241,15 @@ export default {
           vm.orderIng = false;
 
           vm.payResult = res.data;
-          vm.isConfirm = true;
+          // 沒有會員
+          if(!vm.user_account){
+            vm.isConfirm4 = true;
+          } 
+          // 有會員
+          else {
+            vm.isConfirm = true;
+            vm.getUserInfo();
+          }
         }
       })
       .catch((err) => {
@@ -1901,7 +2620,6 @@ export default {
       vm.getTotal(0);
     },
 
-
     // 有規格
     // carts.buyQty change => update products => set carts
     // select_spec_id selectSpecItem specArr (buyQty)
@@ -2219,32 +2937,11 @@ export default {
       },200);
     },
 
-    // postProduct: 點擊商品，後端
-    postProduct(id){
-      const vm = this;
-      localStorage.setItem('isActiveUser', 1);
-
-      const url = `${vm.protocol}//${vm.api}/interface/store/PostProduct`;
-      
-      let formData = new FormData();
-      formData.append('id' , id);
-
-      const config = {
-        headers: {
-          // 'Content-Type': 'application/x-www-form-urlencoded'
-          'Content-Type': 'multipart/form-data'
-        }
-      };
-      vm.$http.post(url, formData, config).then((res) => {
-        if(res.data.errormessage){
-        }
-        else{
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        // vm.login(vm.getAmount, [type, id, func, arr]);
-      });
+    // 
+    showFavorite(id) {
+      let vm = this;
+      let index = vm.products.map((item) => item.ID).indexOf(id);
+      vm.showSelect( vm.products[index], index)
     },
 
     // this.showPage = 'selectProduct'; 
@@ -2253,9 +2950,8 @@ export default {
       this.selectIndex = index; 
       this.showPage = 'selectProduct'; 
       this.getAddPrice(item.ID, item, '1'); 
-      this.postProduct(item.ID); 
       this.allPicUlleft = 0;
-    }, 
+    },
 
     // carts step
     stepOneToTwo(){
@@ -2282,10 +2978,11 @@ export default {
 
     numberInput(item){
       let type = item.buyQty === undefined ? 'Qty' : 'buyQty';
-      this.$set(item, type, item[type].replace(/[^\d]/g,''))
+      let str = item[type].toString();
+      this.$set(item, type, str.replace(/[^\d]/g, '') )
     },
     numberInput_2(event){
-      event.srcElement.value = event.srcElement.value.replace(/[^\d]/g,'');
+      event.srcElement.value = event.srcElement.value.replace(/[^\d]/g,'')
     },
 
     // select
@@ -2420,12 +3117,28 @@ export default {
       return a.replace(/↵/g, '<br>');
     },
 
-    urlPush(url) {
-      window.location.href = url;
+    // 
+    numberThousands(number) {
+      return String(number).replace( /(\d)(?=(?:\d{3})+$)/g, '$1,')
     },
 
-    copy(text){
-      let copy_input = document.querySelector('#copy_input');
+    // 
+    click_share_link() {
+      this.copy( `${this.protocol}//${this.api}/cart/?id=${this.selectProduct.ID}`, '#copy_input2');
+      this.showMessage('複製分享連結', true);
+    },
+
+    urlPush(url, is_open) {
+      if(is_open) {
+        window.open(url);
+      } 
+      else {
+        window.location.href = url;
+      }
+    },
+
+    copy(text, selector){
+      let copy_input = document.querySelector(selector);
       copy_input.value = text;
       copy_input.select();
       document.execCommand('copy');
