@@ -253,7 +253,7 @@
                 <option value="ATM" v-if="store.ATM != 0" selected>ATM/網路ATM</option>
                 <option value="PayCode" v-if="store.PayCode != 0" selected>超商代碼</option>
                 <option value="PayBarCode" v-if="store.PayBarCode != 0" selected>超商條碼</option>
-                <option value="PayOnDelivery" v-if="store.PayOnDelivery != 0" selected>超商取貨付款</option>
+                <!-- <option value="PayOnDelivery" v-if="store.PayOnDelivery != 0" selected>超商取貨付款</option> -->
                 <option value="LinePay" v-if="store.LinePay == 1" selected>LINE Pay</option>
               </select>
               <div class="prompt" v-if="is_click_finish_order && pay_method === '0'"> 請選擇支付方式 </div>
@@ -2241,15 +2241,21 @@ export default {
           vm.orderIng = false;
 
           vm.payResult = res.data;
-          // 沒有會員
-          if(!vm.user_account){
-            vm.isConfirm4 = true;
-          } 
-          // 有會員
-          else {
+
+          // 沒有開啟會員功能
+          if(!(vm.site.MemberFuction * 1)){
             vm.isConfirm = true;
-            vm.getUserInfo();
-          }
+          } 
+          else {
+            // 沒有登入
+            if(!vm.user_account){
+              vm.isConfirm4 = true;
+            } 
+            // 登入
+            else {
+              vm.isConfirm = true;
+            }
+          } 
         }
       })
       .catch((err) => {
