@@ -243,18 +243,21 @@
                 <option value="0" disabled >=== 請選擇配送方式 ===</option>
                 <option value="1" v-if="store.Shipping === '1' || store.Shipping === '2'" selected>一般宅配</option>
                 <option value="2" v-if="store.Shipping === '1' || store.Shipping === '3'" selected>到店自取</option>
+                <!-- 7-11 貨到付款 test -->
+                <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 貨到付款 </option>
               </select>
               <div class="prompt" v-if="is_click_finish_order && transport === '0'"> 請選擇配送方式 </div>
 
               <label for="pay_method">支付方式</label>
               <select id="pay_method" v-model="pay_method" name="支付方式" :class="{inputError:is_click_finish_order && pay_method === '0'}">
                 <option value="0" disabled >=== 請選擇支付方式 ===</option>
-                <option value="CreditCard" v-if="store.CreditCard != 0" selected>信用卡</option>
-                <option value="ATM" v-if="store.ATM != 0" selected>ATM/網路ATM</option>
-                <option value="PayCode" v-if="store.PayCode != 0" selected>超商代碼</option>
-                <option value="PayBarCode" v-if="store.PayBarCode != 0" selected>超商條碼</option>
-                <!-- <option value="PayOnDelivery" v-if="store.PayOnDelivery != 0" selected>超商取貨付款</option> -->
-                <option value="LinePay" v-if="store.LinePay == 1" selected>LINE Pay</option>
+                <option value="CreditCard" v-if="(store.CreditCard != 0 && transport != 3)" selected>信用卡</option>
+                <option value="ATM" v-if="(store.ATM != 0 && transport != 3)" selected>ATM/網路ATM</option>
+                <option value="PayCode" v-if="(store.PayCode != 0 && transport != 3)" selected>超商代碼</option>
+                <option value="PayBarCode" v-if="(store.PayBarCode != 0 && transport != 3)" selected>超商條碼</option>
+                <!-- 7-11 貨到付款 test -->
+                <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport == 3)" selected> 7-11 貨到付款 </option>
+                <option value="LinePay" v-if="store.LinePay == 1 && transport != 3" selected>LINE Pay</option>
               </select>
               <div class="prompt" v-if="is_click_finish_order && pay_method === '0'"> 請選擇支付方式 </div>
 
@@ -272,6 +275,18 @@
                   </ul>
                 </div>
               </template>
+
+              <!-- 7-11 貨到付款 test -->
+              <!-- 之後改 store.PayOnDelivery == 1 -->
+              <template v-if="(transport == 3 && store.PayOnDelivery != 0)">
+                <label> 選擇門市 </label>
+                <div class="store_info">
+                  <div> 門市地址: {{ storeaddress }} </div>
+                </div>
+                <div class="button" @click="pickStore"> 搜尋門市 </div>
+                <div class="prompt" v-if="is_click_finish_order && storeaddress == ''"> 請選擇門市 </div>
+              </template>
+
               <label for="feedback">留言給我們</label>
               <textarea name="" id="feedback" cols="30" rows="5" placeholder="留言給我們" v-model="info.info_message" @input="info_message_input"></textarea>
               <div class="info_messageLength"> {{info.info_message.length}}/150 </div>
@@ -963,6 +978,8 @@ export default {
       invoice_uniNumber: '',
       orderIng: false,
 
+      storeaddress: '',
+
       isConfirm: false,
       isConfirm2: false,
       isConfirm3: false,
@@ -1316,7 +1333,7 @@ export default {
 
         vm.category = '0';
 
-        //
+        // RtnMsg
         let RtnMsg = location.href.split('RtnMsg=')[1];
         if(RtnMsg && RtnMsg == 'Succeeded'){
           window.history.replaceState({}, document.title, "/cart/");
@@ -1326,7 +1343,7 @@ export default {
 
         vm.getCarts(type, '1');
 
-        // 
+        // id
         let id = location.href.split('id=')[1];
         if(id){
           for(let i = 0; i < vm.products.length; i++){
@@ -1337,11 +1354,22 @@ export default {
           }
         }
 
-        //
+        // open_carts
         let is_open_carts = location.href.split('open_carts=')[1];
         if(is_open_carts){
           window.history.replaceState({}, document.title, "/cart/");
           vm.showPage = 'cart'
+        }
+
+        // 7-11 貨到付款 test
+        // storeaddress
+        let storeaddress = location.href.split('storeaddress=')[1];
+        if(storeaddress){
+          window.history.replaceState({}, document.title, "/cart/");
+          vm.showPage = 'cart'
+          vm.stepIndex = 2
+          vm.storeaddress = storeaddress
+          vm.returnInfo()
         }
 
         vm.$nextTick(() => {
@@ -1912,7 +1940,12 @@ export default {
       } else {
         vm.is_click_finish_order = true;
         vm.$validator.validate().then((result) => {
-          if (result && vm.transport !== '0' && vm.pay_method !== '0' && (vm.store.Receipt === '0' || (vm.store.Receipt === '1' && (vm.invoice_type==='1' || (vm.invoice_type==='2' && (vm.invoice_title!=='' && vm.invoice_uniNumber!=='' )))))){
+          if (result && 
+              vm.transport !== '0' && 
+              vm.pay_method !== '0' && 
+              (vm.store.Receipt === '0' || (vm.store.Receipt === '1' && (vm.invoice_type==='1' || (vm.invoice_type==='2' && (vm.invoice_title!=='' && vm.invoice_uniNumber!=='' ))))) &&
+              vm.storeaddress != ''
+              ){
             if ( vm.site.Preview == 2 ){
               vm.showMessage( '預覽模式不開放完成訂單', false);
               return;
@@ -2207,6 +2240,11 @@ export default {
         formData.append('Type' , this.invoice_type * 1);
         formData.append('Title' , this.invoice_title);
         formData.append('UniNumber' , this.invoice_uniNumber);
+
+        // 7-11 貨到付款 test
+        if(this.transport == 3){
+          formData.append('storeaddress' , this.storeaddress);
+        }
 
         formData.append('MemberWallet' , this.use_bonus);
         formData.append('MemberBonus' , this.member_bonus);
@@ -3134,10 +3172,50 @@ export default {
       this.showMessage('複製分享連結', true);
     },
 
+    // 7-11 貨到付款 test
+    pickStore() {
+      let order_info = {
+        isSame: this.isSame,
+        transport: this.transport,
+        pay_method: this.pay_method,
+        info: {
+          purchaser_email: this.info.purchaser_email,
+          purchaser_name: this.info.purchaser_name,
+          purchaser_number: this.info.purchaser_number,
+          receiver_name: this.info.receiver_name,
+          receiver_number: this.info.receiver_number,
+          info_message: this.info.info_message, 
+        },
+        invoice_type: this.invoice_type,
+        invoice_title: this.invoice_title,
+        invoice_uniNumber: this.invoice_uniNumber,
+      }
+      localStorage.setItem('order_info', JSON.stringify(order_info));
+      this.urlPush('https://emap.presco.com.tw/c2cemap.ashx?eshopid=870&&servicetype=1&url=https://jiajingplus.com.tw/interface/store/SpmarketAddress');
+    },
+
+    returnInfo() {
+      let order_info = JSON.parse(localStorage.getItem('order_info')) || {};
+      this.isSame = order_info.isSame
+      this.transport = order_info.transport
+      this.pay_method = order_info.pay_method
+      this.info = {
+        purchaser_email: order_info.info.purchaser_email,
+        purchaser_name: order_info.info.purchaser_name,
+        purchaser_number: order_info.info.purchaser_number,
+        receiver_name: order_info.info.receiver_name,
+        receiver_number: order_info.info.receiver_number,
+        info_message: order_info.info.info_message 
+      }
+      this.invoice_type = order_info.invoice_type
+      this.invoice_title = order_info.invoice_title
+      this.invoice_uniNumber = order_info.invoice_uniNumber
+    },
+
     urlPush(url, is_open) {
       if(is_open) {
         window.open(url);
-      } 
+      }
       else {
         window.location.href = url;
       }

@@ -1210,6 +1210,25 @@ input:focus, textarea:focus, select:focus{
           display: flex;
           flex-direction: column;
         }
+
+        .button{
+          height: 30px;
+          cursor: pointer;
+          border-radius: 5px;
+          color: white;
+          background-color:  #555;
+    
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        .button:hover{
+          background-color:  #222;
+        }
+
+        .store_info{
+          margin: 5px 0;
+        }
       }
       
       .total{
@@ -1236,6 +1255,7 @@ input:focus, textarea:focus, select:focus{
       .buttonGroup{
         display: flex;
         justify-content: space-between;
+
         .button{
           width: 15%;
           height: 30px;
