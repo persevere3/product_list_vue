@@ -267,6 +267,7 @@
                 <div class="prompt">{{ errors.first('收件地址') }}</div>
 
                 <div class="address">
+                  <div class="address_title"> 預設地址 : </div>
                   <ul>
                     <li v-for="(item, key) in userInfo.address_obj" :key="key" @click="info.receiver_address = item.address"> {{ }} 
                       {{ item.address }}  
@@ -318,7 +319,7 @@
               購物金 
               <span v-if="bonus_array.length">
                 (<span v-if="!user_account" > 會員 </span>
-                <span> 付款成功後 </span>
+                <span> 訂單完成後 </span>
                 <template v-for="(item, index) in bonus_array" :key="index">，滿 NT${{ numberThousands(item.lower) }} 送 {{ item.shipping }}% 購物金 </template>)
               </span>
             </div>
@@ -367,7 +368,7 @@
                 <div class="after">NT$ {{numberThousands(total.Sum)}}</div>
               </li>
               <li v-if="user_account && total && bonus_percent * 1">
-                付款成功後獲得 NT${{ numberThousands(member_bonus) }} 購物金
+                訂單完成後獲得 NT${{ numberThousands(member_bonus) }} 購物金
               </li>
             </ul>
           </div>
@@ -476,8 +477,8 @@
               </div>
 
               <div class="share_link" @click="click_share_link">
-                Share
-                <i class="fas fa-link"></i>
+                分享
+                <i class="fas fa-share"></i>
               </div>
 
               <input type="text" id="copy_input2" readonly>
@@ -619,8 +620,11 @@
     <div class="confirm" v-if="isConfirm">
       <div class="frame">
         <div class="border"></div>
-        <i class="title_icon fa fa-check-circle fa-2x" aria-hidden="true"></i>
-        <div class="message"> 訂單完成，前往付款頁面 </div>
+        <div class="confirm_title"> 
+          <i class="fa fa-check-circle fa-2x" aria-hidden="true"></i>  
+          <div class="text"> 訂單完成！ </div>
+        </div>
+        <div class="message"> 前往付款頁面 </div>
         <div class="buttonGroup">
           <div class="button determine" @click="isConfirm = false; toPay()"> 確定 </div>
         </div>
@@ -630,7 +634,9 @@
     <div class="confirm" v-if="isConfirm2">
       <div class="frame">
         <div class="border"></div>
-        <i class="title_icon fa fa-question-circle fa-2x" aria-hidden="true"></i>
+        <div class="confirm_title"> 
+          <i class="fa fa-question-circle fa-2x" aria-hidden="true"></i>
+        </div>
         <div class="message"> 該mail已使用過折扣碼，按確定取消折扣碼優惠直接完成訂單，按取消重新輸入email或折扣碼 </div>
         <div class="buttonGroup">
           <div class="button cancel" @click=" isConfirm2 = false;"> 取消 </div>
@@ -642,18 +648,22 @@
     <div class="confirm" v-if="isConfirm3">
       <div class="frame">
         <div class="border"></div>
-        <i class="title_icon fa fa-check-circle fa-2x" aria-hidden="true"></i>
-        <div class="message"> 
-          <div> {{store.SelfAtmBankId}} {{bank[store.SelfAtmBankId]}}</div>
+        <div class="confirm_title"> 
+          <i class="fa fa-check-circle fa-2x" aria-hidden="true"></i>  
+          <div class="text"> 訂單完成！ </div>
+        </div>
+        <div class="message bank"> 
+          <div>匯款銀行 : {{store.SelfAtmBankId}} {{bank[store.SelfAtmBankId]}} </div>
           <div class="bank_account">
+            匯款帳號 : 
             <input type="text" id="copy_input" readonly v-model="store.SelfAtmId">
             <div class="copy" @click="copy(store.SelfAtmId, '#copy_input')"> <i class="fas fa-copy"></i> </div>
           </div>
         </div>
         <div class="tip">
           <i class="fas fa-exclamation-circle"></i>
-          請在匯款成功後前往 <div class="a" @click="urlPush('/order.html', true)"> 訂單列表 </div>
-          輸入匯款帳戶末6碼，工作人員確認後將儘快為您安排出貨
+          請在匯款成功後前往 <div class="a" @click="urlPush(`/order.html?phone=${info.purchaser_number}`, true)"> 訂單列表 </div>
+          輸入匯款帳戶末6碼工作人員確認後將儘快為您安排出貨。
         </div>
 
         <div class="buttonGroup">
@@ -665,9 +675,12 @@
     <div class="confirm" v-if="isConfirm4">
       <div class="frame">
         <div class="border"></div>
-        <i class="title_icon fa fa-check-circle fa-2x" aria-hidden="true"></i>
+        <div class="confirm_title"> 
+          <i class="fa fa-check-circle fa-2x" aria-hidden="true"></i>  
+          <div class="text"> 訂單完成！ </div>
+        </div>
         <div class="message"> 
-          訂單完成，請問是否要註冊成為會員
+          請問是否要註冊成為會員
         </div>
         <div class="buttonGroup">
           <div class="button cancel" @click="isConfirm4 = false; toPay()"> 否，前往付款頁面 </div>
@@ -679,7 +692,10 @@
     <div class="confirm" v-if="isConfirm5">
       <div class="frame">
         <div class="border"></div>
-        <i class="title_icon fas fa-registered"></i>
+        <div class="confirm_title"> 
+          <i class="fas fa-registered"></i>
+          <div class="text"> 訂單完成！ </div>
+        </div>
         <div class="form">
           <div class="input_container" :class="{ error: r_name.is_error }">
             <input type="text" readonly placeholder="* 請輸入姓名" v-model.trim="r_name.value" @blur="verify(r_name)">

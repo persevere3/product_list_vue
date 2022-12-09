@@ -1165,6 +1165,10 @@ input:focus, textarea:focus, select:focus{
         }
 
         .address{
+          .address_title {
+            padding: 2px 10px;
+            font-size: 12px;
+          }
           ul{
             li{
               padding: 2px 10px;
@@ -2271,57 +2275,76 @@ input:focus, textarea:focus, select:focus{
       border: 1px solid rgba(63,135,166,.7);
       z-index: 1;
     }
-    .title_icon{
+    .confirm_title {
       margin: 30px 0 20px 0;
       color: rgba(63,135,166,.7);
       font-size: 32px;
+
+      .text{
+        margin-left: 15px;
+      }
     }
     .message{
       padding: 10px 30px;
       font-size: 18px;
       z-index: 2;
 
-      .bank_account{
-        margin-top: 10px;
-        position: relative;
+      &.bank {
+        width: 100%;
+        padding: 10px 50px;
 
-        input{
-          height: 30px;
-          line-height: 30px;
-          border: none;
-          outline: none;
-          font-size: 18px;
-
-          &:focus{
-            box-shadow: none;
+        .bank_account{
+          margin-top: 10px;
+          position: relative;
+  
+          input{
+            height: 30px;
+            line-height: 30px;
+            border: none;
+            outline: none;
+            font-size: 18px;
+  
+            &:focus{
+              box-shadow: none;
+            }
           }
-        }
-
-        .copy{
-          height: 100%;
-          display: flex;
-          align-items: center;
-
-          font-size: 20px;
-          color: rgba(63, 135, 166, 0.8);
-
-          position: absolute;
-          top: 0;
-          right: 0px;
-
-          cursor: pointer;
-
-          i{
-            margin: 0;
+  
+          .copy{
+            height: 100%;
+            display: flex;
+            align-items: center;
+  
+            font-size: 20px;
+            color: rgba(63, 135, 166, 0.8);
+  
+            position: absolute;
+            top: 0;
+            right: 0px;
+  
+            cursor: pointer;
+  
+            i{
+              margin: 0;
+            }
           }
         }
       }
     }
     .tip {
-      padding: 20px 55px;
+      width: 100%;
+      text-align: center;
+      padding: 20px 25px;
       font-size: 18px;
-      color: rgba(63, 135, 166, 1);
+      color: #000;
       z-index: 2;
+
+      a{
+        color: #c44b50;
+
+        &:hover {
+          color: $lighten(#c44b50, 50%);
+        }
+      }
     }
     .buttonGroup{
       display: flex;
