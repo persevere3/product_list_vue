@@ -621,7 +621,7 @@
       <div class="frame">
         <div class="border"></div>
         <div class="confirm_title"> 
-          <i class="fa fa-check-circle fa-2x" aria-hidden="true"></i>  
+          <i class="fa fa-check-circle" aria-hidden="true"></i>  
           <div class="text"> 訂單完成！ </div>
         </div>
         <div class="message"> 前往付款頁面 </div>
@@ -635,7 +635,7 @@
       <div class="frame">
         <div class="border"></div>
         <div class="confirm_title"> 
-          <i class="fa fa-question-circle fa-2x" aria-hidden="true"></i>
+          <i class="fa fa-question-circle" aria-hidden="true"></i>
         </div>
         <div class="message"> 該mail已使用過折扣碼，按確定取消折扣碼優惠直接完成訂單，按取消重新輸入email或折扣碼 </div>
         <div class="buttonGroup">
@@ -649,7 +649,7 @@
       <div class="frame">
         <div class="border"></div>
         <div class="confirm_title"> 
-          <i class="fa fa-check-circle fa-2x" aria-hidden="true"></i>  
+          <i class="fa fa-check-circle" aria-hidden="true"></i>  
           <div class="text"> 訂單完成！ </div>
         </div>
         <div class="message bank"> 
@@ -676,7 +676,7 @@
       <div class="frame">
         <div class="border"></div>
         <div class="confirm_title"> 
-          <i class="fa fa-check-circle fa-2x" aria-hidden="true"></i>  
+          <i class="fa fa-check-circle" aria-hidden="true"></i>  
           <div class="text"> 訂單完成！ </div>
         </div>
         <div class="message"> 
@@ -1951,25 +1951,31 @@ export default {
     },
     checkOrder(){
       const vm = this;
+
+      if ( vm.site.Preview == 2 ){
+        vm.showMessage( '預覽模式不開放完成訂單', false);
+        return;
+      }
       if(vm.orderIng){
         return;
-      } else {
-        vm.is_click_finish_order = true;
-        vm.$validator.validate().then((result) => {
-          if (result && 
-              vm.transport !== '0' && 
-              vm.pay_method !== '0' && 
-              (vm.store.Receipt === '0' || (vm.store.Receipt === '1' && (vm.invoice_type==='1' || (vm.invoice_type==='2' && (vm.invoice_title!=='' && vm.invoice_uniNumber!=='' ))))) &&
-              vm.storeaddress != ''
-              ){
-            if ( vm.site.Preview == 2 ){
-              vm.showMessage( '預覽模式不開放完成訂單', false);
-              return;
-            }
-            vm.createOrder();
-          }
-        });
       }
+
+      vm.is_click_finish_order = true;
+      vm.$validator.validate().then((result) => {
+        if (result && 
+            vm.transport !== '0' && 
+            vm.pay_method !== '0' && 
+            (
+              (vm.store.Receipt === '0') || 
+              ( vm.invoice_type === '1' || 
+                (vm.invoice_type==='2' && vm.invoice_title !== '' && vm.invoice_uniNumber !== '')
+              )
+            ) &&
+            ( vm.transport == 3 ? vm.storeaddress != '' : true)
+           ) {
+          vm.createOrder();
+        }
+      });
     },
 
     // createOrder confirm
@@ -2214,6 +2220,7 @@ export default {
       this.r_mail.value = this.info.purchaser_email;
     },
     createOrder(){
+      console.log(2)
       this.orderIng = true;
       let o = this.createCartsStr();
 

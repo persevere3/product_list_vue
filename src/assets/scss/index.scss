@@ -2279,6 +2279,8 @@ input:focus, textarea:focus, select:focus{
       margin: 30px 0 20px 0;
       color: rgba(63,135,166,.7);
       font-size: 32px;
+      display: flex;
+      align-items: center;
 
       .text{
         margin-left: 15px;
@@ -2338,11 +2340,11 @@ input:focus, textarea:focus, select:focus{
       color: #000;
       z-index: 2;
 
-      a{
+      .a{
         color: #c44b50;
 
         &:hover {
-          color: $lighten(#c44b50, 50%);
+          color: lighten(#c44b50, 10%);
         }
       }
     }
