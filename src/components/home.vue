@@ -220,7 +220,7 @@
               <input type="text" :readonly="userInfo.Name" id="name" name="姓名" :class="{inputError:errors.first('姓名')}" v-validate="'required'" placeholder="姓名" v-model="info.purchaser_name" @change="pInput">
               <div class="prompt">{{ errors.first('姓名') }}</div>
               <label for="phone">購買人手機號碼</label>
-              <input type="text" :readonly="userInfo.Phone" id="phone" name="購買人手機號碼" :class="{inputError:errors.first('購買人手機號碼')}" v-validate="'required'" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput">
+              <input type="number" :readonly="userInfo.Phone" id="phone" name="購買人手機號碼" :class="{inputError:errors.first('購買人手機號碼')}" v-validate="'required'" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput">
               <div class="prompt">{{ errors.first('購買人手機號碼') }}</div>
 
               <div class="box">
@@ -244,7 +244,7 @@
                 <option value="1" v-if="store.Shipping === '1' || store.Shipping === '2'" selected>一般宅配</option>
                 <option value="2" v-if="store.Shipping === '1' || store.Shipping === '3'" selected>到店自取</option>
                 <!-- 7-11 貨到付款 test -->
-                <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 貨到付款 </option>
+                <!-- <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 貨到付款 </option> -->
               </select>
               <div class="prompt" v-if="is_click_finish_order && transport === '0'"> 請選擇配送方式 </div>
 
@@ -266,7 +266,7 @@
                 <input type="text" id="raddress" name="收件地址" :class="{inputError:errors.first('收件地址')}" v-validate="'required'" placeholder="收件地址" v-model="info.receiver_address">
                 <div class="prompt">{{ errors.first('收件地址') }}</div>
 
-                <div class="address">
+                <div class="address" v-if="userInfo.address_obj && Object.keys(userInfo.address_obj).length">
                   <div class="address_title"> 預設地址 : </div>
                   <ul>
                     <li v-for="(item, key) in userInfo.address_obj" :key="key" @click="info.receiver_address = item.address"> {{ }} 
@@ -653,9 +653,12 @@
           <div class="text"> 訂單完成！ </div>
         </div>
         <div class="message bank"> 
-          <div>匯款銀行 : {{store.SelfAtmBankId}} {{bank[store.SelfAtmBankId]}} </div>
+          <div style="display: flex; flex-wrap: wrap;">
+            <div style="margin-right: 5px; margin-bottom: 10px;"> 匯款銀行 : </div>
+            <div style="margin-bottom: 10px;"> {{store.SelfAtmBankId}} {{bank[store.SelfAtmBankId]}}  </div>
+          </div>
           <div class="bank_account">
-            匯款帳號 : 
+            <div class="bank_title"> 匯款帳號 : </div>
             <input type="text" id="copy_input" readonly v-model="store.SelfAtmId">
             <div class="copy" @click="copy(store.SelfAtmId, '#copy_input')"> <i class="fas fa-copy"></i> </div>
           </div>
@@ -2026,7 +2029,7 @@ export default {
       }
       // ecpay
       else {
-        this.ECPay_form = `<form id="ECPay_form" action="https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
+        this.ECPay_form = `<form id="ECPay_form" action="https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
         for(let item in this.payResult){
           if(item === 'success' || item === 'message') continue
           // EncryptType TotalAmount item: number，other: string
@@ -2220,7 +2223,6 @@ export default {
       this.r_mail.value = this.info.purchaser_email;
     },
     createOrder(){
-      console.log(2)
       this.orderIng = true;
       let o = this.createCartsStr();
 
@@ -3189,7 +3191,7 @@ export default {
       return String(number).replace( /(\d)(?=(?:\d{3})+$)/g, '$1,')
     },
 
-    // 
+    //
     click_share_link() {
       this.copy( `${this.protocol}//${this.api}/cart/?id=${this.selectProduct.ID}`, '#copy_input2');
       this.showMessage('複製分享連結', true);
