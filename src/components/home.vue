@@ -255,8 +255,11 @@
                 <option value="ATM" v-if="(store.ATM != 0 && transport != 3)" selected>ATM/網路ATM</option>
                 <option value="PayCode" v-if="(store.PayCode != 0 && transport != 3)" selected>超商代碼</option>
                 <option value="PayBarCode" v-if="(store.PayBarCode != 0 && transport != 3)" selected>超商條碼</option>
+                <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport != 3)" selected>取貨付款</option>
+                
                 <!-- 7-11 貨到付款 test -->
-                <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport == 3)" selected> 7-11 貨到付款 </option>
+                <!-- <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport == 3)" selected> 7-11 貨到付款 </option> -->
+                
                 <option value="LinePay" v-if="store.LinePay == 1 && transport != 3" selected>LINE Pay</option>
               </select>
               <div class="prompt" v-if="is_click_finish_order && pay_method === '0'"> 請選擇支付方式 </div>
@@ -278,8 +281,8 @@
               </template>
 
               <!-- 7-11 貨到付款 test -->
-              <!-- 之後改 store.PayOnDelivery == 1 -->
-              <template v-if="(transport == 3 && store.PayOnDelivery != 0)">
+              <!-- 之後改 store.PayOnDelivery -->
+              <template v-if="(transport == 3 && store.PayOnDelivery == 3)">
                 <label> 選擇門市 </label>
                 <div class="store_info">
                   <div> 門市地址: {{ storeaddress }} </div>
@@ -320,7 +323,16 @@
               <span v-if="bonus_array.length">
                 (<span v-if="!user_account" > 會員 </span>
                 <span> 訂單完成後 </span>
-                <template v-for="(item, index) in bonus_array" :key="index">，滿 NT${{ numberThousands(item.lower) }} 送 {{ item.shipping }}% 購物金 </template>)
+                <template v-for="(item, index) in bonus_array" :key="index">
+                  <template v-if="item.shipping">
+                    <template v-if="index == 0">
+                      ，消費即送 {{ item.shipping }}% 購物金
+                    </template>
+                    <template v-else>
+                      ，滿 NT${{ numberThousands(item.lower) }} 送 {{ item.shipping }}% 購物金 
+                    </template>
+                  </template>
+                </template>)
               </span>
             </div>
             <div class="info" v-if="user_account">
@@ -329,9 +341,9 @@
                   購物金餘額: <span class="bonus"> {{numberThousands(total_bonus)}} 點 </span>
                 </div>
                 <div class="box" v-if="total_bonus * 1">
-                  <input type="checkbox" id="is_use_bonus" v-model="is_use_bonus" @change="getTotal(0)"> 
+                  <input type="checkbox" id="is_use_bonus" v-model="is_use_bonus" @change="getTotal(1)"> 
                   <label for="is_use_bonus" > 使用購物金 </label>
-                  <input type="number" placeholder="購物金" v-model="use_bonus" @input="use_bonus = (Math.min(total_bonus, use_bonus, total.Total) != use_bonus ? Math.min(total_bonus, use_bonus, total.Total) : use_bonus * 1)" @change="is_use_bonus ? getTotal(0) : ''">
+                  <input type="number" placeholder="購物金" v-model="use_bonus" @input="use_bonus = (Math.min(total_bonus, use_bonus, total.Total) != use_bonus ? Math.min(total_bonus, use_bonus, total.Total) : use_bonus * 1)" @change="is_use_bonus ? getTotal(1) : ''">
                 </div>
               </div>
               <div class="right"></div>
@@ -706,12 +718,39 @@
               <i class="error_icon fas fa-exclamation-circle"></i> {{  r_name.message  }}
             </div>
           </div>
+
+          <div class="input_container" :class="{ error: r_account.is_error }">
+            <input type="number" readonly placeholder="* 請輸入手機(帳號)" v-model.trim="r_account.value" @blur="verify(r_account)">
+            <div class="error message">
+              <i class="error_icon fas fa-exclamation-circle"></i> {{  r_account.message  }}
+            </div>
+          </div>
+          <template v-if="store.NotificationSystem == 1 || store.NotificationSystem == 2">
+            <div class="input_container" :class="{ error: r_verify_code.is_error }">
+              <input type="text" placeholder="* 請輸入手機驗證碼" v-model.trim="r_verify_code.value" @blur="verify(r_verify_code)"> 
+              <div class="error message">
+                <i class="error_icon fas fa-exclamation-circle"></i> {{  r_verify_code.message  }}
+              </div>
+            </div>
+          </template>
+
           <div class="input_container" :class="{ error: r_mail.is_error }">
             <input type="text" readonly placeholder="* 請輸入電子信箱" v-model.trim="r_mail.value" @blur="verify(r_mail)">
             <div class="error message">
               <i class="error_icon fas fa-exclamation-circle"></i> {{  r_mail.message  }}
             </div>
           </div>
+          <template v-if="store.NotificationSystem == 0 || store.NotificationSystem == 2">
+            <div class="input_container" :class="{ error: r_verify_code2.is_error }">
+              <input type="text" placeholder="* 請輸入電子信箱驗證碼" v-model.trim="r_verify_code2.value" @blur="verify(r_verify_code2)"> 
+              <div class="error message">
+                <i class="error_icon fas fa-exclamation-circle"></i> {{  r_verify_code2.message  }}
+              </div>
+            </div>
+          </template>
+
+          <div class="button" style="margin-bottom: 20px;" @click="send_verify_code"> 獲取驗證碼 <span v-if="second > 0"> ( {{second}}s ) </span> </div>
+
           <div class="input_container" :class="{ error: r_birthday.is_error }">
             <date-picker placeholder="* 請輸入生日" format="YYYY/MM/DD" v-model="r_birthday.value" @close="verify(r_birthday)"
               @clear="verify(r_birthday)"></date-picker>
@@ -730,19 +769,6 @@
               <div class="circle" v-show="sex == 'female'"> </div>
             </div>
             <label for="female"> 女 </label>
-          </div>
-          <div class="input_container" :class="{ error: r_account.is_error }">
-            <input type="number" readonly placeholder="* 請輸入手機(帳號)" v-model.trim="r_account.value" @blur="verify(r_account)">
-            <div class="error message">
-              <i class="error_icon fas fa-exclamation-circle"></i> {{  r_account.message  }}
-            </div>
-          </div>
-          <div class="input_container verify" :class="{ error: r_verify_code.is_error }">
-            <input type="text" placeholder="* 請輸入驗證碼" v-model.trim="r_verify_code.value" @blur="verify(r_verify_code)"> 
-            <div class="button" @click="send_verify_code"> 獲取驗證碼 <span v-if="second > 0"> ( {{second}}s ) </span> </div>
-            <div class="error message">
-              <i class="error_icon fas fa-exclamation-circle"></i> {{  r_verify_code.message  }}
-            </div>
           </div>
           <div class="input_container" :class="{ error: r_password.is_error }">
             <input :type="r_password_type" placeholder="* 請輸入密碼" v-model.trim="r_password.value"
@@ -1072,6 +1098,21 @@ export default {
         is_error: false,
         message: '',
       },
+      r_verify_code2: {
+        value: '',
+        rules: {
+          required: {
+            message: '此項目為必填'
+          },
+          length: {
+            min: 6,
+            max: 6,
+            message: '驗證碼為6位',
+          }
+        },
+        is_error: false,
+        message: '',
+      },
       second: 0,
       r_password: {
         value: '',
@@ -1143,7 +1184,7 @@ export default {
         this.info.receiver_number = '';
       }
     },
-    // this.getTotal(1)
+    //
     transport(v){
       this.getTotal(1);
     },
@@ -1196,7 +1237,7 @@ export default {
     },
 
     member_bonus() {
-      return Math.floor(this.total.Sum * 1 * (this.bonus_percent / 100))
+      return Math.floor((this.total.Sum - this.total.Shipping) * (this.bonus_percent / 100))
     }
   },
   methods: {
@@ -2027,9 +2068,16 @@ export default {
         this.bank = require('../assets/bank.json');
         this.isConfirm3 = true;
       }
+      else if(this.pay_method == 'PayOnDelivery') {
+
+      }
       // ecpay
       else {
-        this.ECPay_form = `<form id="ECPay_form" action="https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
+        if(this.api.indexOf('demo') > -1){
+          this.ECPay_form = `<form id="ECPay_form" action="https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
+        } else {
+          this.ECPay_form = `<form id="ECPay_form" action="https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
+        }
         for(let item in this.payResult){
           if(item === 'success' || item === 'message') continue
           // EncryptType TotalAmount item: number，other: string
@@ -2122,14 +2170,27 @@ export default {
       }
     },
     send_verify_code(){
-      if(!this.verify(this.r_account) || this.second > 0){
-        return
+      if(this.second > 0) return
+
+      if(this.store.NotificationSystem == 0) {
+        if( !this.verify(this.r_mail) ) return
+      }
+      else if(this.store.NotificationSystem == 1) {
+        if( !this.verify(this.r_account) ) return
+      }
+      else {
+        if( !this.verify(this.r_account) || !this.verify(this.r_mail) ) return
       }
 
       let vm = this;
 
       let formData = new FormData();
       formData.append("phone", this.r_account.value.trim());
+      formData.append("mail", this.r_mail.value.trim());
+
+      formData.append("notificationsystem", this.store.NotificationSystem)
+      formData.append("type", this.store.NotificationSystem)
+
       formData.append("storeName", this.store.Name);
       formData.append("storeid", this.site.Name);
 
@@ -2170,7 +2231,20 @@ export default {
       if (!this.r_is_agree) {
         return
       }
-      if (!this.verify(this.r_name, this.r_mail, this.r_birthday, this.r_account, this.r_verify_code, this.r_password, this.r_confirm_password)) {
+
+      let verify_code = [];
+      if(this.store.NotificationSystem == 0) {
+        verify_code.push(this.r_verify_code2)
+      }
+      else if(this.store.NotificationSystem == 1) {
+        verify_code.push(this.r_verify_code)
+      }
+      else {
+        verify_code.push(this.r_verify_code)
+        verify_code.push(this.r_verify_code2)
+      }
+
+      if (!this.verify(this.r_name, this.r_mail, this.r_birthday, this.r_account, ...verify_code, this.r_password, this.r_confirm_password)) {
         return
       }
 
@@ -2179,7 +2253,19 @@ export default {
       let formData = new FormData();
       formData.append("storeid", this.site.Name);
       formData.append("phone", this.r_account.value);
-      formData.append("validate", this.r_verify_code.value);
+      
+      if(this.store.NotificationSystem == 0) {
+        formData.append("validate2", this.r_verify_code2.value);
+      }
+      else if(this.store.NotificationSystem == 1) {
+        formData.append("validate", this.r_verify_code.value);
+      }
+      else {
+        formData.append("validate", this.r_verify_code.value);
+        formData.append("validate2", this.r_verify_code2.value);
+      }
+      formData.append("type", this.store.NotificationSystem)
+
       formData.append("password", this.r_password.value);
       formData.append("name", this.r_name.value);
       let b = this.r_birthday.value
@@ -2318,7 +2404,7 @@ export default {
             else {
               vm.isConfirm = true;
             }
-          } 
+          }
         }
       })
       .catch((err) => {
@@ -3218,7 +3304,6 @@ export default {
       localStorage.setItem('order_info', JSON.stringify(order_info));
       this.urlPush('https://emap.presco.com.tw/c2cemap.ashx?eshopid=870&&servicetype=1&url=https://jiajingplus.com.tw/interface/store/SpmarketAddress');
     },
-
     returnInfo() {
       let order_info = JSON.parse(localStorage.getItem('order_info')) || {};
       this.isSame = order_info.isSame
