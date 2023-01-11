@@ -220,7 +220,7 @@
               <input type="text" :readonly="userInfo.Name" id="name" name="姓名" :class="{inputError:errors.first('姓名')}" v-validate="'required'" placeholder="姓名" v-model="info.purchaser_name" @change="pInput">
               <div class="prompt">{{ errors.first('姓名') }}</div>
               <label for="phone">購買人手機號碼</label>
-              <input type="number" :readonly="userInfo.Phone" id="phone" name="購買人手機號碼" :class="{inputError:errors.first('購買人手機號碼')}" v-validate="'required'" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput">
+              <input type="text" :readonly="userInfo.Phone" id="phone" name="購買人手機號碼" :class="{inputError:errors.first('購買人手機號碼')}" v-validate="'required'" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput">
               <div class="prompt">{{ errors.first('購買人手機號碼') }}</div>
 
               <div class="box">
@@ -265,16 +265,31 @@
               <div class="prompt" v-if="is_click_finish_order && pay_method === '0'"> 請選擇支付方式 </div>
 
               <template v-if="transport == '1'">
-                <label for="raddress">收件地址</label>
-                <input type="text" id="raddress" name="收件地址" :class="{inputError:errors.first('收件地址')}" v-validate="'required'" placeholder="收件地址" v-model="info.receiver_address">
-                <div class="prompt">{{ errors.first('收件地址') }}</div>
-
+                <label for="raddress">
+                  收件地址
+                  <template v-if="userInfo.address_obj && Object.keys(userInfo.address_obj).length < 3 && !has_address">
+                    <input style="margin-left: 10px;" type="checkbox" id="is_save_address" v-model="is_save_address">
+                    <label for="is_save_address"> 加入常用地址 </label>
+                  </template>
+                </label>
+                <select v-model="city_active" :class="{inputError: is_click_finish_order && city_active == ''}">
+                  <option value="" selected > 城市 </option>
+                  <option :value="city" v-for="city in Object.keys(city_district)" :key="city"> {{ city }} </option>
+                </select>
+                <select v-model="district_active" :class="{inputError: is_click_finish_order && district_active == ''}">
+                  <option value="" selected > 鄉鎮市區 </option>
+                  <option :value="district" v-for="(district, index) in city_district[city_active]" :key="index"> {{ district }} </option>
+                </select>
+                <div style="display: flex;" class="input_container">
+                  <input style="width: 100%;" type='text' placeholder="請輸入詳細地址" v-model.trim='detail_address' :class="{inputError: is_click_finish_order && detail_address == ''}">
+                </div>
+                <div class="prompt" v-if="is_click_finish_order && (!city_active || !district_active || !detail_address)"> 請輸入收件地址 </div>
                 <div class="address" v-if="userInfo.address_obj && Object.keys(userInfo.address_obj).length">
-                  <div class="address_title"> 預設地址 : </div>
+                  <div class="address_title"> 常用地址 : </div>
                   <ul>
-                    <li v-for="(item, key) in userInfo.address_obj" :key="key" @click="info.receiver_address = item.address"> {{ }} 
+                    <li v-for="(item, key) in userInfo.address_obj" :key="key" @click="city_active = item.address.split(' ')[0]; district_active = item.address.split(' ')[1]; detail_address = item.address.split(' ')[2];"> {{ }} 
                       {{ item.address }}  
-                      <i class="fa fa-check" v-if="item.address == info.receiver_address.trim()"></i>
+                      <i class="fa fa-check" v-if="item.address == receiver_address"></i>
                     </li>
                   </ul>
                 </div>
@@ -379,9 +394,14 @@
                 <div class="before">= 金額總計</div>
                 <div class="after">NT$ {{numberThousands(total.Sum)}}</div>
               </li>
-              <li v-if="user_account && total && bonus_percent * 1">
-                訂單完成後獲得 NT${{ numberThousands(member_bonus) }} 購物金
-              </li>
+              <template v-if="user_account && total && bonus_percent * 1">
+                <li>
+                  訂單完成後獲得 NT${{ numberThousands(member_bonus) }} 購物金
+                </li>
+                <li>
+                  (購物金將在出貨日滿14天後獲得)
+                </li>
+              </template>
             </ul>
           </div>
           
@@ -846,7 +866,10 @@
           <li v-for="(item, index) in pageFilterProduct" :key="item.ID" >
             <div class="pic_div">
               <div class="pic" ref='picWidth' :style="{backgroundImage :`url(${item.Img1})`, height:`${picHeight}px`}" @click="showSelect(item, index)">
-                <div class="detailButton">查看詳情</div>
+                <div class="detailButton">
+                  查看詳情
+                  <i class="fas fa-heart" :class="{is_favorite : favorite[item.ID]}" @click.stop="toggleFavorite(item.ID)"></i>
+                </div>
               </div>
             </div>
 
@@ -1015,7 +1038,6 @@ export default {
         purchaser_number:'',
         receiver_name:'',
         receiver_number:'',
-        receiver_address:'',
         info_message:''
       },
       invoice_type: '0',
@@ -1169,6 +1191,81 @@ export default {
       use_bonus: 0,
       is_use_bonus: false,
 
+      // 
+      city_district : {
+        '臺北市': [
+            '中正區', '大同區', '中山區', '萬華區', '信義區', '松山區', '大安區', '南港區', '北投區', '內湖區', '士林區', '文山區'
+        ],
+        '新北市': [
+            '板橋區', '新莊區', '泰山區', '林口區', '淡水區', '金山區', '八里區', '萬里區', '石門區', '三芝區', '瑞芳區', '汐止區', '平溪區', '貢寮區', '雙溪區', '深坑區', '石碇區', '新店區', '坪林區', '烏來區', '中和區', '永和區', '土城區', '三峽區', '樹林區', '鶯歌區', '三重區', '蘆洲區', '五股區'
+        ],
+        '基隆市': [
+            '仁愛區', '中正區', '信義區', '中山區', '安樂區', '暖暖區', '七堵區'
+        ],
+        '桃園市': [
+            '桃園區', '中壢區', '平鎮區', '八德區', '楊梅區', '蘆竹區', '龜山區', '龍潭區', '大溪區', '大園區', '觀音區', '新屋區', '復興區'
+        ],
+        '新竹縣': [
+            '竹北市', '竹東鎮', '新埔鎮', '關西鎮', '峨眉鄉', '寶山鄉', '北埔鄉', '橫山鄉', '芎林鄉', '湖口鄉', '新豐鄉', '尖石鄉', '五峰鄉'
+        ],
+        '新竹市': [
+            '東區', '北區', '香山區'
+        ],
+        '苗栗縣': [
+            '苗栗市', '通霄鎮', '苑裡鎮', '竹南鎮', '頭份鎮', '後龍鎮', '卓蘭鎮', '西湖鄉', '頭屋鄉', '公館鄉', '銅鑼鄉', '三義鄉', '造橋鄉', '三灣鄉', '南庄鄉', '大湖鄉', '獅潭鄉', '泰安鄉'
+        ],
+        '臺中市': [
+            '中區', '東區', '南區', '西區', '北區', '北屯區', '西屯區', '南屯區', '太平區', '大里區', '霧峰區', '烏日區', '豐原區', '后里區', '東勢區', '石岡區', '新社區', '和平區', '神岡區', '潭子區', '大雅區', '大肚區', '龍井區', '沙鹿區', '梧棲區', '清水區', '大甲區', '外埔區', '大安區'
+        ],
+        '南投縣': [
+            '南投市', '埔里鎮', '草屯鎮', '竹山鎮', '集集鎮', '名間鄉', '鹿谷鄉', '中寮鄉', '魚池鄉', '國姓鄉', '水里鄉', '信義鄉', '仁愛鄉'
+        ],
+        '彰化縣': [
+            '彰化市', '員林鎮', '和美鎮', '鹿港鎮', '溪湖鎮', '二林鎮', '田中鎮', '北斗鎮', '花壇鄉', '芬園鄉', '大村鄉', '永靖鄉', '伸港鄉', '線西鄉', '福興鄉', '秀水鄉', '埔心鄉', '埔鹽鄉', '大城鄉', '芳苑鄉', '竹塘鄉', '社頭鄉', '二水鄉', '田尾鄉', '埤頭鄉', '溪州鄉'
+        ],
+        '雲林縣': [
+            '斗六市', '斗南鎮', '虎尾鎮', '西螺鎮', '土庫鎮', '北港鎮', '莿桐鄉', '林內鄉', '古坑鄉', '大埤鄉', '崙背鄉', '二崙鄉', '麥寮鄉', '臺西鄉', '東勢鄉', '褒忠鄉', '四湖鄉', '口湖鄉', '水林鄉', '元長鄉'
+        ],
+        '嘉義縣': [
+            '太保市', '朴子市', '布袋鎮', '大林鎮', '民雄鄉', '溪口鄉', '新港鄉', '六腳鄉', '東石鄉', '義竹鄉', '鹿草鄉', '水上鄉', '中埔鄉', '竹崎鄉', '梅山鄉', '番路鄉', '大埔鄉', '阿里山鄉'
+        ],
+        '嘉義市': [
+            '東區', '西區'
+        ],
+        '臺南市': [
+            '中西區', '東區', '南區', '北區', '安平區', '安南區', '永康區', '歸仁區', '新化區', '左鎮區', '玉井區', '楠西區', '南化區', '仁德區', '關廟區', '龍崎區', '官田區', '麻豆區', '佳里區', '西港區', '七股區', '將軍區', '學甲區', '北門區', '新營區', '後壁區', '白河區', '東山區', '六甲區', '下營區', '柳營區', '鹽水區', '善化區', '大內區', '山上區', '新市區', '安定區'
+        ],
+        '高雄市': [
+            '楠梓區', '左營區', '鼓山區', '三民區', '鹽埕區', '前金區', '新興區', '苓雅區', '前鎮區', '小港區', '旗津區', '鳳山區', '大寮區', '鳥松區', '林園區', '仁武區', '大樹區', '大社區', '岡山區', '路竹區', '橋頭區', '梓官區', '彌陀區', '永安區', '燕巢區', '田寮區', '阿蓮區', '茄萣區', '湖內區', '旗山區', '美濃區', '內門區', '杉林區', '甲仙區', '六龜區', '茂林區', '桃源區', '那瑪夏區'
+        ],
+        '屏東縣': [
+            '屏東市', '潮州鎮', '東港鎮', '恆春鎮', '萬丹鄉', '長治鄉', '麟洛鄉', '九如鄉', '里港鄉', '鹽埔鄉', '高樹鄉', '萬巒鄉', '內埔鄉', '竹田鄉', '新埤鄉', '枋寮鄉', '新園鄉', '崁頂鄉', '林邊鄉', '南州鄉', '佳冬鄉', '琉球鄉', '車城鄉', '滿州鄉', '枋山鄉', '霧台鄉', '瑪家鄉', '泰武鄉', '來義鄉', '春日鄉', '獅子鄉', '牡丹鄉', '三地門鄉'
+        ],
+        '宜蘭縣': [
+            '宜蘭市', '羅東鎮', '蘇澳鎮', '頭城鎮', '礁溪鄉', '壯圍鄉', '員山鄉', '冬山鄉', '五結鄉', '三星鄉', '大同鄉', '南澳鄉'
+        ],
+        '花蓮縣': [
+            '花蓮市', '鳳林鎮', '玉里鎮', '新城鄉', '吉安鄉', '壽豐鄉', '秀林鄉', '光復鄉', '豐濱鄉', '瑞穗鄉', '萬榮鄉', '富里鄉', '卓溪鄉'
+        ],
+        '臺東縣': [
+            '臺東市', '成功鎮', '關山鎮', '長濱鄉', '海端鄉', '池上鄉', '東河鄉', '鹿野鄉', '延平鄉', '卑南鄉', '金峰鄉', '大武鄉', '達仁鄉', '綠島鄉', '蘭嶼鄉', '太麻里鄉'
+        ],
+        '澎湖縣': [
+            '馬公市', '湖西鄉', '白沙鄉', '西嶼鄉', '望安鄉', '七美鄉'
+        ],
+        '金門縣': [
+            '金城鎮', '金湖鎮', '金沙鎮', '金寧鄉', '烈嶼鄉', '烏坵鄉'
+        ],
+        '連江縣': [
+            '南竿鄉', '北竿鄉', '莒光鄉', '東引鄉'
+        ]
+      },
+      city_active: '',
+      district_active: '',
+      detail_address: '',
+      is_save_address: false,
+      has_address: false,
+
       api: '',
       protocol: ''
     }
@@ -1238,6 +1335,20 @@ export default {
 
     member_bonus() {
       return Math.floor((this.total.Sum - this.total.Shipping) * (this.bonus_percent / 100))
+    },
+
+    receiver_address() {
+      let address = `${this.city_active} ${this.district_active} ${this.detail_address}`
+      if(this.userInfo.address_obj){
+        this.has_address = false;
+        for(let key in this.userInfo.address_obj) {
+          let item = this.userInfo.address_obj[key];
+          if(item.address == address){
+            this.has_address = true;
+          }
+        }
+      }
+      return address;
     }
   },
   methods: {
@@ -2007,14 +2118,15 @@ export default {
       vm.is_click_finish_order = true;
       vm.$validator.validate().then((result) => {
         if (result && 
-            vm.transport !== '0' && 
-            vm.pay_method !== '0' && 
+            vm.transport !== '0' &&
+            vm.pay_method !== '0' &&
             (
               (vm.store.Receipt === '0') || 
               ( vm.invoice_type === '1' || 
                 (vm.invoice_type==='2' && vm.invoice_title !== '' && vm.invoice_uniNumber !== '')
               )
             ) &&
+            ( vm.transport == 1 ? (vm.city_active && vm.district_active && vm.detail_address) : true) &&
             ( vm.transport == 3 ? vm.storeaddress != '' : true)
            ) {
           vm.createOrder();
@@ -2033,9 +2145,9 @@ export default {
       //   purchaser_number:'',
       //   receiver_name:'',
       //   receiver_number:'',
-      //   receiver_address:'',
       //   info_message:''
       // };
+      // receiver_address
 
       // this.invoice_type = '0';
       // this.invoice_title = '';
@@ -2340,7 +2452,13 @@ export default {
         formData.append('Phone' , this.info.purchaser_number);
         formData.append('Receiver' , this.info.receiver_name);
         formData.append('ReceiverPhone' , this.info.receiver_number);
-        formData.append('Address' , this.info.receiver_address);
+        formData.append('Address' , this.receiver_address);
+        if(this.is_save_address){
+          let id = new Date().getTime();
+          formData.append('saveAddressStr' , `${id}_ _${this.receiver_address.replace(/ /g, '_ _')}`);
+        } else {
+          formData.append('saveAddressStr' , '');
+        }
         formData.append('Message' , this.info.info_message);
         formData.append('Discount' , this.total.Discount * 1);
         formData.append('Shipping' , this.total.Shipping * 1);
@@ -2394,7 +2512,7 @@ export default {
           // 沒有開啟會員功能
           if(!(vm.site.MemberFuction * 1)){
             vm.isConfirm = true;
-          } 
+          }
           else {
             // 沒有登入
             if(!vm.user_account){
