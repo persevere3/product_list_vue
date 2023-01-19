@@ -340,7 +340,7 @@
                 <span> 訂單完成後 </span>
                 <template v-for="(item, index) in bonus_array" :key="index">
                   <template v-if="item.shipping">
-                    <template v-if="index == 0">
+                    <template v-if="item.lower == 0">
                       ，消費即送 {{ item.shipping }}% 購物金
                     </template>
                     <template v-else>
@@ -353,12 +353,12 @@
             <div class="info" v-if="user_account">
               <div class="left">
                 <div class="bonus_container">
-                  購物金餘額: <span class="bonus"> {{numberThousands(total_bonus)}} 點 </span>
+                  購物金餘額: <span class="bonus"> {{numberThousands(total_bonus < 0 ? 0 : total_bonus)}} 點 </span>
                 </div>
                 <div class="box" v-if="total_bonus * 1">
                   <input type="checkbox" id="is_use_bonus" v-model="is_use_bonus" @change="getTotal(1)"> 
                   <label for="is_use_bonus" > 使用購物金 </label>
-                  <input type="number" placeholder="購物金" v-model="use_bonus" @input="use_bonus = (Math.min(total_bonus, use_bonus, total.Total) != use_bonus ? Math.min(total_bonus, use_bonus, total.Total) : use_bonus * 1)" @change="is_use_bonus ? getTotal(1) : ''">
+                  <input type="number" placeholder="購物金" v-model="use_bonus" @input="use_bonus = $event.target.value < 0 ? 0 : $event.target.value ; use_bonus = (Math.min(total_bonus, use_bonus, total.Total) != use_bonus ? Math.min(total_bonus, use_bonus, total.Total) : use_bonus * 1)" @change="is_use_bonus ? getTotal(1) : ''">
                 </div>
               </div>
               <div class="right"></div>
@@ -406,7 +406,7 @@
           </div>
           
           <div class="buttonGroup">
-            <div class="button" @click="stepIndex = 1; getProducts()">上一步</div>
+            <div class="button" @click="use_bonus = 0; is_use_bonus = false; stepIndex = 1; getProducts()">上一步</div>
             <div class="button" @click="checkOrder()"><i  v-show="orderIng" class="fas fa-spinner fa-spin" style="margin-right: 5px"></i>完成訂單</div>
           </div>
         </div>
@@ -649,6 +649,7 @@
       </div>
     </div>
 
+    <!-- 前往付款頁面 -->
     <div class="confirm" v-if="isConfirm">
       <div class="frame">
         <div class="border"></div>
@@ -656,20 +657,25 @@
           <i class="fa fa-check-circle" aria-hidden="true"></i>  
           <div class="text"> 訂單完成！ </div>
         </div>
-        <div class="message"> 前往付款頁面 </div>
+        <div class="message"> 
+          <template v-if="pay_method != 'PayOnDelivery'">
+            前往付款頁面
+          </template>
+        </div>
         <div class="buttonGroup">
           <div class="button determine" @click="isConfirm = false; toPay()"> 確定 </div>
         </div>
       </div>
     </div>
 
+    <!-- 該mail已使用過折扣碼 -->
     <div class="confirm" v-if="isConfirm2">
       <div class="frame">
         <div class="border"></div>
         <div class="confirm_title"> 
           <i class="fa fa-question-circle" aria-hidden="true"></i>
         </div>
-        <div class="message"> 該mail已使用過折扣碼，按確定取消折扣碼優惠直接完成訂單，按取消重新輸入email或折扣碼 </div>
+        <div class="message"> 該手機已使用過折扣碼，按確定取消折扣碼優惠直接完成訂單，按取消重新輸入手機或折扣碼 </div>
         <div class="buttonGroup">
           <div class="button cancel" @click=" isConfirm2 = false;"> 取消 </div>
           <div class="button determine" @click="cancelDiscountCodeCreateOrder()"> 確定  </div>
@@ -677,6 +683,7 @@
       </div>
     </div>
 
+    <!-- ATM 匯款訊息 -->
     <div class="confirm" v-if="isConfirm3">
       <div class="frame">
         <div class="border"></div>
@@ -697,7 +704,7 @@
         </div>
         <div class="tip">
           <i class="fas fa-exclamation-circle"></i>
-          請在匯款成功後前往 <div class="a" @click="urlPush(`/order.html?phone=${info.purchaser_number}`, true)"> 訂單列表 </div>
+          請在匯款成功後前往 <div class="a" @click="urlPush(`/order.html?phone=${info.purchaser_number}&mail=${info.purchaser_email}`, true)"> 訂單列表 </div>
           輸入匯款帳戶末6碼工作人員確認後將儘快為您安排出貨。
         </div>
 
@@ -707,6 +714,7 @@
       </div>
     </div>
 
+    <!-- 詢問是否註冊會員 -->
     <div class="confirm" v-if="isConfirm4">
       <div class="frame">
         <div class="border"></div>
@@ -718,12 +726,18 @@
           請問是否要註冊成為會員
         </div>
         <div class="buttonGroup">
-          <div class="button cancel" @click="isConfirm4 = false; toPay()"> 否，前往付款頁面 </div>
+          <div class="button cancel" @click="isConfirm4 = false; toPay()"> 
+            否
+            <template v-if="pay_method != 'PayOnDelivery'">
+              ，前往付款頁面 
+            </template>
+          </div>
           <div class="button determine" @click="isConfirm4 = false; auto_info();isConfirm5 = true"> 是，填寫註冊資料 </div>
         </div>
       </div>
     </div>
 
+    <!-- 註冊表單 -->
     <div class="confirm" v-if="isConfirm5">
       <div class="frame">
         <div class="border"></div>
@@ -825,7 +839,14 @@
           </div>
         </div>
         <div class="buttonGroup">
-          <div class="button cancel" @click="isConfirm5 = false; toPay()"> 前往付款頁面 </div>
+          <div class="button cancel" @click="isConfirm5 = false; toPay()"> 
+            <template v-if="pay_method != 'PayOnDelivery'">
+              前往付款頁面 
+            </template>
+            <template v-else>
+              取消
+            </template>
+          </div>
           <div class="button determine" :class="{ disabled: !r_is_agree }" @click="register"> 註冊 </div>
         </div>
       </div>
@@ -1567,14 +1588,12 @@ export default {
       };
       this.$http.post(url, formData, config).then((res) => {
         if(res.data.status){
-          vm.userInfo = res.data.datas[0][0];
-
-          vm.total_bonus = vm.userInfo.Wallet * 1
+          vm.userInfo = res.data.datas[0][0]
 
           vm.info.purchaser_email = vm.userInfo.Email;
           vm.info.purchaser_name = vm.userInfo.Name;
           vm.info.purchaser_number = vm.userInfo.Phone;
-          vm.total_bonus = vm.userInfo.Wallet;
+          vm.total_bonus = vm.userInfo.Wallet * 1
 
           let address_obj = {};
           let address_arr = vm.userInfo.Adress.split('_#_');
@@ -2191,7 +2210,7 @@ export default {
           this.ECPay_form = `<form id="ECPay_form" action="https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
         }
         for(let item in this.payResult){
-          if(item === 'success' || item === 'message') continue
+          if(item === 'success' || item === 'message' || item === 'membered') continue
           // EncryptType TotalAmount item: number，other: string
           this.ECPay_form += `<input type="${item == 'EncryptType' || item == 'TotalAmount' || item == 'ExpireDate' ? 'number' : 'text'}" name="${item}" value="${this.payResult[item]}">`;
         }
@@ -2339,6 +2358,49 @@ export default {
       }
       return is_valid;
     },
+    check_account() {
+      let vm = this;
+
+      return new Promise((resolve, reject) => {
+        let formData = new FormData();
+        formData.append("storeid", vm.site.Name);
+        formData.append("phone", vm.info.purchaser_number);
+        formData.append("email", vm.info.purchaser_email);
+
+        formData.append("validate", '');
+        formData.append("validate2", '');
+        formData.append("type", vm.store.NotificationSystem)
+        formData.append("password", '');
+        formData.append("name", '');
+        formData.append("birthday", '');
+        formData.append("gender", 0);
+        formData.append("recommender", '');
+
+        const config = {
+          headers: {
+            // 'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'multipart/form-data'
+          }
+        };
+
+        const url = `${vm.protocol}//${vm.api}/interface/WebMember/MemberRegister`;
+        this.$http.post(url, formData, config).then((res) => {
+          if(res.data.msg.indexOf('已註冊') > -1) {
+            // vm.isConfirm5 = false; 
+            // vm.toPay()
+            // vm.showMessage(res.data.msg, false)
+            resolve(true);
+          }
+          else {
+            resolve(false);
+          }
+        })
+        .catch((err) => { 
+          console.error(err);
+          vm.login(vm.check_account);
+        });
+      })
+    },
     register(){
       if (!this.r_is_agree) {
         return
@@ -2364,7 +2426,7 @@ export default {
       
       let formData = new FormData();
       formData.append("storeid", this.site.Name);
-      formData.append("phone", this.r_account.value);
+      formData.append("phone", this.r_account.value ? this.r_account.value : '0910456456');
       
       if(this.store.NotificationSystem == 0) {
         formData.append("validate2", this.r_verify_code2.value);
@@ -2381,7 +2443,13 @@ export default {
       formData.append("password", this.r_password.value);
       formData.append("name", this.r_name.value);
       let b = this.r_birthday.value
-      let birthday = `${b.getFullYear()}/${b.getMonth() + 1 < 10  ? '0' : '' }${b.getMonth() + 1}/${b.getDate() < 10  ? '0' : '' }${b.getDate()}`
+      let birthday
+      if(b) {
+        birthday = `${b.getFullYear()}/${b.getMonth() + 1 < 10  ? '0' : '' }${b.getMonth() + 1}/${b.getDate() < 10  ? '0' : '' }${b.getDate()}`
+      }
+      else {
+        birthday = ''
+      }
       formData.append("birthday", birthday);
       formData.append("gender", this.sex == 'male' ? 1 : 0 );
       formData.append("email", this.r_mail.value);
@@ -2453,7 +2521,7 @@ export default {
         formData.append('Receiver' , this.info.receiver_name);
         formData.append('ReceiverPhone' , this.info.receiver_number);
         formData.append('Address' , this.receiver_address);
-        if(this.is_save_address){
+        if(Object.keys(this.userInfo.address_obj).length < 3 && !this.has_address && this.is_save_address){
           let id = new Date().getTime();
           formData.append('saveAddressStr' , `${id}_ _${this.receiver_address.replace(/ /g, '_ _')}`);
         } else {
@@ -2488,7 +2556,7 @@ export default {
       };
       const vm = this;
       this.$http.post(url, formData, config)
-      .then((res) => {
+      .then(async (res) => {
         if(!res.data.success){
           if( res.data.message === '該mail已使用過折扣碼' ){
             vm.orderIng = false;
@@ -2516,11 +2584,19 @@ export default {
           else {
             // 沒有登入
             if(!vm.user_account){
-              vm.isConfirm4 = true;
-            } 
+              let hasAcount = await vm.check_account();
+              if(hasAcount) {
+                vm.isConfirm = true;
+              } else {
+                vm.isConfirm4 = true;
+              }
+            }
             // 登入
             else {
               vm.isConfirm = true;
+              vm.is_use_bonus = false;
+              vm.use_bonus = 0;
+              vm.getUserInfo()
             }
           }
         }
