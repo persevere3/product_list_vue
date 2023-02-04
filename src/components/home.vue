@@ -178,6 +178,7 @@
             <div class="discountBox">
               <input type="text" v-model.trim="discountCode" @keyup.enter="discount">
               <div class="button" @click="discount">使用折扣碼</div>
+              <div class="button" @click="unDiscount">取消折扣碼</div>
             </div>
             <div class="discountError" v-if="isDiscountMessage">{{discountMessage}}</div>
           </div>
@@ -197,7 +198,16 @@
                 <div class="after">NT$ {{numberThousands(total.DiscountCode)}}</div>
               </li>
               <li>
-                <div class="before">= 金額總計</div>
+                <div class="before">小計</div>
+                <div class="after">NT$ {{numberThousands(parseInt(total.Total) - parseInt(total.Discount) - parseInt(total.DiscountCode))}}</div>
+              </li>
+              <hr>
+              <li v-if="is_use_bonus && use_bonus > 0">
+                <div class="before">- 購物金</div>
+                <div class="after">NT$ {{numberThousands(use_bonus)}}</div>
+              </li>
+              <li>
+                <div class="before">金額總計</div>
                 <div class="after">NT$ {{numberThousands(total.Sum)}}</div>
               </li>
             </ul>
@@ -356,9 +366,9 @@
                   購物金餘額: <span class="bonus"> {{numberThousands(total_bonus < 0 ? 0 : total_bonus)}} 點 </span>
                 </div>
                 <div class="box" v-if="total_bonus * 1">
-                  <input type="checkbox" id="is_use_bonus" v-model="is_use_bonus" @change="getTotal(1)"> 
+                  <input type="checkbox" id="is_use_bonus" v-model="is_use_bonus" @change="use_bonus_handler"> 
                   <label for="is_use_bonus" > 使用購物金 </label>
-                  <input type="number" placeholder="購物金" v-model="use_bonus" @input="use_bonus = $event.target.value < 0 ? 0 : $event.target.value ; use_bonus = (Math.min(total_bonus, use_bonus, total.Total) != use_bonus ? Math.min(total_bonus, use_bonus, total.Total) : use_bonus * 1)" @change="is_use_bonus ? getTotal(1) : ''">
+                  <input type="number" placeholder="購物金" v-model="use_bonus" @blur="use_bonus_handler">
                 </div>
               </div>
               <div class="right"></div>
@@ -374,10 +384,6 @@
                 <div class="before">商品金額</div>
                 <div class="after">NT$ {{numberThousands(total.Total)}}</div>
               </li>
-              <li v-if="is_use_bonus">
-                <div class="before">- 購物金</div>
-                <div class="after">NT$ {{numberThousands(!use_bonus ? 0 : use_bonus)}}</div>
-              </li>
               <li>
                 <div class="before">- 折扣</div>
                 <div class="after">NT$ {{numberThousands(total.Discount)}}</div>
@@ -387,14 +393,24 @@
                 <div class="after">NT$ {{numberThousands(total.DiscountCode)}}</div>
               </li>
               <li>
+                <div class="before">小計</div>
+                <div class="after">NT$ {{numberThousands(parseInt(total.Total) - parseInt(total.Discount) - parseInt(total.DiscountCode))}}</div>
+              </li>
+              <hr>
+              <li v-if="is_use_bonus && use_bonus > 0">
+                <div class="before">- 購物金</div>
+                <div class="after">NT$ {{numberThousands(use_bonus)}}</div>
+              </li>
+              <li>
                 <div class="before">+ 運費</div>
                 <div class="after">NT$ {{numberThousands(total.Shipping)}}</div>
               </li>
               <li>
-                <div class="before">= 金額總計</div>
+                <div class="before"> 金額總計 </div>
                 <div class="after">NT$ {{numberThousands(total.Sum)}}</div>
               </li>
-              <template v-if="user_account && total && bonus_percent * 1">
+              <template v-if="user_account && total">
+                <hr>
                 <li>
                   訂單完成後獲得 NT${{ numberThousands(member_bonus) }} 購物金
                 </li>
@@ -406,7 +422,7 @@
           </div>
           
           <div class="buttonGroup">
-            <div class="button" @click="use_bonus = 0; is_use_bonus = false; stepIndex = 1; getProducts()">上一步</div>
+            <div class="button" @click="stepIndex = 1; getProducts()">上一步</div>
             <div class="button" @click="checkOrder()"><i  v-show="orderIng" class="fas fa-spinner fa-spin" style="margin-right: 5px"></i>完成訂單</div>
           </div>
         </div>
@@ -675,7 +691,8 @@
         <div class="confirm_title"> 
           <i class="fa fa-question-circle" aria-hidden="true"></i>
         </div>
-        <div class="message"> 該手機已使用過折扣碼，按確定取消折扣碼優惠直接完成訂單，按取消重新輸入手機或折扣碼 </div>
+        <div class="message" v-if="!user_account"> 該手機已使用過此折扣碼，按確定取消折扣碼優惠直接完成訂單，按取消重新輸入手機或折扣碼 </div>
+        <div class="message" v-else> 該會員已使用過此折扣碼，按確定取消折扣碼優惠直接完成訂單，按取消重新輸入折扣碼 </div>
         <div class="buttonGroup">
           <div class="button cancel" @click=" isConfirm2 = false;"> 取消 </div>
           <div class="button determine" @click="cancelDiscountCodeCreateOrder()"> 確定  </div>
@@ -1423,7 +1440,7 @@ export default {
 
         if(vm.user_account) vm.getUserInfo();
       })
-      .catch((err) => { 
+      .catch((err) => {
         console.error(err);
         vm.login(vm.getSite);
       });
@@ -1529,7 +1546,12 @@ export default {
         let RtnMsg = location.href.split('RtnMsg=')[1];
         if(RtnMsg && RtnMsg == 'Succeeded'){
           window.history.replaceState({}, document.title, "/cart/");
-          localStorage.removeItem(`${vm.site.Name}@carts`);
+          if(vm.user_account) {
+            localStorage.removeItem(`${vm.site.Name}@${vm.user_account}@carts`);
+          }
+          else {
+            localStorage.removeItem(`${vm.site.Name}@carts`);
+          }
           vm.showMessage('付款成功', true)
         }
 
@@ -1576,50 +1598,55 @@ export default {
     getUserInfo(){
       let vm = this;
 
-      const url = `${vm.protocol}//${vm.api}/interface/WebMember/GetMemberInfo`;
-      let formData = new FormData();
-      formData.append("storeid", vm.site.Name);
-      formData.append("phone", vm.user_account);
-      const config = {
-        headers: {
-          // 'Content-Type': 'application/x-www-form-urlencoded'
-          'Content-Type': 'multipart/form-data'
-        }
-      };
-      this.$http.post(url, formData, config).then((res) => {
-        if(res.data.status){
-          vm.userInfo = res.data.datas[0][0]
+      return new Promise((resolve, reject) => {
+        const url = `${vm.protocol}//${vm.api}/interface/WebMember/GetMemberInfo`;
+        let formData = new FormData();
+        formData.append("storeid", vm.site.Name);
+        formData.append("phone", vm.user_account);
+        const config = {
+          headers: {
+            // 'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'multipart/form-data'
+          }
+        };
+        vm.$http.post(url, formData, config).then((res) => {
+          if(res.data.status){
+            vm.userInfo = res.data.datas[0][0]
 
-          vm.info.purchaser_email = vm.userInfo.Email;
-          vm.info.purchaser_name = vm.userInfo.Name;
-          vm.info.purchaser_number = vm.userInfo.Phone;
-          vm.total_bonus = vm.userInfo.Wallet * 1
+            vm.info.purchaser_email = vm.userInfo.Email;
+            vm.info.purchaser_name = vm.userInfo.Name;
+            vm.info.purchaser_number = vm.userInfo.Phone;
+            vm.total_bonus = vm.userInfo.Wallet * 1
 
-          let address_obj = {};
-          let address_arr = vm.userInfo.Adress.split('_#_');
-          address_arr.length = address_arr.length - 1;
-          for(let address of address_arr){
-            let item = address.split('_ _');
-            address_obj[item[0]] = {
-              id: item[0],
-              address: `${item[1]} ${item[2]} ${item[3]}`,
+            let address_obj = {};
+            let address_arr = vm.userInfo.Adress.split('_#_');
+            address_arr.length = address_arr.length - 1;
+            for(let address of address_arr){
+              let item = address.split('_ _');
+              address_obj[item[0]] = {
+                id: item[0],
+                address: `${item[1]} ${item[2]} ${item[3]}`,
+              }
+            }
+            vm.userInfo.address_obj = address_obj;
+          }
+          else {
+            if( res.data.msg == '請先登入會員' ||
+                res.data.msg == '閒置逾時，請重新登入' ||
+                res.data.msg == '已登出，請重新登入'
+            ) {
+              localStorage.removeItem('user_account');
+              vm.user_account = '';
             }
           }
-          vm.userInfo.address_obj = address_obj;
-        }
-        else {
-          if( res.data.msg == '請先登入會員' ||
-              res.data.msg == '閒置逾時，請重新登入' ||
-              res.data.msg == '已登出，請重新登入'
-          ) {
-            localStorage.removeItem('user_account');
-            vm.user_account = '';
-          }
-        }
+
+          resolve()
+        })
+        .catch((err) => { 
+          console.error(err);
+          resolve()
+        });
       })
-      .catch((err) => { 
-        console.error(err);
-      });
     },
     
     getAddPrice(id, item, type2){
@@ -1674,8 +1701,25 @@ export default {
     },
     
     getCarts(type, type2){ // type '0' '1'getTotal type2 '0' '1'
-      this.carts = localStorage.getItem(`${this.site.Name}@carts`);
-      this.carts = this.carts ? JSON.parse(this.carts) : [];
+      if(this.user_account) {
+        this.carts = JSON.parse(localStorage.getItem(`${this.site.Name}@${this.user_account}@carts`)) || [];
+        let localCarts = JSON.parse(localStorage.getItem(`${this.site.Name}@carts`)) || [];
+        for(let localIndex in localCarts) {
+          let f = false;
+          for(let cartsIndex in this.carts) {
+            if(localCarts[localIndex].ID === this.carts[cartsIndex].ID) {
+              this.$set(this.carts, cartsIndex, localCarts[localIndex])
+              f = true;
+            }
+          }
+          if(!f) {
+            this.$set(this.carts, this.carts.length, localCarts[localIndex])
+          }
+        }
+      }
+      else {
+        this.carts = JSON.parse(localStorage.getItem(`${this.site.Name}@carts`)) || [];
+      }
 
       let isGetTotal = 0;
       this.computedCartsLength();
@@ -1826,6 +1870,13 @@ export default {
       }
       this.setCarts();
       if(isGetTotal == 0) {
+        if(this.user_account) {
+          this.use_bonus_handler('notGetTotal');
+        } else {
+          this.is_use_bonus = false;
+          this.use_bonus = 0;
+        }
+
         if(type && type == '1'){
           this.getTotal(1);   
         }
@@ -1840,7 +1891,12 @@ export default {
       }
     },
     setCarts(){
-      localStorage.setItem(`${this.site.Name}@carts`, JSON.stringify(this.carts));
+      if(this.user_account) {
+        localStorage.setItem(`${this.site.Name}@${this.user_account}@carts`, JSON.stringify(this.carts));
+      }
+      else {
+        localStorage.setItem(`${this.site.Name}@carts`, JSON.stringify(this.carts));
+      }
       this.computedCartsLength();
     },
 
@@ -1885,7 +1941,6 @@ export default {
       }
       else {
         vm.favorite = JSON.parse(localStorage.getItem(`${vm.site.Name}@favorite`)) || {};
-        
         for(let key in vm.favorite) {
           let favorite = vm.favorite[key];
           let index = vm.products.map((item) => item.ID).indexOf(favorite.ID)
@@ -1953,7 +2008,6 @@ export default {
             }
           })
         }
-
         localStorage.setItem(`${vm.site.Name}@favorite`, JSON.stringify(vm.favorite))
       }
     },
@@ -2005,6 +2059,12 @@ export default {
         this.showMessage('套用折扣碼異常，請稍後再試', false);
         vm.login();
       });
+    },
+
+    unDiscount(){
+      this.discountCode = '';
+      this.useCodeSuccess = '';
+      this.getTotal(0);
     },
     
     createCartsStr(){
@@ -2073,53 +2133,53 @@ export default {
       })
       return o;
     },
-    getTotal(type){
+    async getTotal(type){
       const vm = this;
-      let o = vm.createCartsStr();
-      if( !o.id && !o.specificationid ){
-        return;
-      }
-      this.site = JSON.parse(localStorage.getItem('site')) || [] ;
-      const url = `${vm.protocol}//${vm.api}/interface/store/GetProductTotal?`;
-      const params = `id=${o.id}&qry=${o.qry}&additionalid=${o.additionalid}&additionalqry=${o.additionalqry}&specificationid=${o.specificationid}&specificationqty=${o.specificationqty}&code=${vm.useCodeSuccess}&shipping=${vm.transport == 0 ? 0 : vm.transport * 1 + 1}&type=${type}&Preview=${this.site.Preview}&memberWallet=${this.is_use_bonus ? this.use_bonus : 0}`;
-      const config = {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      };
-      this.$http.post(url, params, config).then((res) => {
 
-        if(res.data.errormessage){
-          // this.stepIndex = 1;
-          // vm.getProducts();
-          console.log('getTotal errormessage')
+      return new Promise((resolve, reject) => {
+        vm.bonus_percent = 0;
+
+        let o = vm.createCartsStr();
+        if( !o.id && !o.specificationid ){
           return;
         }
-
-        vm.total = res.data.data[0];
-
-        for(let item of vm.bonus_array) {
-          if(vm.total.Sum >= item.lower) {
-            vm.bonus_percent = item.shipping;
+        vm.site = JSON.parse(localStorage.getItem('site')) || [] ;
+        const url = `${vm.protocol}//${vm.api}/interface/store/GetProductTotal?`;
+        const params = `id=${o.id}&qry=${o.qry}&additionalid=${o.additionalid}&additionalqry=${o.additionalqry}&specificationid=${o.specificationid}&specificationqty=${o.specificationqty}&code=${vm.useCodeSuccess}&shipping=${vm.transport == 0 ? 0 : vm.transport * 1 + 1}&type=${type}&Preview=${vm.site.Preview}&memberWallet=${vm.is_use_bonus ? vm.use_bonus : 0}`;
+        const config = {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
           }
-        }
+        };
+        vm.$http.post(url, params, config).then((res) => {
 
-        vm.use_bonus = (Math.min(vm.total_bonus, vm.use_bonus, vm.total.Total) != vm.use_bonus ? Math.min(vm.total_bonus, vm.use_bonus, vm.total.Total) : vm.use_bonus * 1)
+          if(res.data.errormessage){
+            console.log('getTotal errormessage')
+            return;
+          }
 
-      }).catch((err) => {
-        console.error(err)
-        // this.stepIndex = 1;
-        // vm.getProducts();
-      });
+          vm.total = res.data.data[0];
+
+          for(let item of vm.bonus_array) {
+            if((parseInt(vm.total.Sum) - parseInt(vm.total.Shipping)) >= item.lower) {
+              vm.bonus_percent = item.shipping;
+            }
+          }
+
+          resolve()
+        }).catch((err) => {
+          console.error(err)
+          resolve()
+        });
+      })
     },
 
     // checkOrder confirm 
-    cancelDiscountCodeCreateOrder(){
+    async cancelDiscountCodeCreateOrder(){
       let vm = this;
       vm.discountCode = '';
       vm.useCodeSuccess = '';
-      vm.total.Sum = vm.total.Total*1 + vm.total.Shipping*1 - vm.total.Discount*1;
-      vm.total.DiscountCode = 0;
+      await vm.getTotal(1)
       vm.isConfirm2 = false;
       vm.createOrder();
     },
@@ -2135,7 +2195,7 @@ export default {
       }
 
       vm.is_click_finish_order = true;
-      vm.$validator.validate().then((result) => {
+      vm.$validator.validate().then(async function(result) {
         if (result && 
             vm.transport !== '0' &&
             vm.pay_method !== '0' &&
@@ -2148,6 +2208,8 @@ export default {
             ( vm.transport == 1 ? (vm.city_active && vm.district_active && vm.detail_address) : true) &&
             ( vm.transport == 3 ? vm.storeaddress != '' : true)
            ) {
+
+          vm.use_bonus_handler();
           vm.createOrder();
         }
       });
@@ -2157,20 +2219,6 @@ export default {
     clearCarts(){
       this.carts = [];
       this.setCarts();
-
-      // this.info = {
-      //   purchaser_email:'',
-      //   purchaser_name:'',
-      //   purchaser_number:'',
-      //   receiver_name:'',
-      //   receiver_number:'',
-      //   info_message:''
-      // };
-      // receiver_address
-
-      // this.invoice_type = '0';
-      // this.invoice_title = '';
-      // this.invoice_uniNumber = '';
 
       this.discountCode = '';
       this.useCodeSuccess = '';
@@ -2186,8 +2234,6 @@ export default {
       this.currentPage = 1;
     },
     toPay(){
-      this.clearCarts();
-
       this.isConfirm = false;
 
       // LinePay
@@ -2521,7 +2567,7 @@ export default {
         formData.append('Receiver' , this.info.receiver_name);
         formData.append('ReceiverPhone' , this.info.receiver_number);
         formData.append('Address' , this.receiver_address);
-        if(Object.keys(this.userInfo.address_obj).length < 3 && !this.has_address && this.is_save_address){
+        if(this.userInfo.address_obj && Object.keys(this.userInfo.address_obj).length < 3 && !this.has_address && this.is_save_address){
           let id = new Date().getTime();
           formData.append('saveAddressStr' , `${id}_ _${this.receiver_address.replace(/ /g, '_ _')}`);
         } else {
@@ -2570,6 +2616,13 @@ export default {
 
           vm.orderIng = false;
           vm.showMessage(res.data.message, false)
+          
+          if(res.data.message === '購物金不足。'){
+            await vm.getUserInfo();
+            vm.use_bonus = 0;
+            vm.getTotal(1);
+          }
+
           return;
         }
         else {
@@ -2599,6 +2652,8 @@ export default {
               vm.getUserInfo()
             }
           }
+
+          vm.clearCarts();
         }
       })
       .catch((err) => {
@@ -3304,11 +3359,28 @@ export default {
 
     // carts step
     stepOneToTwo(){
-      if( false ){
-        return;
-      }
       this.getStore();
       this.getProducts('1');
+      let newUser_account = localStorage.getItem('user_account');
+      if(newUser_account != this.user_account) {
+        this.user_account = newUser_account
+        if(newUser_account) {
+          // 登出 => 登入 or 換帳號
+          this.getUserInfo();
+        }
+        else {
+          // 登入 => 登出
+          this.userInfo = {}
+          this.info = {
+            purchaser_email:'',
+            purchaser_name:'',
+            purchaser_number:'',
+            receiver_name:'',
+            receiver_number:'',
+            info_message:''
+          }
+        }
+      }
       this.stepIndex = 2;
       this.$refs.cartScroll.scrollTop = 0;
     },
@@ -3531,6 +3603,26 @@ export default {
       copy_input.select();
       document.execCommand('copy');
     },
+
+    // 
+    async use_bonus_handler(notGetTotal) {
+      let vm = this;
+      vm.use_bonus  = vm.use_bonus * 1;
+      vm.use_bonus = Math.floor(vm.use_bonus);
+      if(vm.use_bonus <= 0) {
+        vm.use_bonus = 0;
+      }
+      else {
+        let use_bonus_max = Math.min(vm.total_bonus * 1, vm.total.Total * 1 - vm.total.Discount * 1 - vm.total.DiscountCode * 1)
+        if(vm.use_bonus > use_bonus_max) {
+          vm.use_bonus = use_bonus_max
+        }
+      }
+      if(notGetTotal) {
+        return
+      }
+      await vm.getTotal(1)
+    }
   },
   created(){
     const vm = this;

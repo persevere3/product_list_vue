@@ -1010,7 +1010,7 @@ input:focus, textarea:focus, select:focus{
           display: flex;
           height: 30px;
           input{
-            width: 85%;
+            flex: 1 1; 
             border-radius:5px 0px 0px 5px;
             border: 1px solid #555;
             border-right: 0px solid #555;
@@ -1021,15 +1021,18 @@ input:focus, textarea:focus, select:focus{
             box-shadow: 0px 0px 3px 1px rgba(63, 135, 166, 1);
           }
           .button{
-            width: 15%;
+            width: 120px;
             cursor: pointer;
-            border-radius:0px 5px 5px 0px;
             color: white;
             background-color:  rgba(63, 135, 166, 0.7);
   
             display: flex;
             justify-content: center;
             align-items: center;
+
+            &:last-child {
+              border-radius:0px 5px 5px 0px;
+            }
           }
           .button:hover{
             background-color:  rgba(63, 135, 166, 1);
@@ -1414,16 +1417,6 @@ input:focus, textarea:focus, select:focus{
           }
         }
 
-        .discount{
-          .discountBox{
-            input{
-              width: 75%;
-            }
-            .button{
-              width: 25%;
-            }
-          }
-        }
         .total{
           ul{
             li{
@@ -1553,14 +1546,6 @@ input:focus, textarea:focus, select:focus{
         .discount{
           p{
             margin-left: 0px;
-          }
-          .discountBox{
-            input{
-              width: 60%;
-            }
-            .button{
-              width: 40%;
-            }
           }
         }
         .total{
