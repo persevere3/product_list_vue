@@ -199,7 +199,12 @@
               </li>
               <li>
                 <div class="before">小計</div>
-                <div class="after">NT$ {{numberThousands(parseInt(total.Total) - parseInt(total.Discount) - parseInt(total.DiscountCode))}}</div>
+                <div class="after" v-if="(parseInt(total.Total) - parseInt(total.Discount) - parseInt(total.DiscountCode)) >= 0">
+                  NT$ {{numberThousands(parseInt(total.Total) - parseInt(total.Discount) - parseInt(total.DiscountCode))}}
+                </div>
+                <div class="after" v-else>
+                  NT$ 0
+                </div>
               </li>
               <hr>
               <li v-if="is_use_bonus && use_bonus > 0">
@@ -394,7 +399,13 @@
               </li>
               <li>
                 <div class="before">小計</div>
-                <div class="after">NT$ {{numberThousands(parseInt(total.Total) - parseInt(total.Discount) - parseInt(total.DiscountCode))}}</div>
+
+                <div class="after" v-if="(parseInt(total.Total) - parseInt(total.Discount) - parseInt(total.DiscountCode)) >= 0">
+                  NT$ {{numberThousands(parseInt(total.Total) - parseInt(total.Discount) - parseInt(total.DiscountCode))}}
+                </div>
+                <div class="after" v-else>
+                  NT$ 0
+                </div>
               </li>
               <hr>
               <li v-if="is_use_bonus && use_bonus > 0">
@@ -486,11 +497,11 @@
                 </div> 
               
                 <div class="qtyBox" v-show="selectProduct.selectSpecIndex != -1  && store.Enable == 1 && ( selectProduct.selectSpecItem.Enable == 0 || (selectProduct.selectSpecItem.Enable == 1 && selectProduct.selectSpecItem.Amount != 0) )">
-                  <div class="reduce" :class="{qtyDisabled:selectProduct.selectSpecItem.buyQty<1}" @click="getAmount( 3,  selectProduct.selectSpecItem.ID, updateProductsBuyQty_spec, [selectIndex, selectProduct.selectSpecItem.buyQty-1, selectProduct.selectSpecIndex,'']); "><i class="fa fa-minus"></i></div>
-                  <input class="number" size="3" type="text" maxlength="3" @input="numberInput( selectProduct.selectSpecItem )"  @blur="getAmount( 3,  selectProduct.selectSpecItem.ID, updateProductsBuyQty_spec, [selectIndex, selectProduct.selectSpecItem.buyQty, selectProduct.selectSpecIndex,''])" 
-                    @keyup.enter="getAmount( 3,  selectProduct.selectSpecItem.ID, updateProductsBuyQty_spec, [selectIndex, selectProduct.selectSpecItem.buyQty, selectProduct.selectSpecIndex,''])"
+                  <div class="reduce" :class="{qtyDisabled:selectProduct.selectSpecItem.buyQty<1}" @click="getAmount( 3,  selectProduct.selectSpecItem.ID, updateProductsBuyQty_spec, [selectProduct, selectProduct.selectSpecItem.buyQty-1, selectProduct.selectSpecIndex,'']); "><i class="fa fa-minus"></i></div>
+                  <input class="number" size="3" type="text" maxlength="3" @input="numberInput( selectProduct.selectSpecItem )"  @blur="getAmount( 3,  selectProduct.selectSpecItem.ID, updateProductsBuyQty_spec, [selectProduct, selectProduct.selectSpecItem.buyQty, selectProduct.selectSpecIndex,''])" 
+                    @keyup.enter="getAmount( 3,  selectProduct.selectSpecItem.ID, updateProductsBuyQty_spec, [selectProduct, selectProduct.selectSpecItem.buyQty, selectProduct.selectSpecIndex,''])"
                     v-model="selectProduct.selectSpecItem.buyQty">
-                  <div class="add" :class="{qtyDisabled:(selectProduct.selectSpecItem.Enable == 1 && selectProduct.selectSpecItem.buyQty > selectProduct.selectSpecItem.Amount - 1) || selectProduct.selectSpecItem.buyQty > 998 }" @click="getAmount( 3,  selectProduct.selectSpecItem.ID, updateProductsBuyQty_spec, [selectIndex, selectProduct.selectSpecItem.buyQty*1+1, selectProduct.selectSpecIndex,'']); "><i class="fa fa-plus"></i></div>
+                  <div class="add" :class="{qtyDisabled:(selectProduct.selectSpecItem.Enable == 1 && selectProduct.selectSpecItem.buyQty > selectProduct.selectSpecItem.Amount - 1) || selectProduct.selectSpecItem.buyQty > 998 }" @click="getAmount( 3,  selectProduct.selectSpecItem.ID, updateProductsBuyQty_spec, [selectProduct, selectProduct.selectSpecItem.buyQty*1+1, selectProduct.selectSpecIndex,'']); "><i class="fa fa-plus"></i></div>
                 </div>
                 <div class="qtyBox_fake" v-show="!(selectProduct.selectSpecItem.Enable == 1 && selectProduct.selectSpecItem.Amount == 0) && !( selectProduct.selectSpecIndex != -1  && store.Enable == 1 && ( selectProduct.selectSpecItem.Enable == 0 || (selectProduct.selectSpecItem.Enable == 1 && selectProduct.selectSpecItem.Amount != 0) ) )">
                   <div class="reduce"><i class="fa fa-minus"></i></div>
@@ -504,11 +515,11 @@
               <template v-if="!selectProduct.specArr">
                 <div class="noSpec"></div>
                 <div class="qtyBox" v-show=" store.Enable == 1 && ( selectProduct.Enable == 0 || (selectProduct.Enable == 1 && selectProduct.Amount != 0) )">
-                  <div class="reduce" :class="{qtyDisabled:selectProduct.buyQty<1}" @click="getAmount( 1,  selectProduct.ID, updateProductsBuyQty, [selectIndex, selectProduct.buyQty-1,'']);  "><i class="fa fa-minus"></i></div>
-                  <input class="number" size="3" type="text" maxlength="3" @input="numberInput_2"  @blur="getAmount( 1,  selectProduct.ID, updateProductsBuyQty, [selectIndex, selectProduct.buyQty,''])" 
-                    @keyup.enter="getAmount( 1,  selectProduct.ID, updateProductsBuyQty, [selectIndex, selectProduct.buyQty,''])"
+                  <div class="reduce" :class="{qtyDisabled:selectProduct.buyQty<1}" @click="getAmount( 1,  selectProduct.ID, updateProductsBuyQty, [selectProduct, selectProduct.buyQty-1,'']);  "><i class="fa fa-minus"></i></div>
+                  <input class="number" size="3" type="text" maxlength="3" @input="numberInput_2"  @blur="getAmount( 1,  selectProduct.ID, updateProductsBuyQty, [selectProduct, selectProduct.buyQty,''])" 
+                    @keyup.enter="getAmount( 1,  selectProduct.ID, updateProductsBuyQty, [selectProduct, selectProduct.buyQty,''])"
                     v-model="selectProduct.buyQty">
-                  <div class="add" :class="{qtyDisabled:(selectProduct.Enable == 1 && selectProduct.buyQty > selectProduct.Amount - 1) || selectProduct.buyQty > 998 }" @click="getAmount( 1,  selectProduct.ID, updateProductsBuyQty, [selectIndex, selectProduct.buyQty*1+1,'']); "><i class="fa fa-plus"></i></div>
+                  <div class="add" :class="{qtyDisabled:(selectProduct.Enable == 1 && selectProduct.buyQty > selectProduct.Amount - 1) || selectProduct.buyQty > 998 }" @click="getAmount( 1,  selectProduct.ID, updateProductsBuyQty, [selectProduct, selectProduct.buyQty*1+1,'']); "><i class="fa fa-plus"></i></div>
                 </div>
                 <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
                 <div class="discontinued" v-show="selectProduct.Enable == 1 && selectProduct.Amount == 0">暫無庫存</div>
@@ -597,7 +608,7 @@
           <div class="content ql-editor" ref='selectProduct_detail_content' v-html="unescapeHTML(selectProduct.Detail)"></div>
         </div>
 
-        <div class="others">
+        <div class="others" v-if="false">
           <div class="title">相關商品</div>
           <div class="products">
             <ul>
@@ -930,11 +941,11 @@
                 </div> 
                 
                 <div class="qtyBox" v-if="item.selectSpecIndex != -1  && store.Enable == 1 && ( item.selectSpecItem.Enable == 0 || (item.selectSpecItem.Enable == 1 && item.selectSpecItem.Amount != 0) )">
-                  <div class="reduce" :class="{qtyDisabled:item.selectSpecItem.buyQty<1}" @click="getAmount( 3,  item.selectSpecItem.ID, updateProductsBuyQty_spec, [index, item.selectSpecItem.buyQty-1, item.selectSpecIndex, $event]);"><i class="fa fa-minus"></i></div>
-                  <input class="number" size="3" @blur="getAmount( 3,  item.selectSpecItem.ID, updateProductsBuyQty_spec, [index, item.selectSpecItem.buyQty, item.selectSpecIndex, ''])" 
-                    @keyup.enter="getAmount( 3,  item.selectSpecItem.ID, updateProductsBuyQty_spec, [index, item.selectSpecItem.buyQty, item.selectSpecIndex, ''])"
+                  <div class="reduce" :class="{qtyDisabled:item.selectSpecItem.buyQty<1}" @click="getAmount( 3,  item.selectSpecItem.ID, updateProductsBuyQty_spec, [item, item.selectSpecItem.buyQty-1, item.selectSpecIndex, $event]);"><i class="fa fa-minus"></i></div>
+                  <input class="number" size="3" @blur="getAmount( 3,  item.selectSpecItem.ID, updateProductsBuyQty_spec, [item, item.selectSpecItem.buyQty, item.selectSpecIndex, ''])" 
+                    @keyup.enter="getAmount( 3,  item.selectSpecItem.ID, updateProductsBuyQty_spec, [item, item.selectSpecItem.buyQty, item.selectSpecIndex, ''])"
                     type="text" maxlength="3" @input="numberInput(item.selectSpecItem)"  v-model="item.selectSpecItem.buyQty">
-                  <div class="add" :class="{qtyDisabled:(item.selectSpecItem.Enable == 1 && item.selectSpecItem.buyQty > item.selectSpecItem.Amount - 1) || item.selectSpecItem.buyQty > 998 }" @click="getAmount( 3,  item.selectSpecItem.ID, updateProductsBuyQty_spec, [index, item.selectSpecItem.buyQty+1, item.selectSpecIndex, $event]);"><i class="fa fa-plus"></i></div>
+                  <div class="add" :class="{qtyDisabled:(item.selectSpecItem.Enable == 1 && item.selectSpecItem.buyQty > item.selectSpecItem.Amount - 1) || item.selectSpecItem.buyQty > 998 }" @click="getAmount( 3,  item.selectSpecItem.ID, updateProductsBuyQty_spec, [item, item.selectSpecItem.buyQty+1, item.selectSpecIndex, $event]);"><i class="fa fa-plus"></i></div>
                 </div>
                 <div class="qtyBox_fake" v-if="!(item.selectSpecItem.Enable == 1 && item.selectSpecItem.Amount == 0) && !(item.selectSpecIndex != -1  && store.Enable == 1 && ( item.selectSpecItem.Enable == 0 || (item.selectSpecItem.Enable == 1 && item.selectSpecItem.Amount != 0)))">
                   <div class="reduce"><i class="fa fa-minus"></i></div>
@@ -949,11 +960,11 @@
               <template v-if="!item.specArr">
                 <div class="noSpec"></div>
                 <div class="qtyBox" v-show="store.Enable == 1 && ( item.Enable == 0 || (item.Enable == 1 && item.Amount != 0) )">
-                  <div class="reduce" :class="{qtyDisabled:item.buyQty<1}" @click="getAmount( 1,  item.ID, updateProductsBuyQty, [index, item.buyQty-1, $event]); "><i class="fa fa-minus"></i></div>
-                  <input class="number" size="3" @blur="getAmount( 1,  item.ID, updateProductsBuyQty, [index, item.buyQty, ''])" 
-                    @keyup.enter="getAmount( 1,  item.ID, updateProductsBuyQty, [index, item.buyQty, ''])"
+                  <div class="reduce" :class="{qtyDisabled:item.buyQty<1}" @click="getAmount( 1,  item.ID, updateProductsBuyQty, [item, item.buyQty-1, $event]); "><i class="fa fa-minus"></i></div>
+                  <input class="number" size="3" @blur="getAmount( 1,  item.ID, updateProductsBuyQty, [item, item.buyQty, ''])" 
+                    @keyup.enter="getAmount( 1,  item.ID, updateProductsBuyQty, [item, item.buyQty, ''])"
                     type="text" maxlength="3" @input="numberInput_2"  v-model="item.buyQty">
-                  <div class="add" :class="{qtyDisabled:(item.Enable == 1 && item.buyQty > item.Amount - 1) || item.buyQty > 998 }" @click="getAmount( 1,  item.ID, updateProductsBuyQty, [index, item.buyQty*1+1, $event]); "><i class="fa fa-plus"></i></div>
+                  <div class="add" :class="{qtyDisabled:(item.Enable == 1 && item.buyQty > item.Amount - 1) || item.buyQty > 998 }" @click="getAmount( 1,  item.ID, updateProductsBuyQty, [item, item.buyQty*1+1, $event]); "><i class="fa fa-plus"></i></div>
                 </div>
                 <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
                 <div class="discontinued" v-show="item.Enable == 1 && item.Amount == 0">暫無庫存</div>
@@ -1026,6 +1037,7 @@ export default {
 
       //
       user_account: '',
+      isSyncCarts: false,
       userInfo: {},
 
       productCompleted: false,
@@ -1703,19 +1715,6 @@ export default {
     getCarts(type, type2){ // type '0' '1'getTotal type2 '0' '1'
       if(this.user_account) {
         this.carts = JSON.parse(localStorage.getItem(`${this.site.Name}@${this.user_account}@carts`)) || [];
-        let localCarts = JSON.parse(localStorage.getItem(`${this.site.Name}@carts`)) || [];
-        for(let localIndex in localCarts) {
-          let f = false;
-          for(let cartsIndex in this.carts) {
-            if(localCarts[localIndex].ID === this.carts[cartsIndex].ID) {
-              this.$set(this.carts, cartsIndex, localCarts[localIndex])
-              f = true;
-            }
-          }
-          if(!f) {
-            this.$set(this.carts, this.carts.length, localCarts[localIndex])
-          }
-        }
       }
       else {
         this.carts = JSON.parse(localStorage.getItem(`${this.site.Name}@carts`)) || [];
@@ -2137,8 +2136,6 @@ export default {
       const vm = this;
 
       return new Promise((resolve, reject) => {
-        vm.bonus_percent = 0;
-
         let o = vm.createCartsStr();
         if( !o.id && !o.specificationid ){
           return;
@@ -2165,7 +2162,6 @@ export default {
               vm.bonus_percent = item.shipping;
             }
           }
-
           resolve()
         }).catch((err) => {
           console.error(err)
@@ -2209,13 +2205,13 @@ export default {
             ( vm.transport == 3 ? vm.storeaddress != '' : true)
            ) {
 
-          vm.use_bonus_handler();
+          await vm.use_bonus_handler();
           vm.createOrder();
         }
       });
     },
 
-    // createOrder confirm
+    //
     clearCarts(){
       this.carts = [];
       this.setCarts();
@@ -2250,7 +2246,7 @@ export default {
       }
       // ecpay
       else {
-        if(this.api.indexOf('demo') > -1){
+        if(this.api.indexOf('demo.uniqcarttest') > -1){
           this.ECPay_form = `<form id="ECPay_form" action="https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
         } else {
           this.ECPay_form = `<form id="ECPay_form" action="https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
@@ -2591,7 +2587,6 @@ export default {
 
         formData.append('MemberWallet' , this.use_bonus);
         formData.append('MemberBonus' , this.member_bonus);
-
         formData.append('Preview' , this.site.Preview);
       }
       const config = {
@@ -2834,31 +2829,31 @@ export default {
       vm.getTotal(0);
     },
     // pageFilterProduct.buyQty change => update carts => set carts
-    updateProductsBuyQty(i, qty, e, data){
+    updateProductsBuyQty(product, qty, e, data){
       let vm = this;
       let isfly = true;
 
-      let validate = vm.updateBuyQtyValidate(vm.pageFilterProduct[i], qty, data, '商品');
+      let validate = vm.updateBuyQtyValidate(product, qty, data, '商品');
       if(!validate){
         return;
       }
       else if( validate == 1 ){
         qty = 0;
       } 
-      else if ( vm.pageFilterProduct[i].Enable == 1 ) {
-        if( qty*1 > vm.pageFilterProduct[i].Amount*1 ){
-          qty = vm.pageFilterProduct[i].Amount*1;
+      else if ( product.Enable == 1 ) {
+        if( qty*1 > product.Amount*1 ){
+          qty = product.Amount*1;
         }
       }
 
       qty = qty * 1;
 
-      let isAdd = qty - vm.pageFilterProduct[i].buyQty;
+      let isAdd = qty - product.buyQty;
       isfly = isAdd ? true : false;
       // update pageFilterProduct ( bind view )
-      vm.$set(vm.pageFilterProduct[i], 'buyQty', qty);
+      vm.$set(product, 'buyQty', qty);
 
-      let changing = vm.pageFilterProduct[i];
+      let changing = product;
 
       // update carts
       let k = -1;
@@ -2882,6 +2877,12 @@ export default {
 
       // fly
       if(e && isfly){
+        let i 
+        vm.pageFilterProduct.forEach((item, index) => {
+          if(item.ID === product.ID) {
+            i = index
+          }
+        })
         vm.flyHandler(i,isAdd, e);
       }
 
@@ -3086,35 +3087,35 @@ export default {
       vm.getTotal(0);
     },
     // pageFilterProduct.buyQty change => update carts => set carts
-    updateProductsBuyQty_spec(i, qty, i2, e, data){
+    updateProductsBuyQty_spec(product, qty, i2, e, data){
       let vm = this;
       let isfly = true;
 
-      let validate = vm.updateBuyQtyValidate( vm.pageFilterProduct[i].specArr[i2], qty, data, '此規格')
+      let validate = vm.updateBuyQtyValidate( product.specArr[i2], qty, data, '此規格')
       if(!validate){
         return;
       }
       else if( validate == 1 ){
         qty = 0;
       } 
-      else if ( vm.pageFilterProduct[i].specArr[i2].Enable == 1 ) {
-        if( qty*1 > vm.pageFilterProduct[i].specArr[i2].Amount*1 ){
-          qty = vm.pageFilterProduct[i].specArr[i2].Amount*1;
+      else if ( product.specArr[i2].Enable == 1 ) {
+        if( qty*1 > product.specArr[i2].Amount*1 ){
+          qty = product.specArr[i2].Amount*1;
         }
       }
 
       qty = qty * 1;
 
-      let isAdd = qty - vm.pageFilterProduct[i].specArr[i2].buyQty;
+      let isAdd = qty - product.specArr[i2].buyQty;
       isfly = isAdd ? true : false;
       // update pageFilterProduct ( bind view )
-      vm.$set(vm.pageFilterProduct[i].specArr[i2], 'buyQty', qty);
+      vm.$set(product.specArr[i2], 'buyQty', qty);
 
       // update carts
       let cartsIndex = -1;
-      let changing = vm.pageFilterProduct[i].specArr[i2];
+      let changing = product.specArr[i2];
       vm.carts.forEach((item, index)=>{
-        if(item.ID === vm.pageFilterProduct[i].ID){
+        if(item.ID === product.ID){
           cartsIndex = index;
           for(let j = 0 ; j < item.specArr.length; j++){
             if(item.specArr[j].ID === changing.ID){
@@ -3125,10 +3126,10 @@ export default {
       })
       if(cartsIndex == -1){
         cartsIndex = vm.carts.length;
-        vm.carts.push(JSON.parse(JSON.stringify(vm.pageFilterProduct[i])));
-      } 
+        vm.carts.push(JSON.parse(JSON.stringify(product)));
+      }
 
-      let maxQty =  vm.itemTotalQty(vm.pageFilterProduct[i]);
+      let maxQty =  vm.itemTotalQty(product);
       if(!maxQty){
         vm.carts.splice(cartsIndex, 1);
       }
@@ -3138,7 +3139,13 @@ export default {
 
       // fly
       if(e && isfly){
-        vm.flyHandler(i,isAdd, e);
+        let i 
+        vm.pageFilterProduct.forEach((item, index) => {
+          if(item.ID === product.ID) {
+            i = index
+          }
+        })
+        vm.flyHandler(i, isAdd, e);
       }
 
       if(changing.addPrice){
@@ -3618,7 +3625,7 @@ export default {
           vm.use_bonus = use_bonus_max
         }
       }
-      if(notGetTotal) {
+      if(notGetTotal === 'notGetTotal') {
         return
       }
       await vm.getTotal(1)
