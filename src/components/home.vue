@@ -379,7 +379,7 @@
               <div class="right"></div>
             </div>
             <div class="info login" v-else>
-              請先 <span class="a" @click="urlPush('/user.html')"> 登入會員 </span>
+              請先 <span class="a" @click="urlPush(getShoppingPathname('user'))"> 登入會員 </span>
             </div>
           </template>
 
@@ -732,7 +732,7 @@
         </div>
         <div class="tip">
           <i class="fas fa-exclamation-circle"></i>
-          請在匯款成功後前往 <div class="a" @click="urlPush(`/order.html?phone=${info.purchaser_number}&mail=${info.purchaser_email}`, true)"> 訂單列表 </div>
+          請在匯款成功後前往 <div class="a" @click="urlPush(`${getShoppingPathname('order')}?phone=${info.purchaser_number}&mail=${info.purchaser_email}`, true)"> 訂單列表 </div>
           輸入匯款帳戶末6碼工作人員確認後將儘快為您安排出貨。
         </div>
 
@@ -882,7 +882,7 @@
 
     <div class="main" v-if="showPage === 'main'">
       <div class="logo_name">
-        <img :src="store.Logo" class="logo" v-if="store.Logo" @click="urlPush('/')">
+        <img :src="store.Logo" class="logo" v-if="store.Logo" @click="urlPush(getShoppingPathname('index'))">
       </div>
       <div class="categories">
         <ul>
@@ -3629,7 +3629,38 @@ export default {
         return
       }
       await vm.getTotal(1)
+    },
+
+    // shopping
+    getShoppingPathname(page) {
+      let shoppingHost = 'store.uniqm.com'
+
+      let host = location.host;
+
+      let pageIndex = shoppingHost == host ? 1 : 0;
+
+      let pageObj = {
+        index: {
+          0: '/',
+          1: '/'
+        },
+        order: {
+          0: '/order.html',
+          1: '/shoppingOrder.html'
+        },
+        user: {
+          0: '/user.html',
+          1: '/shoppingUser.html'
+        },
+        info: {
+          0: '/user_info.html',
+          1: '/shoppingInfo.html'
+        },
+      }
+
+      return pageObj[page][pageIndex];
     }
+
   },
   created(){
     const vm = this;
