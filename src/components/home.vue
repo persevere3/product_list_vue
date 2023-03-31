@@ -1569,19 +1569,29 @@ export default {
 
         vm.getCarts(type, '1');
 
+        let searchArr = location.search.substring(1).split('&')
+        let searchObj = {} 
+        searchArr.forEach(item => {
+          let key = item.split('=')[0];
+          let value = item.split('=')[1]
+          searchObj[key] = value
+        })
+        console.log(searchObj)
+
         // id
-        let id = location.href.split('id=')[1];
-        if(id){
+        let id = searchObj['id'];
+        let replace = searchObj['replace'];
+        if(id) {
           for(let i = 0; i < vm.products.length; i++){
-            if(vm.products[i].ID == id){
-              window.history.replaceState({}, document.title, "/cart/");
+            if(vm.products[i].ID == id) {
               vm.showSelect( vm.products[i], i);
+              if(!replace) window.history.replaceState({}, document.title, "/cart/");
             }
           }
         }
 
         // open_carts
-        let is_open_carts = location.href.split('open_carts=')[1];
+        let is_open_carts = searchObj['open_carts']
         if(is_open_carts){
           window.history.replaceState({}, document.title, "/cart/");
           vm.showPage = 'cart'
@@ -1589,7 +1599,7 @@ export default {
 
         // 7-11 貨到付款 test
         // storeaddress
-        let storeaddress = location.href.split('storeaddress=')[1];
+        let storeaddress = searchObj['storeaddress']
         if(storeaddress){
           window.history.replaceState({}, document.title, "/cart/");
           vm.showPage = 'cart'
@@ -3552,7 +3562,7 @@ export default {
 
     //
     click_share_link() {
-      this.copy( `${this.protocol}//${this.api}/cart/?id=${this.selectProduct.ID}`, '#copy_input2');
+      this.copy( `${this.protocol}//${this.api}/cart/?id=${this.selectProduct.ID}&replace=false`, '#copy_input2');
       this.showMessage('複製分享連結', true);
     },
 
