@@ -1,5 +1,5 @@
 <template>
-  <div class="productContainer" @click.stop="is_favorite_hover = false">
+  <div v-if="productCompleted" class="productContainer" @click.stop="is_favorite_hover = false">
 
     <div class="notice_page" :style="`height:${innerHeight}px`" v-show="showPage === 'Content' || showPage === 'Description' || showPage === 'PrivacyPolicy'">
       <div class="background" >
@@ -8,7 +8,593 @@
       </div>
     </div>
 
-    <div class="cart" v-show="showPage === 'cart'" :style="`height:${innerHeight}px`">
+    <div class="singleProduct" v-if="showPage === 'singleProduct'" :style="`height:${innerHeight}px`">
+      <div class="background">
+        <div class="picContent">
+          <div class="pic">
+            <div class="mainPic" :style="{backgroundImage :`url(${selectProduct.imgArr[selectProduct.mainImgIndex]})`}">
+            </div>
+            <div class="swiper-container">
+              <div class="swiper-wrapper">
+                <div class="swiper-slide" v-for = "(item, index) in selectProduct.imgArr" :key="`${item}_${index}`"
+                  :class="{active:selectProduct.mainImgIndex === index}"
+                >
+                  <div class="border"></div>
+                  <img :src="item" @click="selectProduct.mainImgIndex = index" alt="">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="content">
+              <div class="title">{{selectProduct.Name}}</div>
+              <div class="price" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{numberThousands(selectProduct.Price)}}</div>
+              <div class="price">NT$ {{numberThousands(selectProduct.NowPrice)}}</div>
+              <div class="title"> <div v-html="unescapeEnter(selectProduct.Content)"></div> </div>
+
+              <!-- 有規格 -->
+              <template v-if="selectProduct.specArr">
+                <div class="spec">
+                  <div tabindex="0" class="select" @click="selectProduct.isShowOption = selectProduct.isShowOption == 1 ? 0 : 1" @blur="selectProduct.isShowOption = 0"> 
+                    <div class="text">{{selectProduct.selectSpecItem.Name ? selectProduct.selectSpecItem.Name : "請選擇規格" }}</div>
+                    <div class="icon" :class="{iconActive:selectProduct.isShowOption === 1}"> <i class="fa fa-caret-down" aria-hidden="true"></i> </div>
+                    <ul class="option" :class="{showOption:selectProduct.isShowOption === 1}">                                                               
+                      <li v-for="(option,index2) in selectProduct.specArr" :key="option.ID" @click.stop="selectSpec(selectProduct, index2);">
+                        {{option.Name}}
+                      </li>
+                    </ul>
+                  </div>
+                </div> 
+              
+                <div class="qtyBox" v-show="selectProduct.selectSpecIndex != -1  && store.Enable == 1 && ( selectProduct.selectSpecItem.Enable == 0 || (selectProduct.selectSpecItem.Enable == 1 && selectProduct.selectSpecItem.Amount != 0) )">
+                  <div class="reduce" :class="{qtyDisabled:selectProduct.selectSpecItem.buyQty<1}" @click="getAmount( 3,  selectProduct.selectSpecItem.ID, updateProductsBuyQty_spec, [selectProduct, selectProduct.selectSpecItem.buyQty-1, selectProduct.selectSpecIndex,'']); "><i class="fa fa-minus"></i></div>
+                  <input class="number" size="3" type="text" maxlength="3" @input="numberInput( selectProduct.selectSpecItem )"  @blur="getAmount( 3,  selectProduct.selectSpecItem.ID, updateProductsBuyQty_spec, [selectProduct, selectProduct.selectSpecItem.buyQty, selectProduct.selectSpecIndex,''])" 
+                    @keyup.enter="getAmount( 3,  selectProduct.selectSpecItem.ID, updateProductsBuyQty_spec, [selectProduct, selectProduct.selectSpecItem.buyQty, selectProduct.selectSpecIndex,''])"
+                    v-model="selectProduct.selectSpecItem.buyQty">
+                  <div class="add" :class="{qtyDisabled:(selectProduct.selectSpecItem.Enable == 1 && selectProduct.selectSpecItem.buyQty > selectProduct.selectSpecItem.Amount - 1) || selectProduct.selectSpecItem.buyQty > 998 }" @click="getAmount( 3,  selectProduct.selectSpecItem.ID, updateProductsBuyQty_spec, [selectProduct, selectProduct.selectSpecItem.buyQty*1+1, selectProduct.selectSpecIndex,'']); "><i class="fa fa-plus"></i></div>
+                </div>
+                <div class="qtyBox_fake" v-show="!(selectProduct.selectSpecItem.Enable == 1 && selectProduct.selectSpecItem.Amount == 0) && !( selectProduct.selectSpecIndex != -1  && store.Enable == 1 && ( selectProduct.selectSpecItem.Enable == 0 || (selectProduct.selectSpecItem.Enable == 1 && selectProduct.selectSpecItem.Amount != 0) ) )">
+                  <div class="reduce"><i class="fa fa-minus"></i></div>
+                  <input class="number" size="3" type="text" maxlength="3" value="0" disabled>
+                  <div class="add"><i class="fa fa-plus"></i></div>
+                </div>
+                <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
+                <div class="discontinued" v-show="selectProduct.selectSpecItem.Enable == 1 && selectProduct.selectSpecItem.Amount == 0">暫無庫存</div> 
+              </template>
+              <!-- 沒規格 -->
+              <template v-if="!selectProduct.specArr">
+                <div class="noSpec"></div>
+                <div class="qtyBox" v-show=" store.Enable == 1 && ( selectProduct.Enable == 0 || (selectProduct.Enable == 1 && selectProduct.Amount != 0) )">
+                  <div class="reduce" :class="{qtyDisabled:selectProduct.buyQty<1}" @click="getAmount( 1,  selectProduct.ID, updateProductsBuyQty, [selectProduct, selectProduct.buyQty-1,'']);  "><i class="fa fa-minus"></i></div>
+                  <input class="number" size="3" type="text" maxlength="3" @input="numberInput_2"  @blur="getAmount( 1,  selectProduct.ID, updateProductsBuyQty, [selectProduct, selectProduct.buyQty,''])" 
+                    @keyup.enter="getAmount( 1,  selectProduct.ID, updateProductsBuyQty, [selectProduct, selectProduct.buyQty,''])"
+                    v-model="selectProduct.buyQty">
+                  <div class="add" :class="{qtyDisabled:(selectProduct.Enable == 1 && selectProduct.buyQty > selectProduct.Amount - 1) || selectProduct.buyQty > 998 }" @click="getAmount( 1,  selectProduct.ID, updateProductsBuyQty, [selectProduct, selectProduct.buyQty*1+1,'']); "><i class="fa fa-plus"></i></div>
+                </div>
+                <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
+                <div class="discontinued" v-show="selectProduct.Enable == 1 && selectProduct.Amount == 0">暫無庫存</div>
+              </template>
+
+              <div class="share_link" @click="click_share_link">
+                分享
+                <i class="fas fa-share"></i>
+              </div>
+
+              <input type="text" id="copy_input2" readonly>
+          </div>
+        </div>
+
+        <div class="addPrice" v-if="selectProduct.addPrice && selectProduct.addPrice.length">
+          <div class="title">
+            加價購
+            <i v-if="isAddPrice" class="fa-solid fa-caret-up" @click="isAddPrice = false"></i>
+            <i v-else class="fa-solid fa-caret-down" @click="isAddPrice = true"></i>
+          </div>
+          <ul v-show="isAddPrice">
+            <div class="ulMask" v-if=" (!selectProduct.specArr && selectProduct.Enable == 1 && selectProduct.Amount == 0) || (selectProduct.specArr && selectProduct.selectSpecItem.Enable == 1 && selectProduct.selectSpecItem.Amount == 0) "></div>
+            <li v-for="(item,index) in selectProduct.addPrice" :key="item.ID">
+              <div class="pic_div">
+                <div class="pic" :style="{backgroundImage :`url(${item.Img})`,}"></div>
+              </div>
+              <div class="content">
+                <div class="title">{{item.Name}}</div>
+                <div class="price">NT$ {{numberThousands(item.Price)}}</div>
+                
+                <!-- 有規格 -->
+                <template v-if="item.specArr">
+                  <div class="spec">
+                    <div tabindex="0" class="select" @click="item.isShowOption = item.isShowOption == 1 ? 0 : 1" @blur="item.isShowOption = 0"> 
+                      <div class="text"> {{item.selectSpecItem.Name ? item.selectSpecItem.Name : "請選擇規格" }}  </div>
+                      <div class="icon" :class="{iconActive:item.isShowOption === 1}"> <i class="fa fa-caret-down" aria-hidden="true"></i> </div>
+                      <ul class="option" :class="{showOption:item.isShowOption === 1}">                                                                  
+                        <li v-for="(option,index2) in item.specArr" :key="option.ID" @click.stop="selectSpec(item, index2);">
+                          {{option.Name}}
+                        </li>
+                      </ul>
+                    </div>
+                  </div> 
+
+                  <div class="qtyBox" v-show="item.selectSpecIndex != -1  && store.Enable == 1 && ( item.selectSpecItem.Enable == 0 || (item.selectSpecItem.Enable == 1 && item.selectSpecItem.Amount != 0) )">
+                    <div class="reduce" :class="{qtyDisabled:item.selectSpecItem.buyQty<1}" @click="getAmount( 3,  item.selectSpecItem.ID, updateProductsAddpriceQty_spec, [selectProduct, index, item.selectSpecItem.buyQty-1, item.selectSpecIndex], selectProduct.ID); "><i class="fa fa-minus"></i></div>
+                    <input class="number" size="3" type="text" maxlength="3" @input="numberInput( item.selectSpecItem )"  @blur="getAmount( 3,  item.selectSpecItem.ID, updateProductsAddpriceQty_spec, [selectProduct, index, item.selectSpecItem.buyQty, item.selectSpecIndex], selectProduct.ID)" 
+                      @keyup.enter="getAmount( 3,  item.selectSpecItem.ID, updateProductsAddpriceQty_spec, [selectProduct, index, item.selectSpecItem.buyQty, item.selectSpecIndex], selectProduct.ID)"
+                      v-model="item.selectSpecItem.buyQty" :disabled="itemTotalQty(selectProduct) < 1">
+                    <div class="add" :class="{qtyDisabled: item.selectSpecItem.buyQty > itemTotalQty(selectProduct) - 1 || (item.selectSpecItem.Enable == 1 && item.selectSpecItem.buyQty > item.selectSpecItem.Amount - 1) || item.selectSpecItem.buyQty > 998 }" @click="getAmount( 3,  item.selectSpecItem.ID, updateProductsAddpriceQty_spec, [selectProduct, index, item.selectSpecItem.buyQty*1+1, item.selectSpecIndex], selectProduct.ID); "><i class="fa fa-plus"></i></div>
+                  </div>
+                  <div class="qtyBox_fake" v-show="!(item.selectSpecItem.Enable == 1 && item.selectSpecItem.Amount == 0) && !( item.selectSpecIndex != -1  && store.Enable == 1 && ( item.selectSpecItem.Enable == 0 || (item.selectSpecItem.Enable == 1 && item.selectSpecItem.Amount != 0) ) )">
+                    <div class="reduce"><i class="fa fa-minus"></i></div>
+                    <input class="number" size="3" type="text" maxlength="3" value="0" disabled>
+                    <div class="add"><i class="fa fa-plus"></i></div>
+                  </div>
+                  <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
+                  <div class="discontinued" v-show="item.selectSpecItem.Enable == 1 && item.selectSpecItem.Amount == 0">暫無庫存</div> 
+                </template>
+                <!-- 沒有規格 -->
+                <template v-if="!item.specArr">
+                  <div class="noSpec"></div>
+                  <div class="qtyBox" v-show="store.Enable == 1 && ( item.Enable == 0 || (item.Enable == 1 && item.Amount != 0) )">
+                    <div class="reduce" :class="{qtyDisabled:item.Qty < 1}" @click="getAmount( 2,  item.ID, updateProductsAddpriceQty, [selectProduct, index, item.Qty - 1], selectProduct.ID);"><i class="fa fa-minus"></i></div>
+                    <input class="number" size="3" @blur="getAmount( 2,  item.ID, updateProductsAddpriceQty, [selectProduct, index, item.Qty], selectProduct.ID)" 
+                      @keyup.enter="getAmount( 2,  item.ID, updateProductsAddpriceQty, [selectProduct, index, item.Qty], selectProduct.ID)"
+                      type="text" maxlength="3" @input="numberInput(item)"  v-model="item.Qty" :disabled="itemTotalQty(selectProduct) < 1">
+                    <div class="add" :class="{qtyDisabled:item.Qty > itemTotalQty(selectProduct) - 1 || (item.Enable == 1 && item.Qty > item.Amount - 1) || item.Qty > 998 }" @click="getAmount( 2,  item.ID, updateProductsAddpriceQty, [selectProduct, index, item.Qty*1 + 1], selectProduct.ID);  "><i class="fa fa-plus"></i></div>
+                  </div>
+                  <div class="discontinued" v-show="store.Enable == 0">停售中</div>
+                  <div class="discontinued" v-show="item.Enable == 1 && item.Amount == 0">暫無庫存</div>
+                </template>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="detail">
+          <div class="title">
+            商品詳情
+            <i v-if="isDetail" class="fa-solid fa-caret-up" @click="isDetail = false"></i>
+            <i v-else class="fa-solid fa-caret-down" @click="isDetail = true"></i>
+          </div>
+          <div v-show="isDetail" class="content ql-editor" ref='selectProduct_detail_content' v-html="unescapeHTML(selectProduct.Detail)"></div>
+        </div>
+
+        <div class="others" v-show="carts.length">
+          <div class="title"> 立即購買 </div>
+          <div class="step">
+            <div class="stepItem" :class="{stepItemActive:stepIndex === 1}">
+              <div class="icon" >1</div>
+              <p>確認購物車</p>
+            </div>
+            <div class="arrow" :class="{arrowActive:stepIndex === 1}"> <i class="fa fa-arrow-right" aria-hidden="true"></i> </div>
+            <div class="stepItem" :class="{stepItemActive:stepIndex === 2}"> 
+              <div class="icon">2</div>
+              <p>付款與運送方式</p>
+            </div>
+            <div class="arrow" :class="{arrowActive:stepIndex === 2}"> <i class="fa fa-arrow-right" aria-hidden="true"></i> </div>
+            <div class="stepItem" :class="{stepItemActive:stepIndex === 3}">
+              <div class="icon">3</div>
+              <p>完成訂單</p>
+            </div>
+          </div>
+
+          <div class="stepOne" v-show="stepIndex === 1">
+            <div class="table">
+              <div class="thead">
+                <div class="th picName">商品</div>
+                <div class="th spec">規格</div>
+                <div class="th price">單價</div>
+                <div class="th qty">數量</div>
+                <div class="th subtotal">小計</div>
+                <div class="th delete"></div>
+              </div>
+              <div class="tbody">
+                <template>
+                  <div v-for=" (item, index) in carts ">
+                    <!-- 有規格 -->
+                    <template v-if="item.specArr">
+                      <div class="tr p-1" v-for="(spec, specIndex) in item.specArr " :key="spec.ID" v-show="spec.buyQty != 0 || spec.buyQty===''">
+                        <div class="td picName jcs">
+                          <div class="pic" :style="{backgroundImage :`url(${item.Img1})`}"></div>
+                          <div class="name">{{item.Name}}</div>
+                        </div>
+                        <div class="td spec"> 
+                          <div class="specButton" @click="cartsSpecCheckedId = cartsSpecCheckedId == spec.ID ? -1 : spec.ID"> 規格 <i :class="{iActive:cartsSpecCheckedId == spec.ID}" class="fa fa-caret-down" aria-hidden="true"></i>  </div>
+                          <div class="specText" :class="{specTextShow:cartsSpecCheckedId == spec.ID}"> {{spec.Name}} </div>
+                        </div>
+                        <div class="td price"> NT$ {{numberThousands(item.NowPrice)}} </div>
+                        <div class="td qty">
+                          <div class="qtyBox" v-show="store.Enable === '1'">
+                            <div class="reduce" :class="{qtyDisabled:spec.buyQty<1}" @click="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, spec.buyQty-1, specIndex]);"><i class="fa fa-minus"></i></div>
+                            <input class="number" size="3" @blur="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, spec.buyQty, specIndex])" 
+                              @keyup.enter="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, spec.buyQty, specIndex])"
+                              type="text" maxlength="3" @input="numberInput(spec)" v-model="spec.buyQty">
+                            <div class="add" :class="{qtyDisabled:(spec.Enable == 1 && spec.buyQty > spec.Amount - 1) || spec.buyQty > 998 }" @click="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, spec.buyQty*1+1, specIndex]);"><i class="fa fa-plus"></i></div>
+                          </div>
+                          <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
+                        </div>
+                        <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{numberThousands(item.NowPrice * (isNaN(spec.buyQty) ? 0 : spec.buyQty))}} </div>  </div>
+                        <div class="td delete">
+                          <div class="deleteButton" @click="getAmount( 3,  spec.ID, updateCartsBuyQty_spec, [index, 0, specIndex]);">
+                            刪除
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                    <!-- 沒有規格 -->
+                    <template v-if="!item.specArr">
+                      <div class="tr p-1" :key="item.ID" v-show="item.buyQty || item.buyQty===''">
+                        <div class="td picName jcs">
+                          <div class="pic" :style="{backgroundImage :`url(${item.Img1})`}"></div>
+                          <div class="name">{{item.Name}}</div>
+                        </div>
+                        <div class="td spec">
+
+                        </div>
+                        <div class="td price">  NT$ {{numberThousands(item.NowPrice)}} </div>
+                        <div class="td qty"> 
+                          <div class="qtyBox" v-show="store.Enable === '1'">
+                            <div class="reduce" :class="{qtyDisabled:item.buyQty<1}" @click="getAmount( 1, item.ID, updateCartsBuyQty, [index, item.buyQty-1]);"><i class="fa fa-minus"></i></div>
+                            <input class="number" size="3" type="text" maxlength="3" @input="numberInput( item )"  @blur="getAmount( 1, item.ID, updateCartsBuyQty, [index, item.buyQty])" 
+                              @keyup.enter="getAmount( 1, item.ID, updateCartsBuyQty, [index, item.buyQty])"
+                              v-model="item.buyQty">
+                            <div class="add" :class="{qtyDisabled:(item.Enable == 1 && item.buyQty > item.Amount - 1) || item.buyQty > 998 }" @click="getAmount( 1,  item.ID, updateCartsBuyQty, [index, item.buyQty*1+1]);"><i class="fa fa-plus"></i></div>
+                          </div>
+                          <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
+                        </div>
+                        <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{numberThousands(item.NowPrice * (isNaN(item.buyQty) ? 0 : item.buyQty))}}</div>  </div>
+                        <div class="td delete">
+                          <div class="deleteButton" @click="getAmount( 1,  item.ID, updateCartsBuyQty, [index, 0]);">
+                            刪除
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+
+                    <template>
+                      <div v-for=" (item2, index2) in item.addPrice ">
+                        <!-- 有規格 -->
+                        <template v-if="item2.specArr">
+                          <div class="tr p-1" v-for="(spec2, specIndex2) in item2.specArr" :key="spec2.ID" v-show="spec2.buyQty!=0 || spec2.buyQty===''">
+                            <div class="td picName jcs">
+                              <div class="pic" :style="{backgroundImage :`url(${item2.Img})`}">
+                                <div class="tag">加價購</div>
+                              </div>
+                              <div class="name">{{item2.Name}}</div>
+                            </div>
+                            <div class="td spec">
+                              <div class="specButton" @click="cartsSpecCheckedId = cartsSpecCheckedId == spec2.ID ? -1 : spec2.ID"> 規格 <i :class="{iActive:cartsSpecCheckedId == spec2.ID}" class="fa fa-caret-down" aria-hidden="true"></i>  </div> 
+                              <div class="specText" :class="{specTextShow:cartsSpecCheckedId == spec2.ID}"> {{spec2.Name}} </div>  
+                            </div>
+                            <div class="td price">  NT$ {{numberThousands(item2.Price)}} </div>
+                            <div class="td qty">
+                              <div class="qtyBox" v-show="store.Enable === '1'">
+                                <div class="reduce" :class="{qtyDisabled:spec2.buyQty<1}" @click="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2,spec2.buyQty-1, specIndex2], item.ID);"><i class="fa fa-minus"></i></div>
+                                <input class="number" size="3" type="text" maxlength="3" @input="numberInput( spec2 )"  @blur="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2,spec2.buyQty, specIndex2], item.ID)" 
+                                  @keyup.enter="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2,spec2.buyQty, specIndex2], item.ID)"
+                                  v-model="spec2.buyQty">
+                                <div class="add" :class="{qtyDisabled: spec2.buyQty > itemTotalQty(item) - 1 || (spec2.Enable == 1 && spec2.buyQty> spec2.Amount - 1)  || spec2.buyQty > 998 }" @click="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2,spec2.buyQty*1+1, specIndex2], item.ID); "><i class="fa fa-plus"></i></div>
+                              </div>
+                              <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
+                            </div>
+                            <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{numberThousands(item2.Price * (isNaN(spec2.buyQty) ? 0 : spec2.buyQty))}} </div>  </div>
+                            <div class="td delete">
+                              <div class="deleteButton" @click="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2, 0, specIndex2], item.ID); ">
+                                刪除
+                              </div>
+                            </div>
+                          </div>
+                        </template>
+                        <!-- 沒有規格 -->
+                        <template v-if="!item2.specArr">
+                          <div class="tr p-1" :key="item2.ID" v-show="item2.Qty!=0 || item2.Qty===''">
+                            <div class="td picName jcs">
+                              <div class="pic" :style="{backgroundImage :`url(${item2.Img})`}">
+                                <div class="tag">加價購</div>
+                              </div>
+                              <div class="name"> {{item2.Name}} </div>
+                            </div>
+                            <div class="td spec"></div>
+                            <div class="td price"> NT$ {{numberThousands(item2.Price)}} </div>
+                            <div class="td qty">
+                              <div class="qtyBox" v-show="store.Enable == 1">
+                                <div class="reduce" :class="{qtyDisabled:item2.Qty < 1}" @click="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, item2.Qty - 1], item.ID);"><i class="fa fa-minus"></i></div>
+                                <input class="number" size="3" type="text" maxlength="3" @input="numberInput( item2 )"  @blur="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, item2.Qty], item.ID)" 
+                                  @keyup.enter="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, item2.Qty], item.ID)"
+                                  v-model="item2.Qty">
+                                <div class="add" :class="{qtyDisabled:item2.Qty > itemTotalQty(item) - 1 || (item2.Enable == 1 && item2.Qty > item2.Amount - 1) || item2.Qty > 998 }" @click="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, item2.Qty*1 + 1], item.ID);"><i class="fa fa-plus"></i></div>
+                              </div>
+                              <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
+                            </div>
+                            <div class="td subtotal"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{numberThousands(item2.Price * (isNaN(item2.Qty) ? 0 : item2.Qty))}} </div> </div>
+                            <div class="td delete">
+                              <div class="deleteButton" @click="getAmount( 2,  item2.ID, updateCartsAddpriceQty, [item, index2, 0], item.ID);">
+                                刪除
+                              </div>
+                            </div>
+                          </div>
+                        </template> 
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <div class="discount">
+              <h5 v-show="store.Discount == 1" style="color: red; white-space: nowrap">消費滿{{store.Price}}元 ，折扣{{store.Ratio}}元 。</h5>
+              <h5 v-show="store.Discount == 2" style="color: red; white-space: nowrap">消費滿{{store.Price}}元 ，打{{(100 - store.Ratio) % 10 === 0 ? (100 - store.Ratio)/10 : 100 - store.Ratio }}折 。</h5>
+              <p>如果要使用折扣碼，請在此填入</p>
+              <div class="discountBox">
+                <input type="text" v-model.trim="discountCode" @keyup.enter="discount">
+                <div class="button" @click="discount">使用折扣碼</div>
+                <div class="button" @click="unDiscount">取消折扣碼</div>
+              </div>
+              <div class="discountError" v-if="isDiscountMessage">{{discountMessage}}</div>
+            </div>
+
+            <div class="total" v-show="total">
+              <ul>
+                <li>
+                  <div class="before">商品金額</div>
+                  <div class="after">NT$ {{numberThousands(total.Total)}}</div>
+                </li>
+                <li>
+                  <div class="before">- 折扣</div>
+                  <div class="after">NT$ {{numberThousands(total.Discount)}}</div>
+                </li>
+                <li>
+                  <div class="before">- 折扣碼優惠</div>
+                  <div class="after">NT$ {{numberThousands(total.DiscountCode)}}</div>
+                </li>
+                <li>
+                  <div class="before">小計</div>
+                  <div class="after" v-if="(parseInt(total.Total) - parseInt(total.Discount) - parseInt(total.DiscountCode)) >= 0">
+                    NT$ {{numberThousands(parseInt(total.Total) - parseInt(total.Discount) - parseInt(total.DiscountCode))}}
+                  </div>
+                  <div class="after" v-else>
+                    NT$ 0
+                  </div>
+                </li>
+                <hr>
+                <li v-if="is_use_bonus && use_bonus > 0">
+                  <div class="before">- 購物金</div>
+                  <div class="after">NT$ {{numberThousands(use_bonus)}}</div>
+                </li>
+                <li>
+                  <div class="before">金額總計</div>
+                  <div class="after">NT$ {{numberThousands(total.Sum)}}</div>
+                </li>
+              </ul>
+            </div>
+            <div class="next" @click="stepOneToTwo()">下一步</div>
+          </div>
+
+          <div class="stepTwo" v-show="stepIndex === 2">
+            <div class="title">
+              填寫購買人資訊
+            </div>
+            <form class="info">
+              <div class="left">
+                <label for="email">購買人Email</label>
+                <input type="text" :readonly="userInfo.Email" id="email" name="email" v-validate="'required|email'" placeholder="email"
+                  :class="{inputError:errors.first('email')}" v-model="info.purchaser_email"
+                >
+                <div class="prompt">{{ errors.first('email') }}</div>
+                <label for="name">購買人姓名</label>
+                <input type="text" :readonly="userInfo.Name" id="name" name="姓名" :class="{inputError:errors.first('姓名')}" v-validate="'required'" placeholder="姓名" v-model="info.purchaser_name" @change="pInput">
+                <div class="prompt">{{ errors.first('姓名') }}</div>
+                <label for="phone">購買人手機號碼</label>
+                <input type="text" :readonly="userInfo.Phone" id="phone" name="購買人手機號碼" :class="{inputError:errors.first('購買人手機號碼')}" v-validate="'required'" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput">
+                <div class="prompt">{{ errors.first('購買人手機號碼') }}</div>
+
+                <div class="box">
+                  <input type="checkbox" id="isSame" v-model="isSame">
+                  <label for="isSame">收件人同購買人資料</label>
+                </div>
+                
+                <label for="rname">收件人姓名</label>
+                <input type="text" id="rname" name="收件人姓名" :class="{inputError:errors.first('收件人姓名')}" v-validate="'required'" placeholder="姓名" v-model="info.receiver_name">
+                <div class="prompt">{{ errors.first('收件人姓名') }}</div>
+                <label for="rphone">收件人聯絡電話</label>
+                <input type="text" id="rphone" name="收件人聯絡電話" :class="{inputError:errors.first('收件人聯絡電話')}" v-validate="'required'" placeholder="聯絡電話" v-model="info.receiver_number">
+                <div class="prompt">{{ errors.first('收件人聯絡電話') }}</div>
+
+              </div>
+
+              <div class="right">
+                <label for="transport">運送方式</label>
+                <select id="transport" v-model="transport" name="運送方式" :class="{inputError:is_click_finish_order && transport === '0'}">
+                  <option value="0" disabled >=== 請選擇配送方式 ===</option>
+                  <option value="1" v-if="store.Shipping === '1' || store.Shipping === '2'" selected>一般宅配</option>
+                  <option value="2" v-if="store.Shipping === '1' || store.Shipping === '3'" selected>到店自取</option>
+                  <!-- 7-11 貨到付款 test -->
+                  <!-- <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 貨到付款 </option> -->
+                </select>
+                <div class="prompt" v-if="is_click_finish_order && transport === '0'"> 請選擇配送方式 </div>
+
+                <label for="pay_method">支付方式</label>
+                <select id="pay_method" v-model="pay_method" name="支付方式" :class="{inputError:is_click_finish_order && pay_method === '0'}">
+                  <option value="0" disabled >=== 請選擇支付方式 ===</option>
+                  <option value="CreditCard" v-if="(store.CreditCard != 0 && transport != 3)" selected>信用卡</option>
+                  <option value="ATM" v-if="(store.ATM != 0 && transport != 3)" selected>ATM/網路ATM</option>
+                  <option value="PayCode" v-if="(store.PayCode != 0 && transport != 3)" selected>超商代碼</option>
+                  <option value="PayBarCode" v-if="(store.PayBarCode != 0 && transport != 3)" selected>超商條碼</option>
+                  <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport != 3)" selected>取貨付款</option>
+                  
+                  <!-- 7-11 貨到付款 test -->
+                  <!-- <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport == 3)" selected> 7-11 貨到付款 </option> -->
+                  
+                  <option value="LinePay" v-if="store.LinePay == 1 && transport != 3" selected>LINE Pay</option>
+                </select>
+                <div class="prompt" v-if="is_click_finish_order && pay_method === '0'"> 請選擇支付方式 </div>
+
+                <template v-if="transport == '1'">
+                  <label for="raddress">
+                    收件地址
+                    <template v-if="userInfo.address_obj && Object.keys(userInfo.address_obj).length < 3 && !has_address">
+                      <input style="margin-left: 10px;" type="checkbox" id="is_save_address" v-model="is_save_address">
+                      <label for="is_save_address"> 加入常用地址 </label>
+                    </template>
+                  </label>
+                  <select v-model="city_active" :class="{inputError: is_click_finish_order && city_active == ''}">
+                    <option value="" selected > 城市 </option>
+                    <option :value="city" v-for="city in Object.keys(city_district)" :key="city"> {{ city }} </option>
+                  </select>
+                  <select v-model="district_active" :class="{inputError: is_click_finish_order && district_active == ''}">
+                    <option value="" selected > 鄉鎮市區 </option>
+                    <option :value="district" v-for="(district, index) in city_district[city_active]" :key="index"> {{ district }} </option>
+                  </select>
+                  <div style="display: flex;" class="input_container">
+                    <input style="width: 100%;" type='text' placeholder="請輸入詳細地址" v-model.trim='detail_address' :class="{inputError: is_click_finish_order && detail_address == ''}">
+                  </div>
+                  <div class="prompt" v-if="is_click_finish_order && (!city_active || !district_active || !detail_address)"> 請輸入收件地址 </div>
+                  <div class="address" v-if="userInfo.address_obj && Object.keys(userInfo.address_obj).length">
+                    <div class="address_title"> 常用地址 : </div>
+                    <ul>
+                      <li v-for="(item, key) in userInfo.address_obj" :key="key" @click="city_active = item.address.split(' ')[0]; district_active = item.address.split(' ')[1]; detail_address = item.address.split(' ')[2];"> {{ }} 
+                        {{ item.address }}  
+                        <i class="fa fa-check" v-if="item.address == receiver_address"></i>
+                      </li>
+                    </ul>
+                  </div>
+                </template>
+
+                <!-- 7-11 貨到付款 test -->
+                <!-- 之後改 store.PayOnDelivery -->
+                <template v-if="(transport == 3 && store.PayOnDelivery == 3)">
+                  <label> 選擇門市 </label>
+                  <div class="store_info">
+                    <div> 門市地址: {{ storeaddress }} </div>
+                  </div>
+                  <div class="button" @click="pickStore"> 搜尋門市 </div>
+                  <div class="prompt" v-if="is_click_finish_order && storeaddress == ''"> 請選擇門市 </div>
+                </template>
+
+                <label for="feedback">留言給我們</label>
+                <textarea name="" id="feedback" cols="30" rows="5" placeholder="留言給我們" v-model="info.info_message" @input="info_message_input"></textarea>
+                <div class="info_messageLength"> {{info.info_message.length}}/150 </div>
+
+                <template v-if="store.Receipt === '1'">
+                  <label for="invoice_type">發票類型</label>
+                  <select id="invoice_type" v-model="invoice_type" name="發票類型">
+                    <option value="0" disabled >=== 請選擇發票類型 ===</option>
+                    <option value="1" >二聯</option>
+                    <option value="2" >三聯</option>
+                  </select>
+                  <div class="prompt" v-if="invoice_type === '0'"> 請選擇發票類型 </div>
+
+                  <template v-if="invoice_type==='2'">
+                    <label for="invoice_title">公司抬頭</label>
+                    <input type="text" id="invoice_title" name="公司抬頭" placeholder="公司抬頭" v-model="invoice_title">
+                    <div class="prompt" v-if="invoice_title === ''"> 請填寫公司抬頭 </div>
+                    <label for="invoice_uniNumber">統一編號</label>
+                    <input type="text" id="invoice_uniNumber" name="統一編號" placeholder="統一編號" v-model="invoice_uniNumber">
+                    <div class="prompt" v-if="invoice_uniNumber === ''"> 請填寫統一編號 </div>
+                  </template>
+                </template>
+              </div>
+            </form>
+
+            <!--  有點數 或 有設定回饋% -->
+            <template v-if="total_bonus * 1 || bonus_array.length">
+              <div class="title">
+                購物金 
+                <span v-if="bonus_array.length">
+                  (<span v-if="!user_account" > 會員 </span>
+                  <span> 訂單完成後 </span>
+                  <template v-for="(item, index) in bonus_array" :key="index">
+                    <template v-if="item.shipping">
+                      <template v-if="item.lower == 0">
+                        ，消費即送 {{ item.shipping }}% 購物金
+                      </template>
+                      <template v-else>
+                        ，滿 NT${{ numberThousands(item.lower) }} 送 {{ item.shipping }}% 購物金 
+                      </template>
+                    </template>
+                  </template>)
+                </span>
+              </div>
+              <div class="info" v-if="user_account">
+                <div class="left">
+                  <div class="bonus_container">
+                    購物金餘額: <span class="bonus"> {{numberThousands(total_bonus < 0 ? 0 : total_bonus)}} 點 </span>
+                  </div>
+                  <div class="box" v-if="total_bonus * 1">
+                    <input type="checkbox" id="is_use_bonus" v-model="is_use_bonus" @change="use_bonus_handler"> 
+                    <label for="is_use_bonus" > 使用購物金 </label>
+                    <input type="number" placeholder="購物金" v-model="use_bonus" @blur="use_bonus_handler">
+                  </div>
+                </div>
+                <div class="right"></div>
+              </div>
+              <div class="info login" v-else>
+                請先 <span class="a" @click="urlPush(getShoppingPathname('user'))"> 登入會員 </span>
+              </div>
+            </template>
+
+            <div class="total">
+              <ul>
+                <li>
+                  <div class="before">商品金額</div>
+                  <div class="after">NT$ {{numberThousands(total.Total)}}</div>
+                </li>
+                <li>
+                  <div class="before">- 折扣</div>
+                  <div class="after">NT$ {{numberThousands(total.Discount)}}</div>
+                </li>
+                <li>
+                  <div class="before">- 折扣碼優惠</div>
+                  <div class="after">NT$ {{numberThousands(total.DiscountCode)}}</div>
+                </li>
+                <li>
+                  <div class="before">小計</div>
+
+                  <div class="after" v-if="(parseInt(total.Total) - parseInt(total.Discount) - parseInt(total.DiscountCode)) >= 0">
+                    NT$ {{numberThousands(parseInt(total.Total) - parseInt(total.Discount) - parseInt(total.DiscountCode))}}
+                  </div>
+                  <div class="after" v-else>
+                    NT$ 0
+                  </div>
+                </li>
+                <hr>
+                <li v-if="is_use_bonus && use_bonus > 0">
+                  <div class="before">- 購物金</div>
+                  <div class="after">NT$ {{numberThousands(use_bonus)}}</div>
+                </li>
+                <li>
+                  <div class="before">+ 運費</div>
+                  <div class="after">NT$ {{numberThousands(total.Shipping)}}</div>
+                </li>
+                <li>
+                  <div class="before"> 金額總計 </div>
+                  <div class="after">NT$ {{numberThousands(total.Sum)}}</div>
+                </li>
+                <template v-if="user_account && total">
+                  <hr>
+                  <li>
+                    訂單完成後獲得 NT${{ numberThousands(member_bonus) }} 購物金
+                  </li>
+                  <li>
+                    (購物金將在出貨日滿14天後獲得)
+                  </li>
+                </template>
+              </ul>
+            </div>
+            
+            <div class="buttonGroup">
+              <div class="button" @click="stepIndex = 1; getProducts()">上一步</div>
+              <div class="button" @click="checkOrder()"><i  v-show="orderIng" class="fas fa-spinner fa-spin" style="margin-right: 5px"></i>完成訂單</div>
+            </div>
+          </div>
+
+          <div class="ECPay_form_container" v-html="ECPay_form"></div>
+
+          <div class="footer">
+            <div class="top"></div>
+            <div class="bottom">POWERED AND SECURED BY UNIQ Micronet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cart" v-if="showPage === 'cart'" :style="`height:${innerHeight}px`">
       <div class="background" ref="cartScroll">
         <div class="close"> <i class="fa fa-times" aria-hidden="true" @click="selectProduct = {}; showPage = 'main'; stepIndex = 1; getProducts();"></i> </div>
         <div class="step">
@@ -447,7 +1033,7 @@
 
         <div class="footer">
           <div class="top"></div>
-          <div class="bottom">POWERED AND SECURED BY HONG BO</div>
+          <div class="bottom">POWERED AND SECURED BY UNIQ Micronet</div>
         </div>
       </div>
     </div>
@@ -456,24 +1042,18 @@
       <div class="background">
         <div class="close" @click="selectProduct = {} ; showPage = 'main' ;"> <i class="fa fa-times" aria-hidden="true"></i> </div>
         <div class="picContent">
-          <div class="pic" ref="allPicWidth">
+          <div class="pic">
             <div class="mainPic" :style="{backgroundImage :`url(${selectProduct.imgArr[selectProduct.mainImgIndex]})`}">
             </div>
-            <div class="allPic" :style="{height:`${allPicHeight}px`}">
-              <ul :style="`left: -${allPicUlleft * liWidth}px; width: ${selectProduct.allPicLength * liWidth}px;`" >
-                <li ref='liItem' v-for = " (item, index) in (selectProduct.imgArr) " :key="`${item}_${index}`" 
-                  @click=" selectProduct.mainImgIndex = index ;"
-                  v-show="item" 
+            <div class="swiper-container">
+              <div class="swiper-wrapper">
+                <div class="swiper-slide" v-for = "(item, index) in selectProduct.imgArr" :key="`${item}_${index}`"
+                  :class="{active:selectProduct.mainImgIndex === index}"
                 >
-                  <div class="img" :style="{backgroundImage :`url(${item})`, width: `${picWidth}px`}"
-                      :class="{imgActive:selectProduct.mainImgIndex === index}">
-                  </div>
-                </li>
-              </ul>
-            </div>
-            <div class="controller" :style="{height:`${allPicHeight}px`}">
-              <div class="left" :class="{disabled:allPicUlleft - 1 < 0}" @click=" allPicUlleft - 1 < 0 ? allPicUlleft : allPicUlleft -= 1"> <i class="fa fa-chevron-left" aria-hidden="true"></i> </div>
-              <div class="right" :class="{disabled:allPicUlleft + 1 > selectProduct.allPicLength - 3}" @click=" allPicUlleft + 1 > selectProduct.allPicLength - 3? allPicUlleft : allPicUlleft += 1"> <i class="fa fa-chevron-right" aria-hidden="true"></i> </div>
+                  <div class="border"></div>
+                  <img :src="item" @click="selectProduct.mainImgIndex = index" alt="">
+                </div>
+              </div>
             </div>
           </div>
           <div class="content">
@@ -614,7 +1194,7 @@
             <ul>
               <li v-for="(item, index) in products" :key="item.ID" v-show="index < 4" >
                 <div class="pic_div">
-                  <div class="pic" ref='picWidth' :style="{backgroundImage :`url(${item.Img1})`, height:`${picHeight}px`}" @click="showSelect(item, index)">
+                  <div class="pic" :style="{backgroundImage :`url(${item.Img1})`, height:`${picHeight}px`}" @click="showSelect(item, index)">
                     <div class="detailButton">查看詳情</div>
                   </div>
                 </div>
@@ -914,7 +1494,7 @@
         <ul>
           <li v-for="(item, index) in pageFilterProduct" :key="item.ID" >
             <div class="pic_div">
-              <div class="pic" ref='picWidth' :style="{backgroundImage :`url(${item.Img1})`, height:`${picHeight}px`}" @click="showSelect(item, index)">
+              <div class="pic" :style="{backgroundImage :`url(${item.Img1})`, height:`${picHeight}px`}" @click="showSelect(item, index)">
                 <div class="detailButton">
                   查看詳情
                   <i class="fas fa-heart" :class="{is_favorite : favorite[item.ID]}" @click.stop="toggleFavorite(item.ID)"></i>
@@ -1023,6 +1603,9 @@
 <script>
 import DatePicker from 'vue2-datepicker';
 import 'vue2-datepicker/index.css';
+
+import Swiper from 'swiper';
+import 'swiper/css/swiper.min.css'
 
 export default {
   components: {
@@ -1227,12 +1810,6 @@ export default {
       //  
       innerHeight: 0,
       picHeight: 0,
-      allPicHeight: 0,
-
-      // 
-      allPicUlleft: 0,
-      liWidth: 0,
-      picWidth: 0,
 
       //
       total_bonus: 0,
@@ -1316,6 +1893,13 @@ export default {
       is_save_address: false,
       has_address: false,
 
+      //
+      isAddPrice: false,
+      isDetail: false,
+
+      //
+      swiper: null,
+
       api: '',
       protocol: ''
     }
@@ -1336,17 +1920,30 @@ export default {
       this.getTotal(1);
     },
     // selectProduct
-    showPage(v){
-      if( v === 'selectProduct'){
-        this.$nextTick(() => {
-          this.computedLiLength();
-          this.computedVideoWidth(v);
-        })
+    showPage(newV, oldV){
+      let vm = this
+
+      // selectProduct => ?
+      if(oldV === 'selectProduct' && newV != oldV) {
+        window.history.replaceState({}, document.title, "/cart/");
       }
-      if( v === 'Content' || v === 'Description' || v === 'PrivacyPolicy' ){
-        this.$nextTick(() => {
-          this.computedVideoWidth(v);
-        })
+      
+      if( newV === 'selectProduct' || newV === 'singleProduct') {
+        setTimeout(() => {
+          const resizeObserver = new ResizeObserver(() => {
+            vm.swiper = null;
+            vm.initSwiper();
+          });
+          resizeObserver.observe(document.querySelector(".mainPic"));
+          
+          vm.initSwiper();
+          vm.computedVideoWidth(newV);
+        }, 0)
+      }
+      if( newV === 'Content' || newV === 'Description' || newV === 'PrivacyPolicy' ){
+        setTimeout(() => {
+          vm.computedVideoWidth(newV);
+        }, 0)
       }
     },
   },
@@ -1449,7 +2046,7 @@ export default {
         vm.getStore();
         vm.getStore2();
         vm.getCategories();
-        vm.getProducts('', true);
+        vm.getProducts();
 
         if(vm.user_account) vm.getUserInfo();
       })
@@ -1585,7 +2182,12 @@ export default {
       })
       .catch((err) => { console.error(err) });
     },
-    getProducts(type, isOpen) {
+    getProducts(type, isIgnoreSingleProduct) {
+      if(!isIgnoreSingleProduct && this.showPage === 'singleProduct') {
+        this.use_bonus_handler('notGetTotal');
+        this.getTotal(type ? type : 0);
+        return
+      }
       const vm = this;
 
       let o = `Preview=${this.site.Preview}`;
@@ -1625,7 +2227,8 @@ export default {
             p.buyQty = 0;
           }
           vm.$set(p, 'mainImgIndex', 0);
-          vm.$set(p, 'imgArr', [p.Img1, p.Img2, p.Img3, p.Img4, p.Img5]);
+          let imgArr = [p.Img1, p.Img2, p.Img3, p.Img4, p.Img5].filter(img => img);
+          vm.$set(p, 'imgArr', imgArr);
           vm.$set(p, 'categoryArr', [p.Category1, p.Category2, p.Category3, p.Category4, p.Category5]);
           let c = 0;
           for(let j = 0; j < p.imgArr.length; j++){
@@ -1637,13 +2240,18 @@ export default {
           vm.$set(p, 'isShowOption', 0);
         }
 
-        vm.getFavorite();
-
-        vm.category = '0';
+        let searchArr = location.search.substring(1).split('&')
+        let searchObj = {} 
+        searchArr.forEach(item => {
+          let key = item.split('=')[0];
+          let value = item.split('=')[1]
+          if(key && value) searchObj[key] = value
+        })
+        console.log(searchObj)
 
         // RtnMsg
-        let RtnMsg = location.href.split('RtnMsg=')[1];
-        if(RtnMsg && RtnMsg == 'Succeeded'){
+        let RtnMsg = searchObj['RtnMsg']
+        if(RtnMsg && RtnMsg == 'Succeeded') {
           window.history.replaceState({}, document.title, "/cart/");
           if(vm.user_account) {
             localStorage.removeItem(`${vm.site.Name}@${vm.user_account}@carts`);
@@ -1654,25 +2262,32 @@ export default {
           vm.showMessage('付款成功', true)
         }
 
-        vm.getCarts(type, '1');
+        // spid
+        let spid = searchObj['spid'];
+        if(spid) {
+          for(let i = 0; i < vm.products.length; i++) {
+            if(vm.products[i].ID == spid) {
+              vm.selectProduct = vm.products[i]; 
+              vm.selectIndex = i; 
+              vm.showPage = 'singleProduct';
+              vm.getAddPrice(spid, vm.products[i], '1'); 
 
-        let searchArr = location.search.substring(1).split('&')
-        let searchObj = {} 
-        searchArr.forEach(item => {
-          let key = item.split('=')[0];
-          let value = item.split('=')[1]
-          searchObj[key] = value
-        })
-        console.log(searchObj)
+              vm.productCompleted = true;
+              return
+            }
+          }
+        }
+
+        vm.getFavorite();
+        vm.category = '0';
+        vm.getCarts(type, '1');
 
         // id
         let id = searchObj['id'];
-        let replace = searchObj['replace'];
         if(id) {
-          for(let i = 0; i < vm.products.length; i++){
+          for(let i = 0; i < vm.products.length; i++) {
             if(vm.products[i].ID == id) {
               vm.showSelect( vm.products[i], i);
-              if(!replace) window.history.replaceState({}, document.title, "/cart/");
             }
           }
         }
@@ -1758,7 +2373,7 @@ export default {
       })
     },
     
-    getAddPrice(id, item, type2){
+    getAddPrice(id, item, type2) {
       const vm = this;
 
       const url = `${vm.protocol}//${vm.api}/interface/store/GetAdditional`;
@@ -1810,6 +2425,7 @@ export default {
     },
     
     getCarts(type, type2){ // type '0' '1'getTotal type2 '0' '1'
+      if(this.showPage === 'singleProduct') return
       if(this.user_account) {
         this.carts = JSON.parse(localStorage.getItem(`${this.site.Name}@${this.user_account}@carts`)) || [];
       }
@@ -1819,7 +2435,7 @@ export default {
 
       let isGetTotal = 0;
       this.computedCartsLength();
-      if(type2 && type2 == '1'){
+      if(type2 && type2 == '1') {
         this.cartsSLength = this.cartsLength;
       }
       for(let i = this.carts.length-1; i > -1; i--){
@@ -1987,6 +2603,7 @@ export default {
       }
     },
     setCarts(){
+      if(this.showPage === 'singleProduct') return
       if(this.user_account) {
         localStorage.setItem(`${this.site.Name}@${this.user_account}@carts`, JSON.stringify(this.carts));
       }
@@ -2309,7 +2926,16 @@ export default {
     },
 
     //
-    clearCarts(){
+    clearCarts() {
+      if(this.showPage === 'singleProduct') {
+        this.carts = [];
+        this.discountCode = '';
+        this.useCodeSuccess = '';
+        this.stepIndex= 1;
+        this.getProducts(null, true);
+        return
+      }
+
       this.carts = [];
       this.setCarts();
 
@@ -2963,7 +3589,7 @@ export default {
       if(k == -1){
         k = vm.carts.length;
         vm.carts.push(JSON.parse(JSON.stringify(changing)));
-      } 
+      }
 
       if(vm.carts[k].buyQty == 0){
         vm.carts.splice(k, 1);
@@ -3453,12 +4079,12 @@ export default {
     },
 
     // this.showPage = 'selectProduct'; 
-    showSelect( item, index){
+    showSelect( item, index) {
       this.selectProduct = item; 
       this.selectIndex = index; 
-      this.showPage = 'selectProduct'; 
+      this.showPage = 'selectProduct';
+      window.history.replaceState({}, document.title, `/cart/?id=${item.ID}`);
       this.getAddPrice(item.ID, item, '1'); 
-      this.allPicUlleft = 0;
     },
 
     // carts step
@@ -3486,6 +4112,7 @@ export default {
         }
       }
       this.stepIndex = 2;
+      if(this.showPage === 'singleProduct') return
       this.$refs.cartScroll.scrollTop = 0;
     },
     // carts info
@@ -3551,12 +4178,6 @@ export default {
         }
       }
       this.cartsLength = productLength + addPriceLength;
-    },
-
-    computedLiLength(){
-      this.liWidth = (this.$refs.allPicWidth.offsetWidth) / 3;
-      this.allPicHeight = this.liWidth;
-      this.picWidth = this.liWidth - 10;
     },
 
     computedVideoWidth(v){
@@ -3649,7 +4270,12 @@ export default {
 
     //
     click_share_link() {
-      this.copy( `${this.protocol}//${this.api}/cart/?id=${this.selectProduct.ID}&replace=false`, '#copy_input2');
+      if(this.showPage === 'singleProduct') {
+        this.copy( `${this.protocol}//${this.api}/cart/?spid=${this.selectProduct.ID}`, '#copy_input2');
+      }
+      else {
+        this.copy( `${this.protocol}//${this.api}/cart/?id=${this.selectProduct.ID}`, '#copy_input2');
+      }
       this.showMessage('複製分享連結', true);
     },
 
@@ -3711,20 +4337,15 @@ export default {
     // 
     async use_bonus_handler(notGetTotal) {
       let vm = this;
-      vm.use_bonus  = vm.use_bonus * 1;
-      vm.use_bonus = Math.floor(vm.use_bonus);
-      if(vm.use_bonus <= 0) {
-        vm.use_bonus = 0;
+      vm.use_bonus  = parseInt(vm.use_bonus);
+
+      let use_bonus_max = Math.min(vm.total_bonus * 1, vm.total.Total * 1 - vm.total.Discount * 1 - vm.total.DiscountCode * 1)
+      if(vm.use_bonus > use_bonus_max) {
+        vm.use_bonus = use_bonus_max
       }
-      else {
-        let use_bonus_max = Math.min(vm.total_bonus * 1, vm.total.Total * 1 - vm.total.Discount * 1 - vm.total.DiscountCode * 1)
-        if(vm.use_bonus > use_bonus_max) {
-          vm.use_bonus = use_bonus_max
-        }
-      }
-      if(notGetTotal === 'notGetTotal') {
-        return
-      }
+      if(vm.use_bonus <= 0) vm.use_bonus = 0;
+
+      if(notGetTotal === 'notGetTotal') return
       await vm.getTotal(1)
     },
 
@@ -3755,8 +4376,14 @@ export default {
       }
 
       return pageObj[page][pageIndex];
-    }
+    },
 
+    // swiper
+    initSwiper() {
+      this.swiper = new Swiper('.swiper-container', {
+        slidesPerView: 3,
+      })
+    },
   },
   created(){
     const vm = this;
@@ -3764,13 +4391,11 @@ export default {
     vm.protocol = location.protocol;
   },
   mounted(){
-    this.getSite();
-    this.innerHeight = window.innerHeight;
+    let vm = this;
+    vm.getSite();
+    vm.innerHeight = window.innerHeight;
     window.onresize = () => {
-      this.innerHeight = window.innerHeight;
-      if(this.showPage === 'selectProduct'){
-        this.computedLiLength();
-      }
+      vm.innerHeight = window.innerHeight;
     }
   }
 }
