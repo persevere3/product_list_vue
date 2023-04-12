@@ -404,8 +404,8 @@
                   <option value="0" disabled >=== 請選擇配送方式 ===</option>
                   <option value="1" v-if="store.Shipping === '1' || store.Shipping === '2'" selected>一般宅配</option>
                   <option value="2" v-if="store.Shipping === '1' || store.Shipping === '3'" selected>到店自取</option>
-                  <!-- 7-11 貨到付款 test -->
-                  <!-- <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 貨到付款 </option> -->
+                  <!-- 7-11 取貨付款 -->
+                  <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 取貨付款 </option>
                 </select>
                 <div class="prompt" v-if="is_click_finish_order && transport === '0'"> 請選擇配送方式 </div>
 
@@ -418,8 +418,8 @@
                   <option value="PayBarCode" v-if="(store.PayBarCode != 0 && transport != 3)" selected>超商條碼</option>
                   <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport != 3)" selected>取貨付款</option>
                   
-                  <!-- 7-11 貨到付款 test -->
-                  <!-- <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport == 3)" selected> 7-11 貨到付款 </option> -->
+                  <!-- 7-11 取貨付款 -->
+                  <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport == 3)" selected> 7-11 取貨付款 </option>
                   
                   <option value="LinePay" v-if="store.LinePay == 1 && transport != 3" selected>LINE Pay</option>
                 </select>
@@ -456,12 +456,13 @@
                   </div>
                 </template>
 
-                <!-- 7-11 貨到付款 test -->
-                <!-- 之後改 store.PayOnDelivery -->
-                <template v-if="(transport == 3 && store.PayOnDelivery == 3)">
+                <!-- 7-11 取貨付款 -->
+                <template v-if="transport == 3">
                   <label> 選擇門市 </label>
                   <div class="store_info">
-                    <div> 門市地址: {{ storeaddress }} </div>
+                    <div v-if="storeid"> 門市店號: {{ storeid }} </div>
+                    <div v-if="storename"> 門市名稱: {{ storename }} </div>
+                    <div v-if="storeaddress"> 門市地址: {{ storeaddress }} </div>
                   </div>
                   <div class="button" @click="pickStore"> 搜尋門市 </div>
                   <div class="prompt" v-if="is_click_finish_order && storeaddress == ''"> 請選擇門市 </div>
@@ -844,8 +845,8 @@
                 <option value="0" disabled >=== 請選擇配送方式 ===</option>
                 <option value="1" v-if="store.Shipping === '1' || store.Shipping === '2'" selected>一般宅配</option>
                 <option value="2" v-if="store.Shipping === '1' || store.Shipping === '3'" selected>到店自取</option>
-                <!-- 7-11 貨到付款 test -->
-                <!-- <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 貨到付款 </option> -->
+                <!-- 7-11 取貨付款 -->
+                <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 取貨付款 </option>
               </select>
               <div class="prompt" v-if="is_click_finish_order && transport === '0'"> 請選擇配送方式 </div>
 
@@ -858,8 +859,8 @@
                 <option value="PayBarCode" v-if="(store.PayBarCode != 0 && transport != 3)" selected>超商條碼</option>
                 <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport != 3)" selected>取貨付款</option>
                 
-                <!-- 7-11 貨到付款 test -->
-                <!-- <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport == 3)" selected> 7-11 貨到付款 </option> -->
+                <!-- 7-11 取貨付款 -->
+                <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport == 3)" selected> 7-11 取貨付款</option>
                 
                 <option value="LinePay" v-if="store.LinePay == 1 && transport != 3" selected>LINE Pay</option>
               </select>
@@ -896,12 +897,13 @@
                 </div>
               </template>
 
-              <!-- 7-11 貨到付款 test -->
-              <!-- 之後改 store.PayOnDelivery -->
-              <template v-if="(transport == 3 && store.PayOnDelivery == 3)">
+              <!-- 7-11 取貨付款 -->
+              <template v-if="transport == 3">
                 <label> 選擇門市 </label>
                 <div class="store_info">
-                  <div> 門市地址: {{ storeaddress }} </div>
+                  <div v-if="storeid"> 門市店號: {{ storeid }} </div>
+                  <div v-if="storename"> 門市名稱: {{ storename }} </div>
+                  <div v-if="storeaddress"> 門市地址: {{ storeaddress }} </div>
                 </div>
                 <div class="button" @click="pickStore"> 搜尋門市 </div>
                 <div class="prompt" v-if="is_click_finish_order && storeaddress == ''"> 請選擇門市 </div>
@@ -1662,7 +1664,7 @@ export default {
       useCodeSuccess: '',
       total: {},
       isSame: false,
-      transport: '0',// 一般宅配2 到店自取3
+      transport: '0', // 一般宅配1 到店自取2
       pay_method: '0',
       is_click_finish_order: false,
       info: {
@@ -1678,6 +1680,8 @@ export default {
       invoice_uniNumber: '',
       orderIng: false,
 
+      storeid: '',
+      storename: '',
       storeaddress: '',
 
       isConfirm: false,
@@ -1851,6 +1855,9 @@ export default {
     //
     transport(v){
       this.getTotal(1);
+      if(v == 3) {
+        this.pay_method = 'PayOnDelivery' 
+      }
     },
     // selectProduct
     showPage(newV, oldV){
@@ -2115,12 +2122,7 @@ export default {
       })
       .catch((err) => { console.error(err) });
     },
-    getProducts(type, isIgnoreSingleProduct) {
-      if(!isIgnoreSingleProduct && this.showPage === 'singleProduct') {
-        this.use_bonus_handler('notGetTotal');
-        this.getTotal(type ? type : 0);
-        return
-      }
+    getProducts(type) {
       const vm = this;
 
       let o = `Preview=${this.site.Preview}`;
@@ -2174,7 +2176,7 @@ export default {
         }
 
         let searchArr = location.search.substring(1).split('&')
-        let searchObj = {} 
+        let searchObj = {}
         searchArr.forEach(item => {
           let key = item.split('=')[0];
           let value = item.split('=')[1]
@@ -2195,17 +2197,27 @@ export default {
           vm.showMessage('付款成功', true)
         }
 
+        // 7-11 取貨付款
+        let storeid = searchObj['storeid']
+        let storename = searchObj['storename']
+        let storeaddress = searchObj['storeaddress']
+
         // spid
         let spid = searchObj['spid'];
         if(spid) {
           for(let i = 0; i < vm.products.length; i++) {
             if(vm.products[i].ID == spid) {
               vm.selectProduct = vm.products[i]; 
-              vm.selectIndex = i; 
+              vm.selectIndex = i;
               vm.showPage = 'singleProduct';
-              vm.getAddPrice(spid, vm.products[i], '1'); 
+
+              // 7-11 取貨付款
+              vm.getConvenienceStore(storeid, storename, storeaddress, spid)
+              
+              vm.getCarts(type, '1');
 
               vm.productCompleted = true;
+
               return
             }
           }
@@ -2232,16 +2244,8 @@ export default {
           vm.showPage = 'cart'
         }
 
-        // 7-11 貨到付款 test
-        // storeaddress
-        let storeaddress = searchObj['storeaddress']
-        if(storeaddress){
-          window.history.replaceState({}, document.title, "/cart/");
-          vm.showPage = 'cart'
-          vm.stepIndex = 2
-          vm.storeaddress = storeaddress
-          vm.returnInfo()
-        }
+        // 7-11 取貨付款
+        vm.getConvenienceStore(storeid, storename, storeaddress)
 
         vm.$nextTick(() => {
           vm.productCompleted = true;
@@ -2251,6 +2255,25 @@ export default {
         console.error(err);
         vm.login(vm.getProducts, [type]);
       });
+    },
+    getConvenienceStore(storeid, storename, storeaddress, spid) {
+      let vm = this
+      if(!storeid || !storename || !storeaddress) return
+
+      vm.storeid = storeid
+      vm.storename = decodeURI(storename)
+      vm.storeaddress = decodeURI(storeaddress)
+
+      if(spid) {
+        window.history.replaceState({}, document.title, `/cart/?spid=${spid}`);
+      }
+      else {
+        window.history.replaceState({}, document.title, "/cart/");
+        vm.showPage = 'cart'
+        vm.stepIndex = 2
+      }
+
+      vm.returnInfo()
     },
     getUserInfo(){
       let vm = this;
@@ -2346,7 +2369,7 @@ export default {
         vm.$set(item, 'addPrice', data);
         if(type2){
           vm.getCarts('' , type2);
-        } 
+        }
         else {
           vm.getCarts();
         }
@@ -2357,13 +2380,17 @@ export default {
       });
     },
     
-    getCarts(type, type2){ // type '0' '1'getTotal type2 '0' '1'
-      if(this.showPage === 'singleProduct') return
-      if(this.user_account) {
-        this.carts = JSON.parse(localStorage.getItem(`${this.site.Name}@${this.user_account}@carts`)) || [];
+    getCarts(type, type2) { // type '0' '1'getTotal type2 '0' '1'
+      if(this.showPage === 'singleProduct') {
+        this.carts = JSON.parse(localStorage.getItem(`${this.site.Name}@${this.selectProduct.ID}@carts`)) || [];
       }
       else {
-        this.carts = JSON.parse(localStorage.getItem(`${this.site.Name}@carts`)) || [];
+        if(this.user_account) {
+          this.carts = JSON.parse(localStorage.getItem(`${this.site.Name}@${this.user_account}@carts`)) || [];
+        }
+        else {
+          this.carts = JSON.parse(localStorage.getItem(`${this.site.Name}@carts`)) || [];
+        }
       }
 
       let isGetTotal = 0;
@@ -2536,12 +2563,16 @@ export default {
       }
     },
     setCarts(){
-      if(this.showPage === 'singleProduct') return
-      if(this.user_account) {
-        localStorage.setItem(`${this.site.Name}@${this.user_account}@carts`, JSON.stringify(this.carts));
+      if(this.showPage === 'singleProduct') {
+        localStorage.setItem(`${this.site.Name}@${this.selectProduct.ID}@carts`, JSON.stringify(this.carts));
       }
       else {
-        localStorage.setItem(`${this.site.Name}@carts`, JSON.stringify(this.carts));
+        if(this.user_account) {
+          localStorage.setItem(`${this.site.Name}@${this.user_account}@carts`, JSON.stringify(this.carts));
+        }
+        else {
+          localStorage.setItem(`${this.site.Name}@carts`, JSON.stringify(this.carts));
+        }
       }
       this.computedCartsLength();
     },
@@ -2865,7 +2896,7 @@ export default {
         this.discountCode = '';
         this.useCodeSuccess = '';
         this.stepIndex= 1;
-        this.getProducts(null, true);
+        this.getProducts();
         return
       }
 
@@ -3218,14 +3249,23 @@ export default {
         formData.append('Phone' , this.info.purchaser_number);
         formData.append('Receiver' , this.info.receiver_name);
         formData.append('ReceiverPhone' , this.info.receiver_number);
+
         formData.append('Address' , this.receiver_address);
         if(this.userInfo.address_obj && Object.keys(this.userInfo.address_obj).length < 3 && !this.has_address && this.is_save_address){
           let id = new Date().getTime();
           formData.append('saveAddressStr' , `${id}_ _${this.receiver_address.replace(/ /g, '_ _')}`);
-        } else {
+        } 
+        else {
           formData.append('saveAddressStr' , '');
         }
-        formData.append('ZipCode' , this.city_district[this.city_active][this.district_active]);
+        if(this.city_active && this.district_active) {
+          formData.append('ZipCode' , this.city_district[this.city_active][this.district_active]);
+        }
+        else {
+          formData.append('ZipCode' , '');
+        }
+        
+
         formData.append('Message' , this.info.info_message);
         formData.append('Discount' , this.total.Discount * 1);
         formData.append('Shipping' , this.total.Shipping * 1);
@@ -3237,8 +3277,10 @@ export default {
         formData.append('Title' , this.invoice_title);
         formData.append('UniNumber' , this.invoice_uniNumber);
 
-        // 7-11 貨到付款 test
-        if(this.transport == 3){
+        // 7-11 取貨付款
+        if(this.transport == 3) {
+          formData.append('storeid' , this.storeid);
+          formData.append('storename' , this.storename);
           formData.append('storeaddress' , this.storeaddress);
         }
 
@@ -3432,6 +3474,7 @@ export default {
     // 沒有規格
     // carts.buyQty change => update products => set carts
     updateCartsBuyQty(i, qty, data){
+      console.log(i, qty, data)
       let vm = this;
 
       let validate = vm.updateBuyQtyValidate(vm.carts[i], qty, data, '商品');
@@ -3461,7 +3504,9 @@ export default {
       // 
       vm.products.forEach(product => {
         if(product.ID === item.ID){
-          product.buyQty = qty;
+          vm.$delete(product, 'buyQty');
+          vm.$set(product, 'buyQty', qty);
+          console.log(product.buyQty)
         }
       })
 
@@ -3508,7 +3553,9 @@ export default {
       let isAdd = qty - product.buyQty;
       isfly = isAdd ? true : false;
       // update pageFilterProduct ( bind view )
+      vm.$delete(product, 'buyQty');
       vm.$set(product, 'buyQty', qty);
+      
 
       let changing = product;
 
@@ -3552,7 +3599,7 @@ export default {
                 vm.getAmount( 3,  changing.addPrice[j].specArr[k].ID, vm.updateProductsAddpriceQty_spec, [changing, j, changing.buyQty, k], changing.ID);
               }
             }
-          } 
+          }
           else {
             if(changing.addPrice[j].Qty > changing.buyQty){
               vm.getAmount( 2,  changing.addPrice[j].ID, vm.updateProductsAddpriceQty, [changing, j, changing.buyQty], changing.ID);
@@ -3613,7 +3660,8 @@ export default {
           else {
             for(let j = 0; j < product.addPrice.length; j++){
               if(product.addPrice[j].ID == item.addPrice[i].ID){
-                product.addPrice[j].Qty = qty;
+                vm.$delete(product.addPrice[j], 'Qty');
+                vm.$set(product.addPrice[j], 'Qty', qty);
               }
             }
           }
@@ -3659,6 +3707,7 @@ export default {
       qty = qty * 1;
 
       // update pageFilterProduct ( bind view )
+      vm.$delete(item.addPrice[i], 'Qty');
       vm.$set(item.addPrice[i], 'Qty', qty);
 
       // update carts
@@ -3709,7 +3758,8 @@ export default {
         if(product.ID === vm.carts[i].ID){
           for(let j = 0 ; j < product.specArr.length; j++){
             if(product.specArr[j].ID === vm.carts[i].specArr[i2].ID){
-              product.specArr[j].buyQty = qty;
+              vm.$delete(product.specArr[j], 'buyQty');
+              vm.$set(product.specArr[j], 'buyQty', qty);
             }
           }
         }
@@ -3766,6 +3816,7 @@ export default {
       let isAdd = qty - product.specArr[i2].buyQty;
       isfly = isAdd ? true : false;
       // update pageFilterProduct ( bind view )
+      vm.$delete(product.specArr[i2], 'buyQty');
       vm.$set(product.specArr[i2], 'buyQty', qty);
 
       // update carts
@@ -3878,7 +3929,8 @@ export default {
               if(product.addPrice[j].ID == item.addPrice[i].ID){
                 for( let k = 0; k < product.addPrice[j].specArr.length; k++){
                    if(product.addPrice[j].specArr[k].ID == item.addPrice[i].specArr[i2].ID){
-                     product.addPrice[j].specArr[k].buyQty = qty;
+                      vm.$delete(product.addPrice[j].specArr[k], 'buyQty');
+                      vm.$set(product.addPrice[j].specArr[k], 'buyQty', qty);
                    }
                 }
               }
@@ -3926,6 +3978,7 @@ export default {
       qty = qty * 1;
 
       // update pageFilterProduct ( bind view )
+      vm.$delete(item.addPrice[i].specArr[i2], 'buyQty');
       vm.$set(item.addPrice[i].specArr[i2], 'buyQty', qty);
 
       // update carts
@@ -4213,12 +4266,12 @@ export default {
       this.showMessage('複製分享連結', true);
     },
 
-    // 7-11 貨到付款 test
+    // 7-11 取貨付款
     pickStore() {
       let order_info = {
-        isSame: this.isSame,
-        transport: this.transport,
-        pay_method: this.pay_method,
+        discountCode: this.discountCode,
+        useCodeSuccess: this.useCodeSuccess,
+
         info: {
           purchaser_email: this.info.purchaser_email,
           purchaser_name: this.info.purchaser_name,
@@ -4227,18 +4280,26 @@ export default {
           receiver_number: this.info.receiver_number,
           info_message: this.info.info_message, 
         },
+        isSame: this.isSame,
+        transport: this.transport,
+        pay_method: this.pay_method,
+  
         invoice_type: this.invoice_type,
         invoice_title: this.invoice_title,
         invoice_uniNumber: this.invoice_uniNumber,
+
+        is_use_bonus: this.is_use_bonus,
+        use_bonus: this.use_bonus,
       }
       localStorage.setItem('order_info', JSON.stringify(order_info));
-      this.urlPush('https://emap.presco.com.tw/c2cemap.ashx?eshopid=870&&servicetype=1&url=https://jiajingplus.com.tw/interface/store/SpmarketAddress');
+      this.urlPush(`https://emap.presco.com.tw/c2cemap.ashx?url=${location.origin}/interface/store/SpmarketAddress${this.showPage == 'singleProduct' ? '?spid=' + this.selectProduct.ID : ''}`);
     },
     returnInfo() {
       let order_info = JSON.parse(localStorage.getItem('order_info')) || {};
-      this.isSame = order_info.isSame
-      this.transport = order_info.transport
-      this.pay_method = order_info.pay_method
+
+      this.discountCode = order_info.discountCode
+      this.useCodeSuccess = order_info.useCodeSuccess
+
       this.info = {
         purchaser_email: order_info.info.purchaser_email,
         purchaser_name: order_info.info.purchaser_name,
@@ -4247,9 +4308,16 @@ export default {
         receiver_number: order_info.info.receiver_number,
         info_message: order_info.info.info_message 
       }
+      this.isSame = order_info.isSame
+      this.transport = order_info.transport
+      this.pay_method = order_info.pay_method
+    
       this.invoice_type = order_info.invoice_type
       this.invoice_title = order_info.invoice_title
       this.invoice_uniNumber = order_info.invoice_uniNumber
+
+      this.is_use_bonus = order_info.is_use_bonus
+      this.use_bonus = order_info.use_bonus
     },
 
     urlPush(url, is_open) {
