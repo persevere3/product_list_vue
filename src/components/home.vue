@@ -405,7 +405,7 @@
                   <option value="1" v-if="store.Shipping === '1' || store.Shipping === '2'" selected>一般宅配</option>
                   <option value="2" v-if="store.Shipping === '1' || store.Shipping === '3'" selected>到店自取</option>
                   <!-- 7-11 取貨付款 -->
-                  <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 取貨付款 </option>
+                  <!-- <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 取貨付款 </option> -->
                 </select>
                 <div class="prompt" v-if="is_click_finish_order && transport === '0'"> 請選擇配送方式 </div>
 
@@ -846,7 +846,7 @@
                 <option value="1" v-if="store.Shipping === '1' || store.Shipping === '2'" selected>一般宅配</option>
                 <option value="2" v-if="store.Shipping === '1' || store.Shipping === '3'" selected>到店自取</option>
                 <!-- 7-11 取貨付款 -->
-                <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 取貨付款 </option>
+                <!-- <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 取貨付款 </option> -->
               </select>
               <div class="prompt" v-if="is_click_finish_order && transport === '0'"> 請選擇配送方式 </div>
 
@@ -1465,6 +1465,22 @@
     <div class="main" v-if="showPage === 'main'">
       <div class="logo_name">
         <img :src="store.Logo" class="logo" v-if="store.Logo" @click="urlPush(getShoppingPathname('index'))">
+      </div>
+      <div class="menu">
+        <ul>
+          <li @click="urlPush(getShoppingPathname('index'))">
+            <i class="fa-solid fa-house"></i> 
+            <span> 首頁 </span>
+          </li>
+          <li @click="user_account ? urlPush(`${getShoppingPathname('order')}?phone=${user_account}`) : urlPush(getShoppingPathname('order'))">
+            <i class="fas fa-clipboard-list"></i>
+            <span class="none650"> 訂單 </span>
+          </li>
+          <li v-if="site.MemberFuction * 1" @click="user_account ? urlPush(getShoppingPathname('info')) : urlPush(getShoppingPathname('user'))">
+            <i class="fa-solid fa-user"></i> 
+            <span class="none650"> 會員中心 </span>
+          </li>
+        </ul>
       </div>
       <div class="categories">
         <ul>
