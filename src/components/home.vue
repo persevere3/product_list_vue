@@ -1959,7 +1959,7 @@ export default {
     }
   },
   methods: {
-    login(func, arr){
+    login(func, arr) {
       this.site = JSON.parse(localStorage.getItem('site')) || [] ;
       let o = `site=${this.site.Site}&store=${this.site.Name}&Preview=${this.site.Preview}&WebPreview=${this.site.WebPreview}`;
       const config = {
@@ -1980,7 +1980,7 @@ export default {
       })
       .catch((err) => { console.error(err) });
     },
-    getSite(){
+    getSite() {
       const vm = this;
 
       const url = `${vm.protocol}//${vm.api}/interface/store/GetSite`;
@@ -2007,6 +2007,13 @@ export default {
         vm.getStore2();
         vm.getCategories();
         vm.getProducts();
+
+        if(location.search.indexOf('account') > -1) {
+          vm.user_account = location.search.split('account=')[1]
+          localStorage.setItem('user_account', vm.user_account)
+
+          window.history.replaceState({}, document.title, "/cart/");
+        }
 
         if(vm.user_account) vm.getUserInfo();
       })
