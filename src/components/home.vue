@@ -1,5 +1,5 @@
 <template>
-  <div v-if="productCompleted" class="productContainer" @click.stop="is_favorite_hover = false">
+  <div v-show="productCompleted" class="productContainer" @click.stop="is_favorite_hover = false">
 
     <div class="notice_page" :style="`height:${innerHeight}px`" v-show="showPage === 'Content' || showPage === 'Description' || showPage === 'PrivacyPolicy'">
       <div class="background" >
@@ -381,7 +381,7 @@
                 <input type="text" :readonly="userInfo.Name" id="name" name="姓名" :class="{inputError:errors.first('姓名')}" v-validate="'required'" placeholder="姓名" v-model="info.purchaser_name" @change="pInput">
                 <div class="prompt">{{ errors.first('姓名') }}</div>
                 <label for="phone">購買人手機號碼</label>
-                <input type="text" :readonly="userInfo.Phone" id="phone" name="購買人手機號碼" :class="{inputError:errors.first('購買人手機號碼')}" v-validate="'required'" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput">
+                <input type="text" :readonly="!!userInfo.Phone2" id="phone" name="購買人手機號碼" :class="{inputError:errors.first('購買人手機號碼')}" v-validate="'required'" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput">
                 <div class="prompt">{{ errors.first('購買人手機號碼') }}</div>
 
                 <div class="box">
@@ -822,7 +822,7 @@
               <input type="text" :readonly="userInfo.Name" id="name" name="姓名" :class="{inputError:errors.first('姓名')}" v-validate="'required'" placeholder="姓名" v-model="info.purchaser_name" @change="pInput">
               <div class="prompt">{{ errors.first('姓名') }}</div>
               <label for="phone">購買人手機號碼</label>
-              <input type="text" :readonly="userInfo.Phone" id="phone" name="購買人手機號碼" :class="{inputError:errors.first('購買人手機號碼')}" v-validate="'required'" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput">
+              <input type="text" :readonly="!!userInfo.Phone2" id="phone" name="購買人手機號碼" :class="{inputError:errors.first('購買人手機號碼')}" v-validate="'required'" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput">
               <div class="prompt">{{ errors.first('購買人手機號碼') }}</div>
 
               <div class="box">
@@ -1357,17 +1357,11 @@
         </div>
         <div class="form">
           <div class="input_container" :class="{ error: r_name.is_error }">
-            <input type="text" readonly placeholder="* 請輸入姓名" v-model.trim="r_name.value" @blur="verify(r_name)">
-            <div class="error message">
-              <i class="error_icon fas fa-exclamation-circle"></i> {{  r_name.message  }}
-            </div>
+            <input type="text" readonly v-model.trim="r_name.value">
           </div>
 
-          <div class="input_container" :class="{ error: r_account.is_error }">
-            <input type="number" readonly placeholder="* 請輸入手機(帳號)" v-model.trim="r_account.value" @blur="verify(r_account)">
-            <div class="error message">
-              <i class="error_icon fas fa-exclamation-circle"></i> {{  r_account.message  }}
-            </div>
+          <div class="input_container">
+            <input type="number" readonly v-model.trim="r_account.value">
           </div>
           <template v-if="store.NotificationSystem == 1 || store.NotificationSystem == 2">
             <div class="input_container" :class="{ error: r_verify_code.is_error }">
@@ -1472,7 +1466,7 @@
             <i class="fa-solid fa-house"></i> 
             <span> 首頁 </span>
           </li>
-          <li @click="user_account ? urlPush(`${getShoppingPathname('order')}?phone=${user_account}`) : urlPush(getShoppingPathname('order'))">
+          <li @click="urlPush(getShoppingPathname('order'))">
             <i class="fas fa-clipboard-list"></i>
             <span class="none650"> 訂單 </span>
           </li>
@@ -1614,6 +1608,11 @@
       <div class="user_modal">
         <div class="content" v-html="unescapeHTML(site.TermsNotices)"></div>
       </div>
+    </div>
+
+    <div class="cookie">
+      <div class="close" > <i class="fa-solid fa-xmark"></i> </div>
+      本網站中使用 cookie，欲查詢有關本網站使用 cookie 方式之詳情，及若您不希望在電腦上使用 cookie 時應如何變更電腦的 cookie 設定，請參閱本網站「隱私權及網站使用條款」之 Cookie 聲明。您繼續使用本網站即表示您同意本公司得按本網站使用條款之 Cookie 聲明使用 cookie。
     </div>
   </div>
 </template>
@@ -2318,7 +2317,7 @@ export default {
 
             vm.info.purchaser_email = vm.userInfo.Email;
             vm.info.purchaser_name = vm.userInfo.Name;
-            vm.info.purchaser_number = vm.userInfo.Phone;
+            vm.info.purchaser_number = vm.userInfo.Phone2;
             vm.total_bonus = vm.userInfo.Wallet * 1
 
             let address_obj = {};
@@ -3068,7 +3067,8 @@ export default {
       let vm = this;
 
       let formData = new FormData();
-      formData.append("phone", this.r_account.value.trim());
+      // r_phone2
+      formData.append("phone", this.r_phone2.value.trim());
       formData.append("mail", this.r_mail.value.trim());
 
       formData.append("notificationsystem", this.store.NotificationSystem)
@@ -3178,7 +3178,7 @@ export default {
       
       let formData = new FormData();
       formData.append("storeid", this.site.Name);
-      formData.append("phone", this.r_account.value ? this.r_account.value : '0910456456');
+      formData.append("phone", this.r_account.value);
       
       if(this.store.NotificationSystem == 0) {
         formData.append("validate2", this.r_verify_code2.value);
@@ -3269,7 +3269,8 @@ export default {
 
         formData.append('Email' , this.info.purchaser_email);
         formData.append('Name' , this.info.purchaser_name);
-        formData.append('Phone' , this.info.purchaser_number);
+        formData.append('Phone' , this.user_account);
+        formData.append('Phone2' , this.info.purchaser_number);
         formData.append('Receiver' , this.info.receiver_name);
         formData.append('ReceiverPhone' , this.info.receiver_number);
 
@@ -4409,6 +4410,13 @@ export default {
         slidesPerView: 3,
       })
     },
+
+    removeCookie() {
+      let node = document.querySelector('.cookie')
+      console.log(node)
+      console.log(node.parentNode)
+      node.parentNode.removeChild(node)
+    }
   },
   created(){
     const vm = this;
@@ -4424,6 +4432,13 @@ export default {
     }
 
     vm.city_district = require('../assets/city_district.json');
+
+    let isCookie = localStorage.getItem('isCookie')
+    if(isCookie) vm.removeCookie() 
+    else {
+      localStorage.setItem('isCookie', true)
+      document.querySelector('.cookie .close').addEventListener('click', vm.removeCookie)
+    }
   }
 }
 </script>

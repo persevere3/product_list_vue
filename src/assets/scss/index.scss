@@ -2669,3 +2669,29 @@ input:focus, textarea:focus, select:focus{
     overflow-y: auto;
   }
 }
+
+.cookie {
+  width: 90%;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 10px;
+  position: absolute;
+  padding: 20px;
+  background-color: #f5f5f5;
+  color: #888;
+  font-weight: bold;
+  border-radius: 10px;
+}
+.cookie .close{
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+  color: #07081d;
+  cursor: pointer;
+}
