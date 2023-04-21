@@ -2675,7 +2675,7 @@ input:focus, textarea:focus, select:focus{
   left: 50%;
   transform: translateX(-50%);
   bottom: 10px;
-  position: absolute;
+  position: fixed;
   padding: 20px;
   background-color: #f5f5f5;
   color: #888;
@@ -2685,7 +2685,7 @@ input:focus, textarea:focus, select:focus{
 .cookie .close{
   width: 20px;
   height: 20px;
-  position: absolute;
+  position: fixed;
   top: 5px;
   right: 5px;
   display: flex;
