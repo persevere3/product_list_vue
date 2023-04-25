@@ -378,7 +378,7 @@
                 >
                 <div class="prompt">{{ errors.first('email') }}</div>
                 <label for="name">購買人姓名</label>
-                <input type="text" :readonly="userInfo.Name" id="name" name="姓名" :class="{inputError:errors.first('姓名')}" v-validate="'required'" placeholder="姓名" v-model="info.purchaser_name" @change="pInput">
+                <input type="text" :readonly="userInfo.Registermethod < 2" id="name" name="姓名" :class="{inputError:errors.first('姓名')}" v-validate="'required'" placeholder="姓名" v-model="info.purchaser_name" @change="pInput">
                 <div class="prompt">{{ errors.first('姓名') }}</div>
                 <label for="phone">購買人手機號碼</label>
                 <input type="text" :readonly="!!userInfo.Phone2" id="phone" name="購買人手機號碼" :class="{inputError:errors.first('購買人手機號碼')}" v-validate="'required'" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput">
@@ -819,7 +819,7 @@
               >
               <div class="prompt">{{ errors.first('email') }}</div>
               <label for="name">購買人姓名</label>
-              <input type="text" :readonly="userInfo.Name" id="name" name="姓名" :class="{inputError:errors.first('姓名')}" v-validate="'required'" placeholder="姓名" v-model="info.purchaser_name" @change="pInput">
+              <input type="text" :readonly="userInfo.Registermethod < 2" id="name" name="姓名" :class="{inputError:errors.first('姓名')}" v-validate="'required'" placeholder="姓名" v-model="info.purchaser_name" @change="pInput">
               <div class="prompt">{{ errors.first('姓名') }}</div>
               <label for="phone">購買人手機號碼</label>
               <input type="text" :readonly="!!userInfo.Phone2" id="phone" name="購買人手機號碼" :class="{inputError:errors.first('購買人手機號碼')}" v-validate="'required'" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput">
@@ -2277,6 +2277,7 @@ export default {
         vm.login(vm.getProducts, [type]);
       });
     },
+    // 7-11
     getConvenienceStore(storeid, storename, storeaddress, spid) {
       let vm = this
       if(!storeid || !storename || !storeaddress) return
