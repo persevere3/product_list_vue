@@ -585,8 +585,6 @@
             </div>
           </div>
 
-          <div class="ECPay_form_container" v-html="ECPay_form"></div>
-
           <div class="footer">
             <div class="top"></div>
             <div class="bottom">POWERED AND SECURED BY UNIQ Micronet</div>
@@ -1026,8 +1024,6 @@
           </div>
         </div>
 
-        <div class="ECPay_form_container" v-html="ECPay_form"></div>
-
         <div class="noItem" v-show="cartsLength === 0">
           <p>購物車沒有內容</p>  
           <div class="button" @click="showPage='main'">back</div>
@@ -1039,6 +1035,7 @@
         </div>
       </div>
     </div>
+    <div class="ECPay_form_container" v-html="ECPay_form"></div>
 
     <div class="selectProduct" v-if="showPage === 'selectProduct'" :style="`height:${innerHeight}px`">
       <div class="background">
@@ -4208,7 +4205,7 @@ export default {
 
         if(itemWidth > contentWidth){
           let itemHeight = items[i].height;
-          let newHeight = parseInt(itemHeight / ( itemWidth/contentWidth )) ;
+          let newHeight = parseInt(itemHeight / ( itemWidth/contentWidth ));
           items[i].width = contentWidth;
           items[i].height = newHeight;
         }
