@@ -323,8 +323,8 @@
               <p>如果要使用折扣碼，請在此填入</p>
               <div class="discountBox">
                 <input type="text" v-model.trim="discountCode" @keyup.enter="discount">
-                <div class="button" @click="discount">使用折扣碼</div>
-                <div class="button" @click="unDiscount">取消折扣碼</div>
+                <div class="button" @click="discount">套用</div>
+                <div class="button" @click="unDiscount">取消</div>
               </div>
               <div class="discountError" v-if="isDiscountMessage">{{discountMessage}}</div>
             </div>
@@ -373,16 +373,24 @@
             <form class="info">
               <div class="left">
                 <label for="email">購買人Email</label>
-                <input type="text" :readonly="userInfo.Email" id="email" name="email" v-validate="'required|email'" placeholder="email"
-                  :class="{inputError:errors.first('email')}" v-model="info.purchaser_email"
-                >
-                <div class="prompt">{{ errors.first('email') }}</div>
+                <template v-if="user_account && userInfo.Registermethod == 2">
+                  <input type="text" id="email" name="email" placeholder="email" @blur="validate('purchaser_email', 'required', 'email')"
+                  :class="{inputError: info.purchaser_email_error}" v-model="info.purchaser_email">
+                    <div class="prompt"> {{ info.purchaser_email_error }} </div>
+                </template>
+                <template v-else>
+                  <input type="text" :readonly="!!userInfo.Email" id="email" name="email" placeholder="email" @blur="validate('purchaser_email', 'required', 'email')"
+                    :class="{inputError: info.purchaser_email_error}" v-model="info.purchaser_email">
+                  <div class="prompt"> {{ info.purchaser_email_error }} </div>
+                </template>
+
                 <label for="name">購買人姓名</label>
-                <input type="text" :readonly="userInfo.Registermethod < 2" id="name" name="姓名" :class="{inputError:errors.first('姓名')}" v-validate="'required'" placeholder="姓名" v-model="info.purchaser_name" @change="pInput">
-                <div class="prompt">{{ errors.first('姓名') }}</div>
+                <input type="text" :readonly="userInfo.Registermethod < 2" id="name" name="姓名" :class="{inputError: info.purchaser_name_error }" placeholder="姓名" v-model="info.purchaser_name" @change="pInput" @blur="validate('purchaser_name', 'required')">
+                <div class="prompt">{{ info.purchaser_name_error }}</div>
+
                 <label for="phone">購買人手機號碼</label>
-                <input type="text" :readonly="!!userInfo.Phone2" id="phone" name="購買人手機號碼" :class="{inputError:errors.first('購買人手機號碼')}" v-validate="'required'" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput">
-                <div class="prompt">{{ errors.first('購買人手機號碼') }}</div>
+                <input type="text" :readonly="!!userInfo.Phone2" id="phone" name="購買人手機號碼" :class="{inputError: info.purchaser_number_error }" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput" @blur="validate('purchaser_number', 'required', 'phone')">
+                <div class="prompt">{{ info.purchaser_number_error }}</div>
 
                 <div class="box">
                   <input type="checkbox" id="isSame" v-model="isSame">
@@ -390,12 +398,12 @@
                 </div>
                 
                 <label for="rname">收件人姓名</label>
-                <input type="text" id="rname" name="收件人姓名" :class="{inputError:errors.first('收件人姓名')}" v-validate="'required'" placeholder="姓名" v-model="info.receiver_name">
-                <div class="prompt">{{ errors.first('收件人姓名') }}</div>
+                <input type="text" id="rname" name="收件人姓名" :class="{inputError: info.receiver_name_error }" placeholder="姓名" v-model="info.receiver_name" @blur="validate('receiver_name', 'required')">
+                <div class="prompt">{{ info.receiver_name_error }}</div>
+                
                 <label for="rphone">收件人聯絡電話</label>
-                <input type="text" id="rphone" name="收件人聯絡電話" :class="{inputError:errors.first('收件人聯絡電話')}" v-validate="'required'" placeholder="聯絡電話" v-model="info.receiver_number">
-                <div class="prompt">{{ errors.first('收件人聯絡電話') }}</div>
-
+                <input type="text" id="rphone" name="收件人聯絡電話" :class="{inputError: info.receiver_number_error }" placeholder="聯絡電話" v-model="info.receiver_number" @blur="validate('receiver_number', 'required')">
+                <div class="prompt">{{ info.receiver_number_error }}</div>
               </div>
 
               <div class="right">
@@ -448,7 +456,7 @@
                   <div class="address" v-if="userInfo.address_obj && Object.keys(userInfo.address_obj).length">
                     <div class="address_title"> 常用地址 : </div>
                     <ul>
-                      <li v-for="(item, key) in userInfo.address_obj" :key="key" @click="city_active = item.address.split(' ')[0]; district_active = item.address.split(' ')[1]; detail_address = item.address.split(' ')[2];"> {{ }} 
+                      <li v-for="(item, key) in userInfo.address_obj" :key="key" @click="city_active = item.address.split(' ')[0]; district_active = item.address.split(' ')[1]; detail_address = item.address.split(' ')[2];">
                         {{ item.address }}  
                         <i class="fa fa-check" v-if="item.address == receiver_address"></i>
                       </li>
@@ -526,7 +534,7 @@
                 <div class="right"></div>
               </div>
               <div class="info login" v-else>
-                請先 <span class="a" @click="urlPush(getShoppingPathname('user'))"> 登入會員 </span>
+                請先 <span class="a" @click="urlPush(getPathname('user'))"> 登入會員 </span>
               </div>
             </template>
 
@@ -762,8 +770,8 @@
             <p>如果要使用折扣碼，請在此填入</p>
             <div class="discountBox">
               <input type="text" v-model.trim="discountCode" @keyup.enter="discount">
-              <div class="button" @click="discount">使用折扣碼</div>
-              <div class="button" @click="unDiscount">取消折扣碼</div>
+              <div class="button" @click="discount">套用</div>
+              <div class="button" @click="unDiscount">取消</div>
             </div>
             <div class="discountError" v-if="isDiscountMessage">{{discountMessage}}</div>
           </div>
@@ -812,16 +820,24 @@
           <form class="info">
             <div class="left">
               <label for="email">購買人Email</label>
-              <input type="text" :readonly="userInfo.Email" id="email" name="email" v-validate="'required|email'" placeholder="email"
-                :class="{inputError:errors.first('email')}" v-model="info.purchaser_email"
-              >
-              <div class="prompt">{{ errors.first('email') }}</div>
+              <template v-if="user_account && userInfo.Registermethod == 2">
+                <input type="text" id="email" name="email" placeholder="email" @blur="validate('purchaser_email', 'required', 'email')"
+                :class="{inputError: info.purchaser_email_error}" v-model="info.purchaser_email">
+                  <div class="prompt"> {{ info.purchaser_email_error }} </div>
+              </template>
+              <template v-else>
+                <input type="text" :readonly="!!userInfo.Email" id="email" name="email" placeholder="email" @blur="validate('purchaser_email', 'required', 'email')"
+                  :class="{inputError: info.purchaser_email_error}" v-model="info.purchaser_email">
+                <div class="prompt"> {{ info.purchaser_email_error }} </div>
+              </template>
+
               <label for="name">購買人姓名</label>
-              <input type="text" :readonly="userInfo.Registermethod < 2" id="name" name="姓名" :class="{inputError:errors.first('姓名')}" v-validate="'required'" placeholder="姓名" v-model="info.purchaser_name" @change="pInput">
-              <div class="prompt">{{ errors.first('姓名') }}</div>
+              <input type="text" :readonly="userInfo.Registermethod < 2" id="name" name="姓名" :class="{inputError: info.purchaser_name_error }" placeholder="姓名" v-model="info.purchaser_name" @change="pInput" @blur="validate('purchaser_name', 'required')">
+              <div class="prompt">{{ info.purchaser_name_error }}</div>
+
               <label for="phone">購買人手機號碼</label>
-              <input type="text" :readonly="!!userInfo.Phone2" id="phone" name="購買人手機號碼" :class="{inputError:errors.first('購買人手機號碼')}" v-validate="'required'" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput">
-              <div class="prompt">{{ errors.first('購買人手機號碼') }}</div>
+              <input type="text" :readonly="!!userInfo.Phone2" id="phone" name="購買人手機號碼" :class="{inputError: info.purchaser_number_error }" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput" @blur="validate('purchaser_number', 'required', 'phone')">
+              <div class="prompt">{{ info.purchaser_number_error }}</div>
 
               <div class="box">
                 <input type="checkbox" id="isSame" v-model="isSame">
@@ -829,12 +845,12 @@
               </div>
               
               <label for="rname">收件人姓名</label>
-              <input type="text" id="rname" name="收件人姓名" :class="{inputError:errors.first('收件人姓名')}" v-validate="'required'" placeholder="姓名" v-model="info.receiver_name">
-              <div class="prompt">{{ errors.first('收件人姓名') }}</div>
+              <input type="text" id="rname" name="收件人姓名" :class="{inputError: info.receiver_name_error }" placeholder="姓名" v-model="info.receiver_name" @blur="validate('receiver_name', 'required')">
+              <div class="prompt">{{ info.receiver_name_error }}</div>
+              
               <label for="rphone">收件人聯絡電話</label>
-              <input type="text" id="rphone" name="收件人聯絡電話" :class="{inputError:errors.first('收件人聯絡電話')}" v-validate="'required'" placeholder="聯絡電話" v-model="info.receiver_number">
-              <div class="prompt">{{ errors.first('收件人聯絡電話') }}</div>
-
+              <input type="text" id="rphone" name="收件人聯絡電話" :class="{inputError: info.receiver_number_error }" placeholder="聯絡電話" v-model="info.receiver_number" @blur="validate('receiver_number', 'required')">
+              <div class="prompt">{{ info.receiver_number_error }}</div>
             </div>
 
             <div class="right">
@@ -965,7 +981,7 @@
               <div class="right"></div>
             </div>
             <div class="info login" v-else>
-              請先 <span class="a" @click="urlPush(getShoppingPathname('user'))"> 登入會員 </span>
+              請先 <span class="a" @click="urlPush(getPathname('user'))"> 登入會員 </span>
             </div>
           </template>
 
@@ -1311,7 +1327,7 @@
         </div>
         <div class="tip">
           <i class="fas fa-exclamation-circle"></i>
-          請在匯款成功後前往 <div class="a" @click="urlPush(`${getShoppingPathname('order')}?phone=${info.purchaser_number}&mail=${info.purchaser_email}`, true)"> 訂單列表 </div>
+          請在匯款成功後前往 <div class="a" @click="urlPush(`${getPathname('order')}?phone=${info.purchaser_number}&mail=${info.purchaser_email}`, true)"> 訂單列表 </div>
           輸入匯款帳戶末6碼工作人員確認後將儘快為您安排出貨。
         </div>
 
@@ -1455,19 +1471,19 @@
 
     <div class="main" v-if="showPage === 'main'">
       <div class="logo_name">
-        <img :src="store.Logo" class="logo" v-if="store.Logo" @click="urlPush(getShoppingPathname('index'))">
+        <img :src="store.Logo" class="logo" v-if="store.Logo" @click="urlPush(getPathname('index'))">
       </div>
-      <div class="menu">
+      <div class="menu" v-if="webVersion != 'uniqm.net'">
         <ul>
-          <li @click="urlPush(getShoppingPathname('index'))">
+          <li @click="urlPush(getPathname('index'))">
             <i class="fa-solid fa-house"></i> 
             <span> 首頁 </span>
           </li>
-          <li @click="urlPush(getShoppingPathname('order'))">
+          <li @click="urlPush(getPathname('order'))">
             <i class="fas fa-clipboard-list"></i>
             <span class="none650"> 訂單 </span>
           </li>
-          <li v-if="site.MemberFuction * 1" @click="user_account ? urlPush(getShoppingPathname('info')) : urlPush(getShoppingPathname('user'))">
+          <li v-if="site.MemberFuction * 1" @click="user_account ? urlPush(getPathname('info')) : urlPush(getPathname('user'))">
             <i class="fa-solid fa-user"></i> 
             <span class="none650"> 會員中心 </span>
           </li>
@@ -1680,10 +1696,15 @@ export default {
       is_click_finish_order: false,
       info: {
         purchaser_email:'',
+        purchaser_email_error: '',
         purchaser_name:'',
+        purchaser_name_error: '',
         purchaser_number:'',
+        purchaser_number_error: '',
         receiver_name:'',
+        receiver_name_error: '',
         receiver_number:'',
+        receiver_number_error: '',
         info_message:''
       },
       invoice_type: '0',
@@ -1849,7 +1870,10 @@ export default {
       swiper: null,
 
       api: '',
-      protocol: ''
+      protocol: '',
+
+      //
+      webVersion: 'uniqm.com',
     }
   },
   watch:{
@@ -1862,6 +1886,8 @@ export default {
         this.info.receiver_name = ''
         this.info.receiver_number = '';
       }
+      this.validate('receiver_name', 'required')
+      this.validate('receiver_number', 'required')
     },
     //
     transport(v){
@@ -1876,7 +1902,7 @@ export default {
 
       // selectProduct => ?
       if(oldV === 'selectProduct' && newV != oldV) {
-        window.history.replaceState({}, document.title, "/cart/");
+        window.history.replaceState({}, document.title, location.pathname);
       }
       
       if( newV === 'selectProduct' || newV === 'singleProduct') {
@@ -1898,7 +1924,10 @@ export default {
       }
     },
     //
-    city_active() {
+    city_active(newV) {
+      for(let key in this.city_district[newV]) {
+        if(key == this.district_active) return
+      }
       this.district_active = ''
     }
   },
@@ -1991,6 +2020,30 @@ export default {
         }
 
         localStorage.setItem('site', JSON.stringify(vm.site));
+
+        console.log(location.search)
+
+        // Line 登入
+        let account = location.search.split('account=')[1] && 
+        location.search.split('account=')[1].split('&')[0];
+        if(account) {
+          vm.user_account = account
+          localStorage.setItem('user_account', vm.user_account)
+        }
+
+        // Line 綁定
+        let result = location.search.split('result=')[1] && 
+        location.search.split('result=')[1].split('&')[0];
+        if(result) {
+          result = JSON.parse(decodeURI(result))
+          if(!result.status) alert(result.msg)
+          else {
+            vm.user_account = result.account
+            localStorage.setItem('user_account', vm.user_account)
+          }
+
+          window.history.replaceState({}, document.title, location.pathname);
+        }
         
         vm.user_account = localStorage.getItem('user_account');
         
@@ -2002,13 +2055,6 @@ export default {
         vm.getStore2();
         vm.getCategories();
         vm.getProducts();
-
-        if(location.search.indexOf('account') > -1) {
-          vm.user_account = location.search.split('account=')[1]
-          localStorage.setItem('user_account', vm.user_account)
-
-          window.history.replaceState({}, document.title, "/cart/");
-        }
 
         if(vm.user_account) vm.getUserInfo();
       })
@@ -2205,7 +2251,7 @@ export default {
         // RtnMsg
         let RtnMsg = searchObj['RtnMsg']
         if(RtnMsg && RtnMsg == 'Succeeded') {
-          window.history.replaceState({}, document.title, "/cart/");
+          window.history.replaceState({}, document.title, location.pathname);
           if(vm.user_account) {
             localStorage.removeItem(`${vm.site.Name}@${vm.user_account}@carts`);
           }
@@ -2258,7 +2304,7 @@ export default {
         // open_carts
         let is_open_carts = searchObj['open_carts']
         if(is_open_carts){
-          window.history.replaceState({}, document.title, "/cart/");
+          window.history.replaceState({}, document.title, location.pathname);
           vm.showPage = 'cart'
         }
 
@@ -2284,10 +2330,10 @@ export default {
       vm.storeaddress = decodeURI(storeaddress)
 
       if(spid) {
-        window.history.replaceState({}, document.title, `/cart/?spid=${spid}`);
+        window.history.replaceState({}, document.title, `${location.pathname}?spid=${spid}`);
       }
       else {
-        window.history.replaceState({}, document.title, "/cart/");
+        window.history.replaceState({}, document.title, location.pathname);
         vm.showPage = 'cart'
         vm.stepIndex = 2
       }
@@ -2763,7 +2809,7 @@ export default {
       this.getTotal(0);
     },
     
-    createCartsStr(){
+    createCartsStr() {
       let vm = this;
       let o = {
         'id': '',
@@ -2848,12 +2894,13 @@ export default {
         vm.$http.post(url, params, config).then((res) => {
 
           if(res.data.errormessage){
-            console.log('getTotal errormessage')
+            alert(res.data.errormessage)
             return;
           }
 
           vm.total = res.data.data[0];
 
+          vm.bonus_percent = 0
           for(let item of vm.bonus_array) {
             if((parseInt(vm.total.Sum) - parseInt(vm.total.Shipping)) >= item.lower) {
               vm.bonus_percent = item.shipping;
@@ -2876,10 +2923,10 @@ export default {
       vm.isConfirm2 = false;
       vm.createOrder();
     },
-    checkOrder(){
+    async checkOrder(){
       const vm = this;
 
-      if ( vm.site.Preview == 2 ){
+      if(vm.site.Preview == 2 ){
         vm.showMessage( '預覽模式不開放完成訂單', false);
         return;
       }
@@ -2888,24 +2935,30 @@ export default {
       }
 
       vm.is_click_finish_order = true;
-      vm.$validator.validate().then(async function(result) {
-        if (result && 
-            vm.transport !== '0' &&
-            vm.pay_method !== '0' &&
-            (
-              (vm.store.Receipt === '0') || 
-              ( vm.invoice_type === '1' || 
-                (vm.invoice_type==='2' && vm.invoice_title !== '' && vm.invoice_uniNumber !== '')
-              )
-            ) &&
-            ( vm.transport == 1 ? (vm.city_active && vm.district_active && vm.detail_address) : true) &&
-            ( vm.transport == 3 ? vm.storeaddress != '' : true)
-           ) {
-
-          await vm.use_bonus_handler();
-          vm.createOrder();
-        }
-      });
+      vm.validate('purchaser_email', 'required', 'email') 
+      vm.validate('purchaser_name', 'required') 
+      vm.validate('purchaser_number', 'required', 'phone') 
+      vm.validate('receiver_name', 'required') 
+      vm.validate('receiver_number', 'required') 
+      if(!vm.info.purchaser_email_error &&
+        !vm.info.purchaser_name_error &&
+        !vm.info.purchaser_number_error &&
+        !vm.info.receiver_name_error &&
+        !vm.info.receiver_number_error &&
+        vm.transport !== '0' &&
+        vm.pay_method !== '0' &&
+        (
+          (vm.store.Receipt === '0') || 
+          ( vm.invoice_type === '1' || 
+            (vm.invoice_type==='2' && vm.invoice_title !== '' && vm.invoice_uniNumber !== '')
+          )
+        ) &&
+        ( vm.transport == 1 ? (vm.city_active && vm.district_active && vm.detail_address) : true) &&
+        ( vm.transport == 3 ? vm.storeaddress != '' : true)
+      ) {
+        await vm.use_bonus_handler();
+        vm.createOrder();
+      }
     },
 
     //
@@ -3495,7 +3548,6 @@ export default {
     // 沒有規格
     // carts.buyQty change => update products => set carts
     updateCartsBuyQty(i, qty, data){
-      console.log(i, qty, data)
       let vm = this;
 
       let validate = vm.updateBuyQtyValidate(vm.carts[i], qty, data, '商品');
@@ -3527,7 +3579,6 @@ export default {
         if(product.ID === item.ID){
           vm.$delete(product, 'buyQty');
           vm.$set(product, 'buyQty', qty);
-          console.log(product.buyQty)
         }
       })
 
@@ -4091,7 +4142,7 @@ export default {
       this.selectProduct = item; 
       this.selectIndex = index; 
       this.showPage = 'selectProduct';
-      window.history.replaceState({}, document.title, `/cart/?id=${item.ID}`);
+      window.history.replaceState({}, document.title, `${location.pathname}?id=${item.ID}`);
       this.getAddPrice(item.ID, item, '1'); 
     },
 
@@ -4100,14 +4151,10 @@ export default {
       this.getStore();
       this.getProducts('1');
       let newUser_account = localStorage.getItem('user_account');
+      if(newUser_account) this.getUserInfo();
       if(newUser_account != this.user_account) {
         this.user_account = newUser_account
-        if(newUser_account) {
-          // 登出 => 登入 or 換帳號
-          this.getUserInfo();
-        }
-        else {
-          // 登入 => 登出
+        if(!this.user_account) {
           this.userInfo = {}
           this.info = {
             purchaser_email:'',
@@ -4128,6 +4175,9 @@ export default {
       if(this.isSame){
         this.info.receiver_name = this.info.purchaser_name;
         this.info.receiver_number = this.info.purchaser_number;
+
+        this.validate('purchaser_name', 'required')
+        this.validate('purchaser_number', 'required')
       }
     },
     info_message_input(){
@@ -4279,10 +4329,10 @@ export default {
     //
     click_share_link() {
       if(this.showPage === 'singleProduct') {
-        this.copy( `${this.protocol}//${this.api}/cart/?spid=${this.selectProduct.ID}`, '#copy_input2');
+        this.copy( `${this.protocol}//${this.api}${location.pathname}?spid=${this.selectProduct.ID}`, '#copy_input2');
       }
       else {
-        this.copy( `${this.protocol}//${this.api}/cart/?id=${this.selectProduct.ID}`, '#copy_input2');
+        this.copy( `${this.protocol}//${this.api}${location.pathname}?id=${this.selectProduct.ID}`, '#copy_input2');
       }
       this.showMessage('複製分享連結', true);
     },
@@ -4373,32 +4423,31 @@ export default {
     },
 
     // shopping
-    getShoppingPathname(page) {
-      let shoppingHost = 'uniqm.com'
-      let host = location.host;
-
-      let pageIndex = host.indexOf(shoppingHost) > -1 ? 1 : 0;
-
+    getPathname(page) {
       let pageObj = {
         index: {
-          0: '/',
-          1: '/'
+          'common': '/',
+          'uniqm.com': '/',
+          'uniqm.net': '/',
         },
         order: {
-          0: '/order.html',
-          1: '/shoppingOrder.html'
+          'common': '/order.html',
+          'uniqm.com': '/shoppingOrder.html',
+          'uniqm.net': '/',
         },
         user: {
-          0: '/user.html',
-          1: '/shoppingUser.html'
+          'common': '/user.html',
+          'uniqm.com': '/shoppingUser.html',
+          'uniqm.net': '/',
         },
         info: {
-          0: '/user_info.html',
-          1: '/shoppingInfo.html'
+          'common': '/info.html',
+          'uniqm.com': '/shoppingInfo.html',
+          'uniqm.net': '/',
         },
       }
 
-      return pageObj[page][pageIndex];
+      return pageObj[page][this.webVersion];
     },
 
     // swiper
@@ -4407,6 +4456,37 @@ export default {
         slidesPerView: 3,
       })
     },
+
+    validate(key, ...arr) {
+      console.log(key)
+      let vm = this
+      let value = vm.info[key]
+      console.log(value)
+      for(let item of arr) {
+        if(item == 'required') {
+          if(value == '') {
+            vm.info[`${key}_error`] = '不得為空'
+            return false
+          }
+        } 
+        else if(item == 'email') {
+          let rep = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+          if(!rep.test(value)) {
+            vm.info[`${key}_error`] = '請輸入正確的Email'
+            return false
+          }
+        }
+        else if(item == 'phone') {
+          let rep = /^(09)[0-9]{8}$/;
+          if (!rep.test(value)) {
+            vm.info[`${key}_error`] = '請輸入正確的手機號碼'
+            return false
+          }
+        }
+      }
+      vm.info[`${key}_error`] = ''
+      return true
+    }
   },
   created(){
     const vm = this;
