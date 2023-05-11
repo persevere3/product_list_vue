@@ -4441,7 +4441,7 @@ export default {
           'uniqm.net': '/',
         },
         info: {
-          'common': '/info.html',
+          'common': '/user_info.html',
           'uniqm.com': '/shoppingInfo.html',
           'uniqm.net': '/',
         },
