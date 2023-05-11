@@ -1277,7 +1277,7 @@
         <div class="border"></div>
         <div class="confirm_title"> 
           <i class="fa fa-check-circle" aria-hidden="true"></i>  
-          <div class="text"> 訂單完成！ </div>
+          <div class="text"> 已收到您的訂單！ </div>
         </div>
         <div class="message"> 
           <template v-if="pay_method != 'PayOnDelivery'">
@@ -1297,11 +1297,11 @@
         <div class="confirm_title"> 
           <i class="fa fa-question-circle" aria-hidden="true"></i>
         </div>
-        <div class="message" v-if="!user_account"> 該手機已使用過此折扣碼，按確定取消折扣碼優惠直接完成訂單，按取消重新輸入手機或折扣碼 </div>
-        <div class="message" v-else> 該會員已使用過此折扣碼，按確定取消折扣碼優惠直接完成訂單，按取消重新輸入折扣碼 </div>
+        <div class="message" v-if="!user_account"> 此折扣碼已使用過！請按取消重新輸入手機或折扣碼，或按確定放棄優惠直接完成訂單 </div>
+        <div class="message" v-else> 您已使用過此折扣碼！請按取消後重新輸入折扣碼，或按確定放棄優惠直接完成訂單 </div>
         <div class="buttonGroup">
-          <div class="button cancel" @click=" isConfirm2 = false;"> 取消 </div>
           <div class="button determine" @click="cancelDiscountCodeCreateOrder()"> 確定  </div>
+          <div class="button cancel" @click=" isConfirm2 = false;"> 取消 </div>
         </div>
       </div>
     </div>
@@ -1311,8 +1311,8 @@
       <div class="frame">
         <div class="border"></div>
         <div class="confirm_title"> 
-          <i class="fa fa-check-circle" aria-hidden="true"></i>  
-          <div class="text"> 訂單完成！ </div>
+          <i class="fa fa-check-circle" aria-hidden="true"></i>
+          <div class="text"> 已收到您的訂單！ </div>  
         </div>
         <div class="message bank"> 
           <div style="display: flex; flex-wrap: wrap;">
@@ -1327,8 +1327,8 @@
         </div>
         <div class="tip">
           <i class="fas fa-exclamation-circle"></i>
-          請在匯款成功後前往 <div class="a" @click="urlPush(`${getPathname('order')}?phone=${info.purchaser_number}&mail=${info.purchaser_email}`, true)"> 訂單列表 </div>
-          輸入匯款帳戶末6碼工作人員確認後將儘快為您安排出貨。
+          請記得在匯款成功後前往 <div class="a" @click="urlPush(`${getPathname('order')}?phone=${info.purchaser_number}&mail=${info.purchaser_email}`, true)"> 訂單列表 </div>
+          輸入匯款帳戶末6碼，我們確認後將儘快為您安排出貨！。
         </div>
 
         <div class="buttonGroup">
@@ -1342,11 +1342,11 @@
       <div class="frame">
         <div class="border"></div>
         <div class="confirm_title"> 
-          <i class="fa fa-check-circle" aria-hidden="true"></i>  
-          <div class="text"> 訂單完成！ </div>
+          <i class="fa fa-check-circle" aria-hidden="true"></i>
+          <div class="text"> 已收到您的訂單！ </div>
         </div>
         <div class="message"> 
-          請問是否要註冊成為會員
+          是否可以耽擱您一點時間來加入我們會員？
         </div>
         <div class="buttonGroup">
           <div class="button cancel" @click="isConfirm4 = false; toPay()"> 
@@ -1355,7 +1355,7 @@
               ，前往付款頁面 
             </template>
           </div>
-          <div class="button determine" @click="isConfirm4 = false; auto_info();isConfirm5 = true"> 是，填寫註冊資料 </div>
+          <div class="button determine" @click="isConfirm4 = false; auto_info();isConfirm5 = true"> 是，請填寫註冊資料 </div>
         </div>
       </div>
     </div>
@@ -1366,7 +1366,7 @@
         <div class="border"></div>
         <div class="confirm_title"> 
           <i class="fas fa-registered"></i>
-          <div class="text"> 訂單完成！ </div>
+          <div class="text"> 加入會員！ </div>
         </div>
         <div class="form">
           <div class="input_container" :class="{ error: r_name.is_error }">
@@ -1878,7 +1878,7 @@ export default {
   },
   watch:{
     // this.info
-    isSame(v){
+    isSame(v) {
       if(v){
         this.info.receiver_name = this.info.purchaser_name;
         this.info.receiver_number = this.info.purchaser_number;
@@ -1890,14 +1890,14 @@ export default {
       this.validate('receiver_number', 'required')
     },
     //
-    transport(v){
+    transport(v) {
       this.getTotal(1);
       if(v == 3) {
         this.pay_method = 'PayOnDelivery' 
       }
     },
     // selectProduct
-    showPage(newV, oldV){
+    showPage(newV, oldV) {
       let vm = this
 
       // selectProduct => ?
@@ -2246,7 +2246,7 @@ export default {
           let value = item.split('=')[1]
           if(key && value) searchObj[key] = value
         })
-        console.log(searchObj)
+        // console.log(searchObj)
 
         // RtnMsg
         let RtnMsg = searchObj['RtnMsg']
@@ -2258,7 +2258,7 @@ export default {
           else {
             localStorage.removeItem(`${vm.site.Name}@carts`);
           }
-          vm.showMessage('付款成功', true)
+          vm.showMessage('已收到您的付款！', true)
         }
 
         // 7-11 取貨付款
@@ -2622,8 +2622,8 @@ export default {
         }
 
         this.computedCartsLength();
-        if(this.cartsSLength != this.cartsLength){
-          this.showMessage('部分商品下架，請重新確認', false);
+        if(this.cartsSLength != this.cartsLength) {
+          this.showMessage('抱歉，您選購的商品已下架', false);
         }
       }
     },
@@ -2776,12 +2776,12 @@ export default {
         let data = res.data.data[0].status;
         let message = '';
         if(data == 1){
-          vm.showMessage('套用折扣碼成功', true);
+          vm.showMessage('恭喜您獲得折扣', true);
           vm.isDiscountMessage = false;
         } else if (data == 0){
-          message = '查無此折扣碼';
+          message = '抱歉您的折扣碼無效，請重新輸入';
         } else if (data == 2){
-          message = '折扣碼已用完';
+          message = '抱歉此折扣碼已使用完，請重新輸入';
         }
 
         if (data == 1) {
@@ -2798,7 +2798,7 @@ export default {
         }
       }).catch((err) => { 
         console.error(err);
-        this.showMessage('套用折扣碼異常，請稍後再試', false);
+        vm.showMessage('需要專人服務處理，請聯繫客服', false);
         vm.login();
       });
     },
@@ -2915,7 +2915,7 @@ export default {
     },
 
     // checkOrder confirm 
-    async cancelDiscountCodeCreateOrder(){
+    async cancelDiscountCodeCreateOrder() {
       let vm = this;
       vm.discountCode = '';
       vm.useCodeSuccess = '';
@@ -2923,7 +2923,7 @@ export default {
       vm.isConfirm2 = false;
       vm.createOrder();
     },
-    async checkOrder(){
+    async checkOrder() {
       const vm = this;
 
       if(vm.site.Preview == 2 ){
@@ -2992,7 +2992,7 @@ export default {
       this.isConfirm = false;
 
       // LinePay
-      if(this.pay_method == 'LinePay'){
+      if(this.pay_method == 'LinePay') {
         this.urlPush(this.payResult.payUrl)
       }
       // company account
@@ -3427,7 +3427,7 @@ export default {
       .catch((err) => {
         console.error(err);
         vm.login();
-        vm.showMessage('完成訂單異常，請聯繫客服', false)
+        vm.showMessage('需要專人服務處理，請聯繫客服', false)
         vm.orderIng = false;
       });
     },
@@ -3490,7 +3490,7 @@ export default {
       // 下架
       if(!data){
         vm.getProducts();
-        vm.showMessage(`${itemStr}已下架`, false);
+        vm.showMessage(`抱歉，${itemStr}已下架`, false);
         return 0;
       }
       item.Enable = data.Enable;

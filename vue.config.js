@@ -1,4 +1,4 @@
-// uniqm.com, uniqm.net
+// common, uniqm.com, uniqm.net
 let webVersion = 'uniqm.com'
 
 module.exports = {
