@@ -392,9 +392,10 @@
                 <input type="text" :readonly="!!userInfo.Phone2" id="phone" name="購買人手機號碼" :class="{inputError: info.purchaser_number_error }" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput" @blur="validate('purchaser_number', 'required', 'phone')">
                 <div class="prompt">{{ info.purchaser_number_error }}</div>
 
-                <div class="box">
-                  <input type="checkbox" id="isSame" v-model="isSame">
-                  <label for="isSame">收件人同購買人資料</label>
+                <div class="custom_option" @click="isSame = !isSame" style="padding: 5px; margin-top: 10px;">
+                  <label>收件人同購買人資料</label>
+                  <i class="fa-regular fa-square-check" v-if="isSame"></i>
+                  <i class="fa-regular fa-square" v-else></i>
                 </div>
                 
                 <label for="rname">收件人姓名</label>
@@ -408,29 +409,78 @@
 
               <div class="right">
                 <label for="transport">運送方式</label>
+                <div class="custom_option" @click="transport = '1'" v-if="store.Shipping === '1' || store.Shipping === '2'"> 
+                  一般宅配
+                  <i class="fa-regular fa-square-check" v-if="transport === '1'"></i>
+                  <i class="fa-regular fa-square" v-else></i>
+                </div>
+                <div class="custom_option" @click="transport = '2'" v-if="store.Shipping === '1' || store.Shipping === '3'"> 
+                  到店自取
+                  <i class="fa-regular fa-square-check" v-if="transport === '2'"></i>
+                  <i class="fa-regular fa-square" v-else></i>
+                </div>
+                <!--
                 <select id="transport" v-model="transport" name="運送方式" :class="{inputError:is_click_finish_order && transport === '0'}">
                   <option value="0" disabled >=== 請選擇配送方式 ===</option>
                   <option value="1" v-if="store.Shipping === '1' || store.Shipping === '2'" selected>一般宅配</option>
                   <option value="2" v-if="store.Shipping === '1' || store.Shipping === '3'" selected>到店自取</option>
-                  <!-- 7-11 取貨付款 -->
-                  <!-- <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 取貨付款 </option> -->
+                  7-11 取貨付款
+                  <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 取貨付款 </option>
                 </select>
+                -->
                 <div class="prompt" v-if="is_click_finish_order && transport === '0'"> 請選擇配送方式 </div>
 
                 <label for="pay_method">支付方式</label>
-                <select id="pay_method" v-model="pay_method" name="支付方式" :class="{inputError:is_click_finish_order && pay_method === '0'}">
-                  <option value="0" disabled >=== 請選擇支付方式 ===</option>
-                  <option value="CreditCard" v-if="(store.CreditCard != 0 && transport != 3)" selected>信用卡</option>
-                  <option value="ATM" v-if="(store.ATM != 0 && transport != 3)" selected>ATM/網路ATM</option>
-                  <option value="PayCode" v-if="(store.PayCode != 0 && transport != 3)" selected>超商代碼</option>
-                  <option value="PayBarCode" v-if="(store.PayBarCode != 0 && transport != 3)" selected>超商條碼</option>
-                  <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport != 3)" selected>取貨付款</option>
-                  
-                  <!-- 7-11 取貨付款 -->
-                  <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport == 3)" selected> 7-11 取貨付款 </option>
-                  
-                  <option value="LinePay" v-if="store.LinePay == 1 && transport != 3" selected>LINE Pay</option>
-                </select>
+                
+                <template v-if="pay_method_number < 6">
+                  <div class="custom_option" @click="pay_method = 'CreditCard'" v-if="(store.CreditCard != 0 && transport != 3)"> 
+                    信用卡
+                    <i class="fa-regular fa-square-check" v-if="pay_method === 'CreditCard'"></i>
+                    <i class="fa-regular fa-square" v-else></i>
+                  </div>
+                  <div class="custom_option" @click="pay_method = 'ATM'" v-if="(store.ATM != 0 && transport != 3)"> 
+                    ATM/網路ATM
+                    <i class="fa-regular fa-square-check" v-if="pay_method === 'ATM'"></i>
+                    <i class="fa-regular fa-square" v-else></i>
+                  </div>
+                  <div class="custom_option" @click="pay_method = 'PayCode'" v-if="(store.PayCode != 0 && transport != 3)"> 
+                    超商代碼
+                    <i class="fa-regular fa-square-check" v-if="pay_method === 'PayCode'"></i>
+                    <i class="fa-regular fa-square" v-else></i>
+                  </div>
+                  <div class="custom_option" @click="pay_method = 'PayBarCode'" v-if="(store.PayBarCode != 0 && transport != 3)"> 
+                    超商條碼
+                    <i class="fa-regular fa-square-check" v-if="pay_method === 'PayBarCode'"></i>
+                    <i class="fa-regular fa-square" v-else></i>
+                  </div>
+                  <div class="custom_option" @click="pay_method = 'PayOnDelivery'" v-if="(store.PayOnDelivery != 0 && transport != 3)"> 
+                    取貨付款
+                    <i class="fa-regular fa-square-check" v-if="pay_method === 'PayOnDelivery'"></i>
+                    <i class="fa-regular fa-square" v-else></i>
+                  </div>
+                  <div class="custom_option" @click="pay_method = 'LinePay'" v-if="store.LinePay == 1 && transport != 3"> 
+                    LINE Pay
+                    <i class="fa-regular fa-square-check" v-if="pay_method === 'LinePay'"></i>
+                    <i class="fa-regular fa-square" v-else></i>
+                  </div>
+                </template>
+
+                <template v-else>
+                  <select id="pay_method" v-model="pay_method" name="支付方式" :class="{inputError:is_click_finish_order && pay_method === '0'}">
+                    <option value="0" disabled >=== 請選擇支付方式 ===</option>
+                    <option value="CreditCard" v-if="(store.CreditCard != 0 && transport != 3)" selected>信用卡</option>
+                    <option value="ATM" v-if="(store.ATM != 0 && transport != 3)" selected>ATM/網路ATM</option>
+                    <option value="PayCode" v-if="(store.PayCode != 0 && transport != 3)" selected>超商代碼</option>
+                    <option value="PayBarCode" v-if="(store.PayBarCode != 0 && transport != 3)" selected>超商條碼</option>
+                    <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport != 3)" selected>取貨付款</option>
+                    
+                    <!-- 7-11 取貨付款 -->
+                    <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport == 3)" selected> 7-11 取貨付款</option>
+                    
+                    <option value="LinePay" v-if="store.LinePay == 1 && transport != 3" selected>LINE Pay</option>
+                  </select>
+                </template>
+
                 <div class="prompt" v-if="is_click_finish_order && pay_method === '0'"> 請選擇支付方式 </div>
 
                 <template v-if="transport == '1'">
@@ -458,7 +508,8 @@
                     <ul>
                       <li v-for="(item, key) in userInfo.address_obj" :key="key" @click="city_active = item.address.split(' ')[0]; district_active = item.address.split(' ')[1]; detail_address = item.address.split(' ')[2];">
                         {{ item.address }}  
-                        <i class="fa fa-check" v-if="item.address == receiver_address"></i>
+                        <i class="fa-regular fa-square-check" v-if="item.address == receiver_address"></i>
+                        <i class="fa-regular fa-square" v-else></i>
                       </li>
                     </ul>
                   </div>
@@ -591,6 +642,11 @@
               <div class="button" @click="stepIndex = 1; getProducts()">上一步</div>
               <div class="button" @click="checkOrder()"><i  v-show="orderIng" class="fas fa-spinner fa-spin" style="margin-right: 5px"></i>完成訂單</div>
             </div>
+          </div>
+
+          <div class="noItem" v-show="cartsLength === 0">
+            <p> 購物車是空的?? 趕緊手刀買起來!! </p>  
+            <div class="button" @click="showPage='main'"> 現在就去逛! </div>
           </div>
 
           <div class="footer">
@@ -839,9 +895,10 @@
               <input type="text" :readonly="!!userInfo.Phone2" id="phone" name="購買人手機號碼" :class="{inputError: info.purchaser_number_error }" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput" @blur="validate('purchaser_number', 'required', 'phone')">
               <div class="prompt">{{ info.purchaser_number_error }}</div>
 
-              <div class="box">
-                <input type="checkbox" id="isSame" v-model="isSame">
-                <label for="isSame">收件人同購買人資料</label>
+              <div class="custom_option" @click="isSame = !isSame" style="padding: 5px; margin-top: 10px;">
+                <label>收件人同購買人資料</label>
+                <i class="fa-regular fa-square-check" v-if="isSame"></i>
+                <i class="fa-regular fa-square" v-else></i>
               </div>
               
               <label for="rname">收件人姓名</label>
@@ -855,29 +912,78 @@
 
             <div class="right">
               <label for="transport">運送方式</label>
+              <div class="custom_option" @click="transport = '1'" v-if="store.Shipping === '1' || store.Shipping === '2'"> 
+                一般宅配
+                <i class="fa-regular fa-square-check" v-if="transport === '1'"></i>
+                <i class="fa-regular fa-square" v-else></i>
+              </div>
+              <div class="custom_option" @click="transport = '2'" v-if="store.Shipping === '1' || store.Shipping === '3'"> 
+                到店自取
+                <i class="fa-regular fa-square-check" v-if="transport === '2'"></i>
+                <i class="fa-regular fa-square" v-else></i>
+              </div>
+              <!--
               <select id="transport" v-model="transport" name="運送方式" :class="{inputError:is_click_finish_order && transport === '0'}">
                 <option value="0" disabled >=== 請選擇配送方式 ===</option>
                 <option value="1" v-if="store.Shipping === '1' || store.Shipping === '2'" selected>一般宅配</option>
                 <option value="2" v-if="store.Shipping === '1' || store.Shipping === '3'" selected>到店自取</option>
-                <!-- 7-11 取貨付款 -->
-                <!-- <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 取貨付款 </option> -->
+                7-11 取貨付款
+                <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 取貨付款 </option>
               </select>
+              -->
               <div class="prompt" v-if="is_click_finish_order && transport === '0'"> 請選擇配送方式 </div>
 
               <label for="pay_method">支付方式</label>
-              <select id="pay_method" v-model="pay_method" name="支付方式" :class="{inputError:is_click_finish_order && pay_method === '0'}">
-                <option value="0" disabled >=== 請選擇支付方式 ===</option>
-                <option value="CreditCard" v-if="(store.CreditCard != 0 && transport != 3)" selected>信用卡</option>
-                <option value="ATM" v-if="(store.ATM != 0 && transport != 3)" selected>ATM/網路ATM</option>
-                <option value="PayCode" v-if="(store.PayCode != 0 && transport != 3)" selected>超商代碼</option>
-                <option value="PayBarCode" v-if="(store.PayBarCode != 0 && transport != 3)" selected>超商條碼</option>
-                <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport != 3)" selected>取貨付款</option>
-                
-                <!-- 7-11 取貨付款 -->
-                <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport == 3)" selected> 7-11 取貨付款</option>
-                
-                <option value="LinePay" v-if="store.LinePay == 1 && transport != 3" selected>LINE Pay</option>
-              </select>
+
+              <template v-if="pay_method_number < 6">
+                  <div class="custom_option" @click="pay_method = 'CreditCard'" v-if="(store.CreditCard != 0 && transport != 3)"> 
+                    信用卡
+                    <i class="fa-regular fa-square-check" v-if="pay_method === 'CreditCard'"></i>
+                    <i class="fa-regular fa-square" v-else></i>
+                  </div>
+                  <div class="custom_option" @click="pay_method = 'ATM'" v-if="(store.ATM != 0 && transport != 3)"> 
+                    ATM/網路ATM
+                    <i class="fa-regular fa-square-check" v-if="pay_method === 'ATM'"></i>
+                    <i class="fa-regular fa-square" v-else></i>
+                  </div>
+                  <div class="custom_option" @click="pay_method = 'PayCode'" v-if="(store.PayCode != 0 && transport != 3)"> 
+                    超商代碼
+                    <i class="fa-regular fa-square-check" v-if="pay_method === 'PayCode'"></i>
+                    <i class="fa-regular fa-square" v-else></i>
+                  </div>
+                  <div class="custom_option" @click="pay_method = 'PayBarCode'" v-if="(store.PayBarCode != 0 && transport != 3)"> 
+                    超商條碼
+                    <i class="fa-regular fa-square-check" v-if="pay_method === 'PayBarCode'"></i>
+                    <i class="fa-regular fa-square" v-else></i>
+                  </div>
+                  <div class="custom_option" @click="pay_method = 'PayOnDelivery'" v-if="(store.PayOnDelivery != 0 && transport != 3)"> 
+                    取貨付款
+                    <i class="fa-regular fa-square-check" v-if="pay_method === 'PayOnDelivery'"></i>
+                    <i class="fa-regular fa-square" v-else></i>
+                  </div>
+                  <div class="custom_option" @click="pay_method = 'LinePay'" v-if="store.LinePay == 1 && transport != 3"> 
+                    LINE Pay
+                    <i class="fa-regular fa-square-check" v-if="pay_method === 'LinePay'"></i>
+                    <i class="fa-regular fa-square" v-else></i>
+                  </div>
+              </template>
+
+              <template v-else>
+                <select id="pay_method" v-model="pay_method" name="支付方式" :class="{inputError:is_click_finish_order && pay_method === '0'}">
+                  <option value="0" disabled >=== 請選擇支付方式 ===</option>
+                  <option value="CreditCard" v-if="(store.CreditCard != 0 && transport != 3)" selected>信用卡</option>
+                  <option value="ATM" v-if="(store.ATM != 0 && transport != 3)" selected>ATM/網路ATM</option>
+                  <option value="PayCode" v-if="(store.PayCode != 0 && transport != 3)" selected>超商代碼</option>
+                  <option value="PayBarCode" v-if="(store.PayBarCode != 0 && transport != 3)" selected>超商條碼</option>
+                  <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport != 3)" selected>取貨付款</option>
+                  
+                  <!-- 7-11 取貨付款 -->
+                  <option value="PayOnDelivery" v-if="(store.PayOnDelivery != 0 && transport == 3)" selected> 7-11 取貨付款</option>
+                  
+                  <option value="LinePay" v-if="store.LinePay == 1 && transport != 3" selected>LINE Pay</option>
+                </select>
+              </template>
+
               <div class="prompt" v-if="is_click_finish_order && pay_method === '0'"> 請選擇支付方式 </div>
 
               <template v-if="transport == '1'">
@@ -904,8 +1010,9 @@
                   <div class="address_title"> 常用地址 : </div>
                   <ul>
                     <li v-for="(item, key) in userInfo.address_obj" :key="key" @click="city_active = item.address.split(' ')[0]; district_active = item.address.split(' ')[1]; detail_address = item.address.split(' ')[2];"> {{ }} 
-                      {{ item.address }}  
-                      <i class="fa fa-check" v-if="item.address == receiver_address"></i>
+                      {{ item.address }}
+                      <i class="fa-regular fa-square-check" v-if="item.address == receiver_address"></i>
+                      <i class="fa-regular fa-square" v-else></i>
                     </li>
                   </ul>
                 </div>
@@ -1041,8 +1148,8 @@
         </div>
 
         <div class="noItem" v-show="cartsLength === 0">
-          <p>購物車沒有內容</p>  
-          <div class="button" @click="showPage='main'">back</div>
+          <p> 購物車是空的?? 趕緊手刀買起來!! </p>  
+          <div class="button" @click="showPage='main'"> 現在就去逛! </div>
         </div>
 
         <div class="footer">
@@ -1873,7 +1980,7 @@ export default {
       protocol: '',
 
       //
-      webVersion: 'uniqm.com',
+      webVersion: 'common',
     }
   },
   watch:{
@@ -1980,6 +2087,12 @@ export default {
         }
       }
       return address;
+    },
+
+    pay_method_number() {
+      let arr = [this.store.ATM, this.store.CreditCard, this.store.LinePay, this.store.PayBarCode, this.store.PayCode, this.store.PayOnDelivery]
+      console.log(arr.filter( item => item !== '0').length)
+      return arr.filter( item => item !== '0').length
     }
   },
   methods: {

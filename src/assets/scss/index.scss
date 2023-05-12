@@ -1152,6 +1152,20 @@ input:focus, textarea:focus, select:focus{
           font-size: 12px;
         }
 
+        .custom_option {
+          padding: 2px 10px;
+          cursor: pointer;
+
+          &:hover{
+            background-color: #eee;
+          }
+
+          i{
+            margin-left: 10px;
+            color: rgb(63,135,166);
+          }
+        }
+
         .address{
           .address_title {
             padding: 2px 10px;
