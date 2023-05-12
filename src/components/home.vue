@@ -645,7 +645,8 @@
           </div>
 
           <div class="noItem" v-show="cartsLength === 0">
-            <p> 購物車是空的?? 趕緊手刀買起來!! </p>  
+            <p> 購物車是空的?? </p>
+            <p> 趕緊手刀買起來!! </p> 
             <div class="button" @click="showPage='main'"> 現在就去逛! </div>
           </div>
 
@@ -1148,7 +1149,8 @@
         </div>
 
         <div class="noItem" v-show="cartsLength === 0">
-          <p> 購物車是空的?? 趕緊手刀買起來!! </p>  
+          <p> 購物車是空的?? </p>
+          <p> 趕緊手刀買起來!! </p>
           <div class="button" @click="showPage='main'"> 現在就去逛! </div>
         </div>
 
@@ -1980,7 +1982,7 @@ export default {
       protocol: '',
 
       //
-      webVersion: 'common',
+      webVersion: 'uniqm.com',
     }
   },
   watch:{
