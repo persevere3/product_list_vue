@@ -516,12 +516,17 @@
                 <div class="info_messageLength"> {{info.info_message.length}}/150 </div>
 
                 <template v-if="store.Receipt === '1'">
-                  <label for="invoice_type">發票類型</label>
-                  <select id="invoice_type" v-model="invoice_type" name="發票類型">
-                    <option value="0" disabled >=== 請選擇發票類型 ===</option>
-                    <option value="1" >二聯</option>
-                    <option value="2" >三聯</option>
-                  </select>
+                  <label>發票類型</label>
+                  <div class="custom_option" @click="invoice_type = '1'"> 
+                    二聯
+                    <i class="fa-regular fa-square-check" v-if="invoice_type === '1'"></i>
+                    <i class="fa-regular fa-square" v-else></i>
+                  </div>
+                  <div class="custom_option" @click="invoice_type = '2'"> 
+                    三聯
+                    <i class="fa-regular fa-square-check" v-if="invoice_type === '2'"></i>
+                    <i class="fa-regular fa-square" v-else></i>
+                  </div>
                   <div class="prompt" v-if="invoice_type === '0'"> 請選擇發票類型 </div>
 
                   <template v-if="invoice_type==='2'">
@@ -1004,12 +1009,17 @@
               <div class="info_messageLength"> {{info.info_message.length}}/150 </div>
 
               <template v-if="store.Receipt === '1'">
-                <label for="invoice_type">發票類型</label>
-                <select id="invoice_type" v-model="invoice_type" name="發票類型">
-                  <option value="0" disabled >=== 請選擇發票類型 ===</option>
-                  <option value="1" >二聯</option>
-                  <option value="2" >三聯</option>
-                </select>
+                <label>發票類型</label>
+                <div class="custom_option" @click="invoice_type = '1'"> 
+                  二聯
+                  <i class="fa-regular fa-square-check" v-if="invoice_type === '1'"></i>
+                  <i class="fa-regular fa-square" v-else></i>
+                </div>
+                <div class="custom_option" @click="invoice_type = '2'"> 
+                  三聯
+                  <i class="fa-regular fa-square-check" v-if="invoice_type === '2'"></i>
+                  <i class="fa-regular fa-square" v-else></i>
+                </div>
                 <div class="prompt" v-if="invoice_type === '0'"> 請選擇發票類型 </div>
 
                 <template v-if="invoice_type==='2'">
