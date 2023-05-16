@@ -1960,7 +1960,7 @@ export default {
       protocol: '',
 
       //
-      webVersion: 'uniqm.com',
+      webVersion: 'common',
     }
   },
   watch:{
@@ -2166,10 +2166,12 @@ export default {
         }
         let store = res.data.data[0]
         store.paymethodOrder = {}
-        store.OrderPaymethod = JSON.parse(store.OrderPaymethod)
-        store.OrderPaymethod.forEach(item => {
-          store.paymethodOrder[item.name] = parseInt(item.order)
-        })
+        if(store.OrderPaymethod) {
+          store.OrderPaymethod = JSON.parse(store.OrderPaymethod)
+          store.OrderPaymethod.forEach(item => {
+            store.paymethodOrder[item.name] = parseInt(item.order)
+          })
+        }
 
         vm.store = store;
         vm.arrangement = vm.store.Sort || "0";
