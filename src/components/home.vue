@@ -27,7 +27,7 @@
           </div>
           <div class="content">
               <div class="title">{{selectProduct.Name}}</div>
-              <div class="price" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{numberThousands(selectProduct.Price)}}</div>
+              <div class="price" v-if="parseInt(selectProduct.Price) > -1" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{numberThousands(selectProduct.Price)}}</div>
               <div class="price">NT$ {{numberThousands(selectProduct.NowPrice)}}</div>
               <div class="title"> <div v-html="unescapeEnter(selectProduct.Content)"></div> </div>
 
@@ -1160,7 +1160,7 @@
           </div>
           <div class="content">
               <div class="title">{{selectProduct.Name}}</div>
-              <div class="price" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{numberThousands(selectProduct.Price)}}</div>
+              <div class="price" v-if="parseInt(selectProduct.Price) > -1" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{numberThousands(selectProduct.Price)}}</div>
               <div class="price">NT$ {{numberThousands(selectProduct.NowPrice)}}</div>
               <div class="title"> <div v-html="unescapeEnter(selectProduct.Content)"></div> </div>
 
@@ -1303,7 +1303,7 @@
 
                 <div class="content">
                   <div class="title">{{item.Name}}</div>
-                  <div class="price" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{numberThousands(item.Price)}}</div>
+                  <div class="price" v-if="parseInt(item.Price) > -1" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{numberThousands(item.Price)}}</div>
                   <div class="price">NT$ {{numberThousands(item.NowPrice)}}</div>
                 </div>
               </li>
@@ -1616,7 +1616,8 @@
 
             <div class="content">
               <div class="title">{{item.Name}}</div>
-              <div class="price" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{numberThousands(item.Price)}}</div>
+              <div class="price" v-if="parseInt(item.Price) > -1" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{numberThousands(item.Price)}}</div>
+              <div class="price" v-else style="opacity: 0">NT$ {{numberThousands(item.Price)}}</div>
               <div class="price">NT$ {{numberThousands(item.NowPrice)}}</div>
               <!-- 有規格 -->
               <template v-if="item.specArr">
@@ -1960,7 +1961,7 @@ export default {
       protocol: '',
 
       //
-      webVersion: 'common',
+      webVersion: 'uniqm.com',
     }
   },
   watch:{
