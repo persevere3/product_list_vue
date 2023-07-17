@@ -58,6 +58,103 @@ input:focus, textarea:focus, select:focus{
   box-shadow: 0px 0px 3px 1px rgba(63, 135, 166, 1);
 }
 
+.px10 {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.mt5 {
+  margin-top: 5px;
+}
+.mt10 {
+  margin-top: 10px;
+}
+.select{
+  width: 100%;
+
+  padding: 0px 20px 0px 5px;
+  height: 33px;
+  display: flex;
+  justify-content: start;
+  align-items: center;
+
+  font-size: 16px;
+  border-radius: 5px;
+  border: 1px solid #aaaaaa;
+
+  position: relative;
+  cursor: pointer;
+  outline: none;
+
+  &:focus {
+    outline: none;
+    box-shadow: 0px 0px 3px 1px rgba(63, 135, 166, 1);
+  }
+
+  .text{
+    width: 100%;
+    overflow:hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .icon{
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    transform: translateY(-50%);
+    transition: .3s;
+  }
+  .iconActive{
+    transform: translateY(-50%) rotate(180deg);
+  }
+
+  .option{
+    width: 102%;
+    position: absolute;
+    left: -1%;
+    top: 110%;
+    background-color: #fff;
+    border-radius: 5px;
+    border: 1px solid #555;
+    display: none;
+    z-index: 5;
+    li:first-child{
+      border-top: 1px solid #ccc;
+      border-radius: 5px 5px 0px 0px ;
+    }
+    li{
+      width: 100%;
+      padding: 5px;
+      word-break : break-all;
+      margin-bottom: 0;
+      border-bottom: 1px solid #ccc;
+      border-left: 1px solid #ccc;
+      border-right: 1px solid #ccc;
+      text-align: left;
+    }
+    li:hover{
+      background: linear-gradient(20deg, rgba(63, 135, 166, 0.3), rgba(235, 248, 225, 0.3));
+    }
+    li:last-child{
+      border-radius: 0px 0px 5px 5px;
+    }
+  }
+  .option.showOption{
+    display: block;
+  }
+}
+.cart, .singleProduct {
+  .select {
+    height: 29px;
+    margin-top: 5px;
+
+    .option {
+      max-height: 190px;
+      overflow-y: auto;
+    }
+  }
+}
+
 #copy_input2 {
   position: absolute;
   top: 0;
@@ -1103,6 +1200,8 @@ input:focus, textarea:focus, select:focus{
       margin-bottom: 10px;
 
       .title{
+        height: auto !important;
+        line-height: normal !important;
         background-color: #aaa;
         color: white;
         padding: 3px 12px;
@@ -1155,6 +1254,16 @@ input:focus, textarea:focus, select:focus{
         .prompt{
           color: red;
           font-size: 12px;
+
+          span {
+            margin-left: 5px;
+            text-decoration: underline;
+            cursor: pointer;
+
+            &:hover {
+              opacity: 0.7;
+            }
+          }
         }
 
         .custom_select {
@@ -1173,6 +1282,33 @@ input:focus, textarea:focus, select:focus{
           i{
             margin-left: 10px;
             color: rgb(63,135,166);
+          }
+        }
+
+        .custom_option2, .button2 {
+          width: 190px;
+          height: 29px;
+          margin-top: 5px;
+          padding: 0 10px;
+          border-radius: 5px;
+          border: 1px solid #555;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          cursor: pointer;
+
+          &:hover, &.active {
+            background: #555;
+            color: #fff;
+          }
+        }
+        .button2 {
+          border: none;
+          background-color: rgba(63,135,166,.7);
+          color: #fff;
+          &:hover {
+            background-color: #3f87a6;
+            color: #fff;
           }
         }
 
@@ -1225,21 +1361,6 @@ input:focus, textarea:focus, select:focus{
           width: 45%;
           display: flex;
           flex-direction: column;
-        }
-
-        .button{
-          height: 30px;
-          cursor: pointer;
-          border-radius: 5px;
-          color: white;
-          background-color:  #555;
-    
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-        .button:hover{
-          background-color:  #222;
         }
 
         .store_info{

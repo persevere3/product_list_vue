@@ -385,8 +385,11 @@
                 </template>
 
                 <label for="name">購買人姓名</label>
-                <input type="text" :readonly="userInfo.Registermethod < 2" id="name" name="姓名" :class="{inputError: info.purchaser_name_error }" placeholder="姓名" v-model="info.purchaser_name" @change="pInput" @blur="validate('purchaser_name', 'required')">
-                <div class="prompt">{{ info.purchaser_name_error }}</div>
+                <input type="text" :readonly="userInfo.Registermethod < 2" id="name" name="姓名" :class="{inputError: info.purchaser_name_error }" placeholder="姓名" v-model="info.purchaser_name" @change="pInput" @blur="validate('purchaser_name', 'required', 'name', 'nameLength')">
+                <div class="prompt">
+                  {{ info.purchaser_name_error }}
+                  <span v-if="user_account && info.purchaser_name_error" @click="urlPush(getPathname('info'))"> 前往修改會員姓名 </span> 
+                </div>
 
                 <label for="phone">購買人手機號碼</label>
                 <input type="text" :readonly="!!userInfo.Phone2" id="phone" name="購買人手機號碼" :class="{inputError: info.purchaser_number_error }" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput" @blur="validate('purchaser_number', 'required', 'phone')">
@@ -399,74 +402,200 @@
                 </div>
                 
                 <label for="rname">收件人姓名</label>
-                <input type="text" id="rname" name="收件人姓名" :class="{inputError: info.receiver_name_error }" placeholder="姓名" v-model="info.receiver_name" @blur="validate('receiver_name', 'required')">
+                <input type="text" id="rname" name="收件人姓名" :class="{inputError: info.receiver_name_error }" placeholder="姓名" v-model="info.receiver_name" @blur="validate('receiver_name', 'required', 'name', 'nameLength')">
                 <div class="prompt">{{ info.receiver_name_error }}</div>
                 
                 <label for="rphone">收件人聯絡電話</label>
                 <input type="text" id="rphone" name="收件人聯絡電話" :class="{inputError: info.receiver_number_error }" placeholder="聯絡電話" v-model="info.receiver_number" @blur="validate('receiver_number', 'required')">
                 <div class="prompt">{{ info.receiver_number_error }}</div>
+
+                <label for="feedback">留言給我們</label>
+                <textarea name="" id="feedback" cols="30" rows="5" placeholder="留言給我們" v-model="info.info_message" @input="info_message_input"></textarea>
+                <div class="info_messageLength"> {{info.info_message.length}}/150 </div>
               </div>
 
               <div class="right">
+                <!-- 運送方式 -->
                 <label for="transport">運送方式</label>
-                <div class="custom_option" @click="transport = '1'" v-if="store.Shipping === '1' || store.Shipping === '2'"> 
-                  一般宅配
-                  <i class="fa-regular fa-square-check" v-if="transport === '1'"></i>
-                  <i class="fa-regular fa-square" v-else></i>
-                </div>
-                <div class="custom_option" @click="transport = '2'" v-if="store.Shipping === '1' || store.Shipping === '3'"> 
-                  到店自取
-                  <i class="fa-regular fa-square-check" v-if="transport === '2'"></i>
-                  <i class="fa-regular fa-square" v-else></i>
-                </div>
-                <!--
-                <select id="transport" v-model="transport" name="運送方式" :class="{inputError:is_click_finish_order && transport === '0'}">
-                  <option value="0" disabled >=== 請選擇配送方式 ===</option>
-                  <option value="1" v-if="store.Shipping === '1' || store.Shipping === '2'" selected>一般宅配</option>
-                  <option value="2" v-if="store.Shipping === '1' || store.Shipping === '3'" selected>到店自取</option>
-                  7-11 取貨付款
-                  <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 取貨付款 </option>
-                </select>
-                -->
+                <template v-if="transport_number < 6">
+                  <div class="custom_option2" :class="{active:transport === '1'}" 
+                    @click="transport = '1'" v-if="store.Shipping === '1' || store.Shipping === '2'"
+                  > 
+                    一般宅配
+                  </div>
+                  <div class="custom_option2" :class="{active:transport === '2'}" 
+                    @click="transport = '2'" v-if="store.Shipping === '1' || store.Shipping === '3'"
+                  > 
+                    到店自取
+                  </div>
+                  <!-- 7-11 -->
+                  <div class="custom_option2" :class="{active:transport === 'UNIMARTDelivery' || transport === 'UNIMARTC2CDelivery'}" 
+                    @click="transport = store.UNIMARTDelivery ? 'UNIMARTDelivery' : 'UNIMARTC2CDelivery'" 
+                    v-if="store.UNIMARTDelivery || store.UNIMARTC2CDelivery"
+                  > 
+                    7-11 取貨付款
+                  </div>
+                  <div class="custom_option2" :class="{active:transport === 'UNIMART' || transport === 'UNIMARTC2C'}" 
+                    @click="transport = store.UNIMART ? 'UNIMART' : 'UNIMARTC2C'" 
+                    v-if="store.UNIMART || store.UNIMARTC2C"
+                  > 
+                    7-11 取貨不付款
+                  </div>
+                  <div class="custom_option2" :class="{active:transport === 'UNIMARTFREEZEDelivery'}" 
+                    @click="transport = 'UNIMARTFREEZEDelivery'" 
+                    v-if="store.UNIMARTFREEZEDelivery"
+                  > 
+                    7-11冷凍 取貨付款
+                  </div>
+                  <div class="custom_option2" :class="{active:transport === 'UNIMARTFREEZE'}" 
+                    @click="transport = 'UNIMARTFREEZE'" 
+                    v-if="store.UNIMARTFREEZE"
+                  > 
+                    7-11冷凍 取貨不付款
+                  </div>
+
+                  <!-- 全家 -->
+                  <div class="custom_option2" :class="{active:transport === 'FAMIDelivery' || transport === 'FAMIC2CDelivery'}" 
+                    @click="transport = store.FAMIDelivery ? 'FAMIDelivery' : 'FAMIC2CDelivery'" 
+                    v-if="store.FAMIDelivery || store.FAMIC2CDelivery"
+                  > 
+                    全家 取貨付款
+                  </div>
+                  <div class="custom_option2" :class="{active:transport === 'FAMI' || transport === 'FAMIC2C'}" 
+                    @click="transport = store.FAMI ? 'FAMI' : 'FAMIC2C'" 
+                    v-if="store.FAMI || store.FAMIC2C"
+                  > 
+                    全家 取貨不付款
+                  </div>
+
+                  <!-- 萊爾富 -->
+                  <div class="custom_option2" :class="{active:transport === 'HILIFEDelivery' || transport === 'HILIFEC2CDelivery'}" 
+                    @click="transport = store.HILIFEDelivery ? 'HILIFEDelivery' : 'HILIFEC2CDelivery'" 
+                    v-if="store.HILIFEDelivery || store.HILIFEC2CDelivery"
+                  > 
+                    萊爾富 取貨付款
+                  </div>
+                  <div class="custom_option2" :class="{active:transport === 'HILIFE' || transport === 'HILIFEC2C'}" 
+                    @click="transport = store.HILIFE ? 'HILIFE' : 'HILIFEC2C'" 
+                    v-if="store.HILIFE || store.HILIFEC2C"
+                  > 
+                    萊爾富 取貨不付款
+                  </div>
+
+                  <!-- OK超商 -->
+                  <div class="custom_option2" :class="{active:transport === 'OKMARTC2CDelivery'}" 
+                    @click="transport = 'OKMARTC2CDelivery'" 
+                    v-if="store.OKMARTC2CCDelivery"
+                  > 
+                    OK超商 取貨付款
+                  </div>
+                  <div class="custom_option2" :class="{active:transport === 'OKMARTC2C'}" 
+                    @click="transport = 'OKMARTC2C'" 
+                    v-if="store.OKMARTC2C"
+                  > 
+                    OK超商 取貨不付款
+                  </div>
+                </template>
+                <template v-else>
+                  <div tabindex="0" class="select" @click="is_show_transport_options = !is_show_transport_options" @blur="is_show_transport_options = false"> 
+                    <div class="text">{{ transport !== '0' ? transport_obj[transport] : "請選擇運送方式" }}</div>
+                    <div class="icon" :class="{iconActive:is_show_transport_options}"> <i class="fa fa-caret-down" aria-hidden="true"></i> </div>
+                    <ul class="option" :class="{showOption:is_show_transport_options}">                                                               
+                      <li @click.stop="transport = '1'; is_show_transport_options = false" v-if="store.Shipping === '1' || store.Shipping === '2'"> 一般宅配 </li>
+                      <li @click.stop="transport = '2'; is_show_transport_options = false" v-if="store.Shipping === '1' || store.Shipping === '3'"> 到店自取 </li>
+
+                      <!-- 7-11 -->
+                      <li @click.stop="transport = store.UNIMARTDelivery ? 'UNIMARTDelivery' : 'UNIMARTC2CDelivery'; is_show_transport_options = false" 
+                        v-if="store.UNIMARTDelivery || store.UNIMARTC2CDelivery"
+                      > 
+                        7-11 取貨付款 
+                      </li>
+                      <li @click.stop="transport = store.UNIMART ? 'UNIMART' : 'UNIMARTC2C'; is_show_transport_options = false" 
+                        v-if="store.UNIMART || store.UNIMARTC2C"
+                      > 
+                        7-11 取貨不付款 
+                      </li>
+                      <li @click.stop="transport = 'UNIMARTFREEZEDelivery'; is_show_transport_options = false" 
+                        v-if="store.UNIMARTFREEZEDelivery"
+                      > 
+                        7-11冷凍 取貨付款 
+                      </li>
+                      <li @click.stop="transport = 'UNIMARTFREEZE'; is_show_transport_options = false" 
+                        v-if="store.UNIMARTFREEZE"
+                      > 
+                        7-11冷凍 取貨不付款 
+                      </li>
+
+                      <!-- 全家 -->
+                      <li @click.stop="transport = store.FAMIDelivery ? 'FAMIDelivery' : 'FAMIC2CDelivery'; is_show_transport_options = false" 
+                        v-if="store.FAMIDelivery || store.FAMIC2CDelivery"
+                      > 
+                        全家 取貨付款 
+                      </li>
+                      <li @click.stop="transport = store.FAMI ? 'FAMI' : 'FAMIC2C'; is_show_transport_options = false" 
+                        v-if="store.FAMI || store.FAMIC2C"
+                      > 
+                        全家 取貨不付款 
+                      </li>
+
+                      <!-- 萊爾富 -->
+                      <li @click.stop="transport = store.HILIFEDelivery ? 'HILIFEDelivery' : 'HILIFEC2CDelivery'; is_show_transport_options = false" 
+                        v-if="store.HILIFEDelivery || store.HILIFEC2CDelivery"
+                      > 
+                        萊爾富 取貨付款 
+                      </li>
+                      <li @click.stop="transport = store.HILIFE ? 'HILIFE' : 'HILIFEC2C'; is_show_transport_options = false" 
+                        v-if="store.HILIFE || store.HILIFEC2C"
+                      > 
+                        萊爾富 取貨不付款 
+                      </li>
+
+                      <!-- OK超商 -->
+                      <li @click.stop="transport = 'OKMARTC2CDelivery'; is_show_transport_options = false" 
+                        v-if="store.OKMARTC2CCDelivery"
+                      > 
+                        OK超商 取貨付款 
+                      </li>
+                      <li @click.stop="transport = 'OKMARTC2C'; is_show_transport_options = false" 
+                        v-if="store.OKMARTC2C"
+                      > 
+                        OK超商 取貨不付款 
+                      </li>
+                    </ul>
+                  </div>
+                </template>
                 <div class="prompt" v-if="is_click_finish_order && transport === '0'"> 請選擇配送方式 </div>
 
+                <!-- 支付方式 -->
                 <label for="pay_method">支付方式</label>
-                
-                <div class="custom_select">
-                  <div class="custom_option" :style="`order: ${store.paymethodOrder['CreditCard']}`" @click="pay_method = 'CreditCard'" v-if="(store.CreditCard != 0 && transport != 3)"> 
+                <div class="custom_select" v-if="store.paymethodOrder">
+                  <div class="custom_option2" :class="{active:pay_method === 'CreditCard'}" :style="`order: ${store.paymethodOrder['CreditCard']}`" @click="pay_method = 'CreditCard'" v-if="store.CreditCard != 0 && !is_collection"> 
                     信用卡
-                    <i class="fa-regular fa-square-check" v-if="pay_method === 'CreditCard'"></i>
-                    <i class="fa-regular fa-square" v-else></i>
                   </div>
-                  <div class="custom_option" :style="`order: ${store.paymethodOrder['ATM']}`" @click="pay_method = 'ATM'" v-if="(store.ATM != 0 && transport != 3)"> 
+                  <div class="custom_option2" :class="{active:pay_method === 'ATM'}" :style="`order: ${store.paymethodOrder['ATM']}`" @click="pay_method = 'ATM'" v-if="store.ATM != 0 && !is_collection"> 
                     ATM/網路ATM
-                    <i class="fa-regular fa-square-check" v-if="pay_method === 'ATM'"></i>
-                    <i class="fa-regular fa-square" v-else></i>
                   </div>
-                  <div class="custom_option" :style="`order: ${store.paymethodOrder['PayCode']}`" @click="pay_method = 'PayCode'" v-if="(store.PayCode != 0 && transport != 3)"> 
+                  <div class="custom_option2" :class="{active:pay_method === 'PayCode'}" :style="`order: ${store.paymethodOrder['PayCode']}`" @click="pay_method = 'PayCode'" v-if="store.PayCode != 0 && !is_collection"> 
                     超商代碼
-                    <i class="fa-regular fa-square-check" v-if="pay_method === 'PayCode'"></i>
-                    <i class="fa-regular fa-square" v-else></i>
                   </div>
-                  <div class="custom_option" :style="`order: ${store.paymethodOrder['PayBarCode']}`" @click="pay_method = 'PayBarCode'" v-if="(store.PayBarCode != 0 && transport != 3)"> 
+                  <div class="custom_option2" :class="{active:pay_method === 'PayBarCode'}" :style="`order: ${store.paymethodOrder['PayBarCode']}`" @click="pay_method = 'PayBarCode'" v-if="store.PayBarCode != 0 && !is_collection"> 
                     超商條碼
-                    <i class="fa-regular fa-square-check" v-if="pay_method === 'PayBarCode'"></i>
-                    <i class="fa-regular fa-square" v-else></i>
                   </div>
-                  <div class="custom_option" :style="`order: ${store.paymethodOrder['PayOnDelivery']}`" @click="pay_method = 'PayOnDelivery'" v-if="(store.PayOnDelivery != 0 && transport != 3)"> 
+                  <div class="custom_option2" :class="{active:pay_method === 'PayOnDelivery'}" :style="`order: ${store.paymethodOrder['PayOnDelivery']}`" @click="pay_method = 'PayOnDelivery'" v-if="store.PayOnDelivery != 0 && !is_store"> 
                     取貨付款
-                    <i class="fa-regular fa-square-check" v-if="pay_method === 'PayOnDelivery'"></i>
-                    <i class="fa-regular fa-square" v-else></i>
                   </div>
-                  <div class="custom_option" :style="`order: ${store.paymethodOrder['LinePay']}`" @click="pay_method = 'LinePay'" v-if="store.LinePay == 1 && transport != 3"> 
+                  <div class="custom_option2" :class="{active:pay_method === 'LinePay'}" :style="`order: ${store.paymethodOrder['LinePay']}`" @click="pay_method = 'LinePay'" v-if="store.LinePay == 1 && !is_collection"> 
                     LINE Pay
-                    <i class="fa-regular fa-square-check" v-if="pay_method === 'LinePay'"></i>
-                    <i class="fa-regular fa-square" v-else></i>
+                  </div>
+
+                  <!-- 超商取貨付款 -->
+                  <div class="custom_option2" :class="{active:pay_method === 'MartPayOnDelivery'}" :style="`order: ${store.paymethodOrder['PayOnDelivery']}`" @click="pay_method = 'MartPayOnDelivery'" v-if="is_collection"> 
+                    超商取貨付款
                   </div>
                 </div>
-
                 <div class="prompt" v-if="is_click_finish_order && pay_method === '0'"> 請選擇支付方式 </div>
 
+                <!-- 一般宅配 地址 -->
                 <template v-if="transport == '1'">
                   <label for="raddress">
                     收件地址
@@ -475,14 +604,35 @@
                       <label for="is_save_address"> 加入常用地址 </label>
                     </template>
                   </label>
-                  <select v-model="city_active" :class="{inputError: is_click_finish_order && city_active == ''}">
-                    <option value="" selected disabled> 城市 </option>
-                    <option :value="city" v-for="(value, city) in city_district" :key="city"> {{ city }} </option>
-                  </select>
-                  <select v-model="district_active" :class="{inputError: is_click_finish_order && district_active == ''}">
-                    <option value="" selected disabled> 鄉鎮市區 </option>
-                    <option :value="district" v-for="(zipCode, district) in city_district[city_active]" :key="district"> {{ district }} {{ zipCode }} </option>
-                  </select>
+                  <div tabindex="0" class="select" :class="{inputError: is_click_finish_order && city_active == ''}"
+                    @click="is_show_city_options = !is_show_city_options" 
+                    @blur="is_show_city_options = false"
+                  > 
+                    <div class="text">{{ city_active !== '' ? city_active : "請選擇城市" }}</div>
+                    <div class="icon" :class="{iconActive:is_show_city_options}"> <i class="fa fa-caret-down" aria-hidden="true"></i> </div>
+                    <ul class="option" :class="{showOption:is_show_city_options}">                                                               
+                      <li v-for="(value, city) in city_district" :key="city" 
+                        @click.stop="city_active = city; is_show_city_options = false"
+                      > 
+                        {{ city }}
+                      </li>
+                    </ul>
+                  </div>
+                  <div tabindex="0" class="select" :class="{inputError: is_click_finish_order && district_active == ''}"
+                    @click="is_show_district_options = !is_show_district_options" 
+                    @blur="is_show_district_options = false"
+                  > 
+                    <div class="text">{{ district_active !== '' ? district_active : "請選擇鄉鎮市區" }} {{ district_active ? city_district[city_active][district_active] : '' }}</div>
+                    <div class="icon" :class="{iconActive:is_show_district_options}"> <i class="fa fa-caret-down" aria-hidden="true"></i> </div>
+                    <ul class="option" :class="{showOption:is_show_district_options}">                                                               
+                      <li v-for="(zipCode, district) in city_district[city_active]" :key="district"
+                        @click.stop="district_active = district; is_show_district_options = false"
+                      > 
+                        {{ district }} {{ zipCode }}
+                      </li>
+                    </ul>
+                  </div>
+
                   <div style="display: flex;" class="input_container">
                     <input style="width: 100%;" type='text' placeholder="請輸入詳細地址" v-model.trim='detail_address' :class="{inputError: is_click_finish_order && detail_address == ''}">
                   </div>
@@ -490,8 +640,8 @@
                   <div class="address" v-if="userInfo.address_obj && Object.keys(userInfo.address_obj).length">
                     <div class="address_title"> 常用地址 : </div>
                     <ul>
-                      <li v-for="(item, key) in userInfo.address_obj" :key="key" @click="city_active = item.address.split(' ')[0]; district_active = item.address.split(' ')[1]; detail_address = item.address.split(' ')[2];">
-                        {{ item.address }}  
+                      <li v-for="(item, key) in userInfo.address_obj" :key="key" @click="city_active = item.address.split(' ')[0]; district_active = item.address.split(' ')[1]; detail_address = item.address.split(' ')[2];"> {{ }} 
+                        {{ item.address }}
                         <i class="fa-regular fa-square-check" v-if="item.address == receiver_address"></i>
                         <i class="fa-regular fa-square" v-else></i>
                       </li>
@@ -499,43 +649,62 @@
                   </div>
                 </template>
 
-                <!-- 7-11 取貨付款 -->
-                <template v-if="transport == 3">
-                  <label> 選擇門市 </label>
-                  <div class="store_info">
+                <!-- 超商取貨 選擇門市 -->
+                <template v-if="is_store">
+                  <label v-if="!storeid" > 請選擇門市 </label>
+                  <div class="store_info" v-else >
                     <div v-if="storeid"> 門市店號: {{ storeid }} </div>
                     <div v-if="storename"> 門市名稱: {{ storename }} </div>
                     <div v-if="storeaddress"> 門市地址: {{ storeaddress }} </div>
                   </div>
-                  <div class="button" @click="pickStore"> 搜尋門市 </div>
+                  <div class="button2" v-if="!storeid || !storename || !storeaddress" @click="pickStore"> 搜尋門市 </div>
+                  <div class="button2" v-else @click="pickStore"> 更改門市 </div>
                   <div class="prompt" v-if="is_click_finish_order && storeaddress == ''"> 請選擇門市 </div>
                 </template>
 
-                <label for="feedback">留言給我們</label>
-                <textarea name="" id="feedback" cols="30" rows="5" placeholder="留言給我們" v-model="info.info_message" @input="info_message_input"></textarea>
-                <div class="info_messageLength"> {{info.info_message.length}}/150 </div>
-
+                <!-- 發票 -->
                 <template v-if="store.Receipt === '1'">
                   <label>發票類型</label>
-                  <div class="custom_option" @click="invoice_type = '1'"> 
-                    二聯
-                    <i class="fa-regular fa-square-check" v-if="invoice_type === '1'"></i>
-                    <i class="fa-regular fa-square" v-else></i>
+                  <div class="custom_option2" :class="{active:personal_or_company === '個人發票'}" @click="personal_or_company = '個人發票'; invoice_type = is_other_invoice_type ? '0' : '1'">
+                    個人發票
                   </div>
-                  <div class="custom_option" @click="invoice_type = '2'"> 
-                    三聯
-                    <i class="fa-regular fa-square-check" v-if="invoice_type === '2'"></i>
-                    <i class="fa-regular fa-square" v-else></i>
+                  <div class="custom_option2" :class="{active:personal_or_company === '公司發票'}" @click="personal_or_company = '公司發票'; invoice_type = '2'"> 
+                    公司發票
                   </div>
-                  <div class="prompt" v-if="invoice_type === '0'"> 請選擇發票類型 </div>
 
-                  <template v-if="invoice_type==='2'">
-                    <label for="invoice_title">公司抬頭</label>
-                    <input type="text" id="invoice_title" name="公司抬頭" placeholder="公司抬頭" v-model="invoice_title">
-                    <div class="prompt" v-if="invoice_title === ''"> 請填寫公司抬頭 </div>
-                    <label for="invoice_uniNumber">統一編號</label>
-                    <input type="text" id="invoice_uniNumber" name="統一編號" placeholder="統一編號" v-model="invoice_uniNumber">
-                    <div class="prompt" v-if="invoice_uniNumber === ''"> 請填寫統一編號 </div>
+                  <template v-if="personal_or_company === '個人發票' && is_other_invoice_type">
+                    <label>個人發票類型</label>
+
+                    <div class="custom_option2" :class="{active:invoice_type === '1'}" @click="invoice_type = '1'"> 
+                      個人紙本發票
+                    </div>
+                    <div class="custom_option2" v-if="store.NatureCode === '1'" :class="{active:invoice_type === '3'}" @click="invoice_type = '3'"> 
+                      手機條碼載具
+                    </div>
+                    <div v-if="invoice_type === '3'">
+                      <input type="text" placeholder="手機條碼載具" v-model="phone_barCode">
+                      <div class="prompt" v-if="is_click_finish_order && phone_barCode === ''"> 請填寫手機條碼載具 </div>
+                    </div>
+                    <div class="custom_option2" v-if="store.NatureCode === '1'" :class="{active:invoice_type === '4'}" @click="invoice_type = '4'"> 
+                      自然人憑證載具
+                    </div>
+                    <div v-if="invoice_type === '4'">
+                      <input type="text" placeholder="自然人憑證載具" v-model="natural_barCode">
+                      <div class="prompt" v-if="is_click_finish_order && natural_barCode === ''"> 請填寫自然人憑證載具 </div>
+                    </div>
+                  </template>
+
+                  <div class="prompt" v-if="is_click_finish_order && invoice_type === '0'"> 請選擇發票類型 </div>
+
+                  <template v-if="invoice_type === '2'">
+                    <div>
+                      <input type="text" id="invoice_title" name="公司抬頭" placeholder="公司抬頭" v-model="invoice_title">
+                      <div class="prompt" v-if="is_click_finish_order && invoice_title === ''"> 請填寫公司抬頭 </div>
+                    </div>
+                    <div>
+                      <input type="text" id="invoice_uniNumber" name="統一編號" placeholder="統一編號" v-model="invoice_uniNumber">
+                      <div class="prompt" v-if="is_click_finish_order && invoice_uniNumber === ''"> 請填寫統一編號 </div>
+                    </div>
                   </template>
                 </template>
               </div>
@@ -878,8 +1047,11 @@
               </template>
 
               <label for="name">購買人姓名</label>
-              <input type="text" :readonly="userInfo.Registermethod < 2" id="name" name="姓名" :class="{inputError: info.purchaser_name_error }" placeholder="姓名" v-model="info.purchaser_name" @change="pInput" @blur="validate('purchaser_name', 'required')">
-              <div class="prompt">{{ info.purchaser_name_error }}</div>
+              <input type="text" :readonly="userInfo.Registermethod < 2" id="name" name="姓名" :class="{inputError: info.purchaser_name_error }" placeholder="姓名" v-model="info.purchaser_name" @change="pInput" @blur="validate('purchaser_name', 'required', 'name', 'nameLength')">
+              <div class="prompt">
+                {{ info.purchaser_name_error }}
+                <span v-if="user_account && info.purchaser_name_error" @click="urlPush(getPathname('info'))"> 前往修改會員姓名 </span> 
+              </div>
 
               <label for="phone">購買人手機號碼</label>
               <input type="text" :readonly="!!userInfo.Phone2" id="phone" name="購買人手機號碼" :class="{inputError: info.purchaser_number_error }" placeholder="購買人手機號碼" v-model="info.purchaser_number" @change="pInput" @blur="validate('purchaser_number', 'required', 'phone')">
@@ -892,74 +1064,200 @@
               </div>
               
               <label for="rname">收件人姓名</label>
-              <input type="text" id="rname" name="收件人姓名" :class="{inputError: info.receiver_name_error }" placeholder="姓名" v-model="info.receiver_name" @blur="validate('receiver_name', 'required')">
+              <input type="text" id="rname" name="收件人姓名" :class="{inputError: info.receiver_name_error }" placeholder="姓名" v-model="info.receiver_name" @blur="validate('receiver_name', 'required', 'name', 'nameLength')">
               <div class="prompt">{{ info.receiver_name_error }}</div>
               
               <label for="rphone">收件人聯絡電話</label>
               <input type="text" id="rphone" name="收件人聯絡電話" :class="{inputError: info.receiver_number_error }" placeholder="聯絡電話" v-model="info.receiver_number" @blur="validate('receiver_number', 'required')">
               <div class="prompt">{{ info.receiver_number_error }}</div>
+
+              <label for="feedback">留言給我們</label>
+              <textarea name="" id="feedback" cols="30" rows="5" placeholder="留言給我們" v-model="info.info_message" @input="info_message_input"></textarea>
+              <div class="info_messageLength"> {{info.info_message.length}}/150 </div>
             </div>
 
             <div class="right">
+              <!-- 運送方式 -->
               <label for="transport">運送方式</label>
-              <div class="custom_option" @click="transport = '1'" v-if="store.Shipping === '1' || store.Shipping === '2'"> 
-                一般宅配
-                <i class="fa-regular fa-square-check" v-if="transport === '1'"></i>
-                <i class="fa-regular fa-square" v-else></i>
-              </div>
-              <div class="custom_option" @click="transport = '2'" v-if="store.Shipping === '1' || store.Shipping === '3'"> 
-                到店自取
-                <i class="fa-regular fa-square-check" v-if="transport === '2'"></i>
-                <i class="fa-regular fa-square" v-else></i>
-              </div>
-              <!--
-              <select id="transport" v-model="transport" name="運送方式" :class="{inputError:is_click_finish_order && transport === '0'}">
-                <option value="0" disabled >=== 請選擇配送方式 ===</option>
-                <option value="1" v-if="store.Shipping === '1' || store.Shipping === '2'" selected>一般宅配</option>
-                <option value="2" v-if="store.Shipping === '1' || store.Shipping === '3'" selected>到店自取</option>
-                7-11 取貨付款
-                <option value="3" v-if="(store.PayOnDelivery != 0)" selected> 7-11 取貨付款 </option>
-              </select>
-              -->
+              <template v-if="transport_number < 6">
+                <div class="custom_option2" :class="{active:transport === '1'}" 
+                  @click="transport = '1'" v-if="store.Shipping === '1' || store.Shipping === '2'"
+                > 
+                  一般宅配
+                </div>
+                <div class="custom_option2" :class="{active:transport === '2'}" 
+                  @click="transport = '2'" v-if="store.Shipping === '1' || store.Shipping === '3'"
+                > 
+                  到店自取
+                </div>
+                <!-- 7-11 -->
+                <div class="custom_option2" :class="{active:transport === 'UNIMARTDelivery' || transport === 'UNIMARTC2CDelivery'}" 
+                  @click="transport = store.UNIMARTDelivery ? 'UNIMARTDelivery' : 'UNIMARTC2CDelivery'" 
+                  v-if="store.UNIMARTDelivery || store.UNIMARTC2CDelivery"
+                > 
+                  7-11 取貨付款
+                </div>
+                <div class="custom_option2" :class="{active:transport === 'UNIMART' || transport === 'UNIMARTC2C'}" 
+                  @click="transport = store.UNIMART ? 'UNIMART' : 'UNIMARTC2C'" 
+                  v-if="store.UNIMART || store.UNIMARTC2C"
+                > 
+                  7-11 取貨不付款
+                </div>
+                <div class="custom_option2" :class="{active:transport === 'UNIMARTFREEZEDelivery'}" 
+                  @click="transport = 'UNIMARTFREEZEDelivery'" 
+                  v-if="store.UNIMARTFREEZEDelivery"
+                > 
+                  7-11冷凍 取貨付款
+                </div>
+                <div class="custom_option2" :class="{active:transport === 'UNIMARTFREEZE'}" 
+                  @click="transport = 'UNIMARTFREEZE'" 
+                  v-if="store.UNIMARTFREEZE"
+                > 
+                  7-11冷凍 取貨不付款
+                </div>
+
+                <!-- 全家 -->
+                <div class="custom_option2" :class="{active:transport === 'FAMIDelivery' || transport === 'FAMIC2CDelivery'}" 
+                  @click="transport = store.FAMIDelivery ? 'FAMIDelivery' : 'FAMIC2CDelivery'" 
+                  v-if="store.FAMIDelivery || store.FAMIC2CDelivery"
+                > 
+                  全家 取貨付款
+                </div>
+                <div class="custom_option2" :class="{active:transport === 'FAMI' || transport === 'FAMIC2C'}" 
+                  @click="transport = store.FAMI ? 'FAMI' : 'FAMIC2C'" 
+                  v-if="store.FAMI || store.FAMIC2C"
+                > 
+                  全家 取貨不付款
+                </div>
+
+                <!-- 萊爾富 -->
+                <div class="custom_option2" :class="{active:transport === 'HILIFEDelivery' || transport === 'HILIFEC2CDelivery'}" 
+                  @click="transport = store.HILIFEDelivery ? 'HILIFEDelivery' : 'HILIFEC2CDelivery'" 
+                  v-if="store.HILIFEDelivery || store.HILIFEC2CDelivery"
+                > 
+                  萊爾富 取貨付款
+                </div>
+                <div class="custom_option2" :class="{active:transport === 'HILIFE' || transport === 'HILIFEC2C'}" 
+                  @click="transport = store.HILIFE ? 'HILIFE' : 'HILIFEC2C'" 
+                  v-if="store.HILIFE || store.HILIFEC2C"
+                > 
+                  萊爾富 取貨不付款
+                </div>
+
+                <!-- OK超商 -->
+                <div class="custom_option2" :class="{active:transport === 'OKMARTC2CDelivery'}" 
+                  @click="transport = 'OKMARTC2CDelivery'" 
+                  v-if="store.OKMARTC2CCDelivery"
+                > 
+                  OK超商 取貨付款
+                </div>
+                <div class="custom_option2" :class="{active:transport === 'OKMARTC2C'}" 
+                  @click="transport = 'OKMARTC2C'" 
+                  v-if="store.OKMARTC2C"
+                > 
+                  OK超商 取貨不付款
+                </div>
+              </template>
+              <template v-else>
+                <div tabindex="0" class="select" @click="is_show_transport_options = !is_show_transport_options" @blur="is_show_transport_options = false"> 
+                  <div class="text">{{ transport !== '0' ? transport_obj[transport] : "請選擇運送方式" }}</div>
+                  <div class="icon" :class="{iconActive:is_show_transport_options}"> <i class="fa fa-caret-down" aria-hidden="true"></i> </div>
+                  <ul class="option" :class="{showOption:is_show_transport_options}">                                                               
+                    <li @click.stop="transport = '1'; is_show_transport_options = false" v-if="store.Shipping === '1' || store.Shipping === '2'"> 一般宅配 </li>
+                    <li @click.stop="transport = '2'; is_show_transport_options = false" v-if="store.Shipping === '1' || store.Shipping === '3'"> 到店自取 </li>
+
+                    <!-- 7-11 -->
+                    <li @click.stop="transport = store.UNIMARTDelivery ? 'UNIMARTDelivery' : 'UNIMARTC2CDelivery'; is_show_transport_options = false" 
+                      v-if="store.UNIMARTDelivery || store.UNIMARTC2CDelivery"
+                    > 
+                      7-11 取貨付款 
+                    </li>
+                    <li @click.stop="transport = store.UNIMART ? 'UNIMART' : 'UNIMARTC2C'; is_show_transport_options = false" 
+                      v-if="store.UNIMART || store.UNIMARTC2C"
+                    > 
+                      7-11 取貨不付款 
+                    </li>
+                    <li @click.stop="transport = 'UNIMARTFREEZEDelivery'; is_show_transport_options = false" 
+                      v-if="store.UNIMARTFREEZEDelivery"
+                    > 
+                      7-11冷凍 取貨付款 
+                    </li>
+                    <li @click.stop="transport = 'UNIMARTFREEZE'; is_show_transport_options = false" 
+                      v-if="store.UNIMARTFREEZE"
+                    > 
+                      7-11冷凍 取貨不付款 
+                    </li>
+
+                    <!-- 全家 -->
+                    <li @click.stop="transport = store.FAMIDelivery ? 'FAMIDelivery' : 'FAMIC2CDelivery'; is_show_transport_options = false" 
+                      v-if="store.FAMIDelivery || store.FAMIC2CDelivery"
+                    > 
+                      全家 取貨付款 
+                    </li>
+                    <li @click.stop="transport = store.FAMI ? 'FAMI' : 'FAMIC2C'; is_show_transport_options = false" 
+                      v-if="store.FAMI || store.FAMIC2C"
+                    > 
+                      全家 取貨不付款 
+                    </li>
+
+                    <!-- 萊爾富 -->
+                    <li @click.stop="transport = store.HILIFEDelivery ? 'HILIFEDelivery' : 'HILIFEC2CDelivery'; is_show_transport_options = false" 
+                      v-if="store.HILIFEDelivery || store.HILIFEC2CDelivery"
+                    > 
+                      萊爾富 取貨付款 
+                    </li>
+                    <li @click.stop="transport = store.HILIFE ? 'HILIFE' : 'HILIFEC2C'; is_show_transport_options = false" 
+                      v-if="store.HILIFE || store.HILIFEC2C"
+                    > 
+                      萊爾富 取貨不付款 
+                    </li>
+
+                    <!-- OK超商 -->
+                    <li @click.stop="transport = 'OKMARTC2CDelivery'; is_show_transport_options = false" 
+                      v-if="store.OKMARTC2CCDelivery"
+                    > 
+                      OK超商 取貨付款 
+                    </li>
+                    <li @click.stop="transport = 'OKMARTC2C'; is_show_transport_options = false" 
+                      v-if="store.OKMARTC2C"
+                    > 
+                      OK超商 取貨不付款 
+                    </li>
+                  </ul>
+                </div>
+              </template>
               <div class="prompt" v-if="is_click_finish_order && transport === '0'"> 請選擇配送方式 </div>
 
+              <!-- 支付方式 -->
               <label for="pay_method">支付方式</label>
-
-              <div class="custom_select">
-                <div class="custom_option" :style="`order: ${store.paymethodOrder['CreditCard']}`" @click="pay_method = 'CreditCard'" v-if="(store.CreditCard != 0 && transport != 3)"> 
+              <div class="custom_select" v-if="store.paymethodOrder">
+                <div class="custom_option2" :class="{active:pay_method === 'CreditCard'}" :style="`order: ${store.paymethodOrder['CreditCard']}`" @click="pay_method = 'CreditCard'" v-if="store.CreditCard != 0 && !is_collection"> 
                   信用卡
-                  <i class="fa-regular fa-square-check" v-if="pay_method === 'CreditCard'"></i>
-                  <i class="fa-regular fa-square" v-else></i>
                 </div>
-                <div class="custom_option" :style="`order: ${store.paymethodOrder['ATM']}`" @click="pay_method = 'ATM'" v-if="(store.ATM != 0 && transport != 3)"> 
+                <div class="custom_option2" :class="{active:pay_method === 'ATM'}" :style="`order: ${store.paymethodOrder['ATM']}`" @click="pay_method = 'ATM'" v-if="store.ATM != 0 && !is_collection"> 
                   ATM/網路ATM
-                  <i class="fa-regular fa-square-check" v-if="pay_method === 'ATM'"></i>
-                  <i class="fa-regular fa-square" v-else></i>
                 </div>
-                <div class="custom_option" :style="`order: ${store.paymethodOrder['PayCode']}`" @click="pay_method = 'PayCode'" v-if="(store.PayCode != 0 && transport != 3)"> 
+                <div class="custom_option2" :class="{active:pay_method === 'PayCode'}" :style="`order: ${store.paymethodOrder['PayCode']}`" @click="pay_method = 'PayCode'" v-if="store.PayCode != 0 && !is_collection"> 
                   超商代碼
-                  <i class="fa-regular fa-square-check" v-if="pay_method === 'PayCode'"></i>
-                  <i class="fa-regular fa-square" v-else></i>
                 </div>
-                <div class="custom_option" :style="`order: ${store.paymethodOrder['PayBarCode']}`" @click="pay_method = 'PayBarCode'" v-if="(store.PayBarCode != 0 && transport != 3)"> 
+                <div class="custom_option2" :class="{active:pay_method === 'PayBarCode'}" :style="`order: ${store.paymethodOrder['PayBarCode']}`" @click="pay_method = 'PayBarCode'" v-if="store.PayBarCode != 0 && !is_collection"> 
                   超商條碼
-                  <i class="fa-regular fa-square-check" v-if="pay_method === 'PayBarCode'"></i>
-                  <i class="fa-regular fa-square" v-else></i>
                 </div>
-                <div class="custom_option" :style="`order: ${store.paymethodOrder['PayOnDelivery']}`" @click="pay_method = 'PayOnDelivery'" v-if="(store.PayOnDelivery != 0 && transport != 3)"> 
+                <div class="custom_option2" :class="{active:pay_method === 'PayOnDelivery'}" :style="`order: ${store.paymethodOrder['PayOnDelivery']}`" @click="pay_method = 'PayOnDelivery'" v-if="store.PayOnDelivery != 0 && !is_store"> 
                   取貨付款
-                  <i class="fa-regular fa-square-check" v-if="pay_method === 'PayOnDelivery'"></i>
-                  <i class="fa-regular fa-square" v-else></i>
                 </div>
-                <div class="custom_option" :style="`order: ${store.paymethodOrder['LinePay']}`" @click="pay_method = 'LinePay'" v-if="store.LinePay == 1 && transport != 3"> 
+                <div class="custom_option2" :class="{active:pay_method === 'LinePay'}" :style="`order: ${store.paymethodOrder['LinePay']}`" @click="pay_method = 'LinePay'" v-if="store.LinePay == 1 && !is_collection"> 
                   LINE Pay
-                  <i class="fa-regular fa-square-check" v-if="pay_method === 'LinePay'"></i>
-                  <i class="fa-regular fa-square" v-else></i>
+                </div>
+
+                <!-- 超商取貨付款 -->
+                <div class="custom_option2" :class="{active:pay_method === 'MartPayOnDelivery'}" :style="`order: ${store.paymethodOrder['PayOnDelivery']}`" @click="pay_method = 'MartPayOnDelivery'" v-if="is_collection"> 
+                  超商取貨付款
                 </div>
               </div>
-
               <div class="prompt" v-if="is_click_finish_order && pay_method === '0'"> 請選擇支付方式 </div>
 
+              <!-- 一般宅配 地址 -->
               <template v-if="transport == '1'">
                 <label for="raddress">
                   收件地址
@@ -968,14 +1266,35 @@
                     <label for="is_save_address"> 加入常用地址 </label>
                   </template>
                 </label>
-                <select v-model="city_active" :class="{inputError: is_click_finish_order && city_active == ''}">
-                  <option value="" selected disabled> 城市 </option>
-                  <option :value="city" v-for="(value, city) in city_district" :key="city"> {{ city }} </option>
-                </select>
-                <select v-model="district_active" :class="{inputError: is_click_finish_order && district_active == ''}">
-                  <option value="" selected disabled> 鄉鎮市區 </option>
-                  <option :value="district" v-for="(zipCode, district) in city_district[city_active]" :key="district"> {{ district }} {{ zipCode }} </option>
-                </select>
+                <div tabindex="0" class="select" :class="{inputError: is_click_finish_order && city_active == ''}"
+                  @click="is_show_city_options = !is_show_city_options" 
+                  @blur="is_show_city_options = false"
+                > 
+                  <div class="text">{{ city_active !== '' ? city_active : "請選擇城市" }}</div>
+                  <div class="icon" :class="{iconActive:is_show_city_options}"> <i class="fa fa-caret-down" aria-hidden="true"></i> </div>
+                  <ul class="option" :class="{showOption:is_show_city_options}">                                                               
+                    <li v-for="(value, city) in city_district" :key="city" 
+                      @click.stop="city_active = city; is_show_city_options = false"
+                    > 
+                      {{ city }}
+                    </li>
+                  </ul>
+                </div>
+                <div tabindex="0" class="select" :class="{inputError: is_click_finish_order && district_active == ''}"
+                  @click="is_show_district_options = !is_show_district_options" 
+                  @blur="is_show_district_options = false"
+                > 
+                  <div class="text">{{ district_active !== '' ? district_active : "請選擇鄉鎮市區" }} {{ district_active ? city_district[city_active][district_active] : '' }}</div>
+                  <div class="icon" :class="{iconActive:is_show_district_options}"> <i class="fa fa-caret-down" aria-hidden="true"></i> </div>
+                  <ul class="option" :class="{showOption:is_show_district_options}">                                                               
+                    <li v-for="(zipCode, district) in city_district[city_active]" :key="district"
+                      @click.stop="district_active = district; is_show_district_options = false"
+                    > 
+                      {{ district }} {{ zipCode }}
+                    </li>
+                  </ul>
+                </div>
+
                 <div style="display: flex;" class="input_container">
                   <input style="width: 100%;" type='text' placeholder="請輸入詳細地址" v-model.trim='detail_address' :class="{inputError: is_click_finish_order && detail_address == ''}">
                 </div>
@@ -992,43 +1311,62 @@
                 </div>
               </template>
 
-              <!-- 7-11 取貨付款 -->
-              <template v-if="transport == 3">
-                <label> 選擇門市 </label>
-                <div class="store_info">
+              <!-- 超商取貨 選擇門市 -->
+              <template v-if="is_store">
+                <label v-if="!storeid" > 請選擇門市 </label>
+                <div class="store_info" v-else>
                   <div v-if="storeid"> 門市店號: {{ storeid }} </div>
                   <div v-if="storename"> 門市名稱: {{ storename }} </div>
                   <div v-if="storeaddress"> 門市地址: {{ storeaddress }} </div>
                 </div>
-                <div class="button" @click="pickStore"> 搜尋門市 </div>
+                <div class="button2" v-if="!storeid || !storename || !storeaddress" @click="pickStore"> 搜尋門市 </div>
+                <div class="button2" v-else @click="pickStore"> 更改門市 </div>
                 <div class="prompt" v-if="is_click_finish_order && storeaddress == ''"> 請選擇門市 </div>
               </template>
 
-              <label for="feedback">留言給我們</label>
-              <textarea name="" id="feedback" cols="30" rows="5" placeholder="留言給我們" v-model="info.info_message" @input="info_message_input"></textarea>
-              <div class="info_messageLength"> {{info.info_message.length}}/150 </div>
-
+              <!-- 發票 -->
               <template v-if="store.Receipt === '1'">
                 <label>發票類型</label>
-                <div class="custom_option" @click="invoice_type = '1'"> 
-                  二聯
-                  <i class="fa-regular fa-square-check" v-if="invoice_type === '1'"></i>
-                  <i class="fa-regular fa-square" v-else></i>
+                <div class="custom_option2" :class="{active:personal_or_company === '個人發票'}" @click="personal_or_company = '個人發票'; invoice_type = is_other_invoice_type ? '0' : '1'">
+                  個人發票
                 </div>
-                <div class="custom_option" @click="invoice_type = '2'"> 
-                  三聯
-                  <i class="fa-regular fa-square-check" v-if="invoice_type === '2'"></i>
-                  <i class="fa-regular fa-square" v-else></i>
+                <div class="custom_option2" :class="{active:personal_or_company === '公司發票'}" @click="personal_or_company = '公司發票'; invoice_type = '2'"> 
+                  公司發票
                 </div>
-                <div class="prompt" v-if="invoice_type === '0'"> 請選擇發票類型 </div>
 
-                <template v-if="invoice_type==='2'">
-                  <label for="invoice_title">公司抬頭</label>
-                  <input type="text" id="invoice_title" name="公司抬頭" placeholder="公司抬頭" v-model="invoice_title">
-                  <div class="prompt" v-if="invoice_title === ''"> 請填寫公司抬頭 </div>
-                  <label for="invoice_uniNumber">統一編號</label>
-                  <input type="text" id="invoice_uniNumber" name="統一編號" placeholder="統一編號" v-model="invoice_uniNumber">
-                  <div class="prompt" v-if="invoice_uniNumber === ''"> 請填寫統一編號 </div>
+                <template v-if="personal_or_company === '個人發票' && is_other_invoice_type">
+                  <label>個人發票類型</label>
+
+                  <div class="custom_option2" :class="{active:invoice_type === '1'}" @click="invoice_type = '1'"> 
+                    個人紙本發票
+                  </div>
+                  <div class="custom_option2" v-if="store.NatureCode === '1'" :class="{active:invoice_type === '3'}" @click="invoice_type = '3'"> 
+                    手機條碼載具
+                  </div>
+                  <div v-if="invoice_type === '3'">
+                    <input type="text" placeholder="手機條碼載具" v-model="phone_barCode">
+                    <div class="prompt" v-if="is_click_finish_order && phone_barCode === ''"> 請填寫手機條碼載具 </div>
+                  </div>
+                  <div class="custom_option2" v-if="store.NatureCode === '1'" :class="{active:invoice_type === '4'}" @click="invoice_type = '4'"> 
+                    自然人憑證載具
+                  </div>
+                  <div v-if="invoice_type === '4'">
+                    <input type="text" placeholder="自然人憑證載具" v-model="natural_barCode">
+                    <div class="prompt" v-if="is_click_finish_order && natural_barCode === ''"> 請填寫自然人憑證載具 </div>
+                  </div>
+                </template>
+
+                <div class="prompt" v-if="is_click_finish_order && invoice_type === '0'"> 請選擇發票類型 </div>
+
+                <template v-if="invoice_type === '2'">
+                  <div>
+                    <input type="text" id="invoice_title" name="公司抬頭" placeholder="公司抬頭" v-model="invoice_title">
+                    <div class="prompt" v-if="is_click_finish_order && invoice_title === ''"> 請填寫公司抬頭 </div>
+                  </div>
+                  <div>
+                    <input type="text" id="invoice_uniNumber" name="統一編號" placeholder="統一編號" v-model="invoice_uniNumber">
+                    <div class="prompt" v-if="is_click_finish_order && invoice_uniNumber === ''"> 請填寫統一編號 </div>
+                  </div>
                 </template>
               </template>
             </div>
@@ -1139,6 +1477,7 @@
       </div>
     </div>
     <div class="ECPay_form_container" v-html="ECPay_form"></div>
+    <div class="ECPay_form_container" v-html="ECPay_store_form"></div>
 
     <div class="selectProduct" v-if="showPage === 'selectProduct'" :style="`height:${innerHeight}px`">
       <div class="background">
@@ -1367,7 +1706,7 @@
           <div class="text"> 已收到您的訂單！ </div>
         </div>
         <div class="message"> 
-          <template v-if="pay_method != 'PayOnDelivery'">
+          <template v-if="pay_method != 'PayOnDelivery' && pay_method != 'MartPayOnDelivery'">
             前往付款頁面
           </template>
         </div>
@@ -1438,7 +1777,7 @@
         <div class="buttonGroup">
           <div class="button cancel" @click="isConfirm4 = false; toPay()"> 
             否
-            <template v-if="pay_method != 'PayOnDelivery'">
+            <template v-if="pay_method != 'PayOnDelivery' && pay_method != 'MartPayOnDelivery'">
               ，前往付款頁面 
             </template>
           </div>
@@ -1544,7 +1883,7 @@
         </div>
         <div class="buttonGroup">
           <div class="button cancel" @click="isConfirm5 = false; toPay()"> 
-            <template v-if="pay_method != 'PayOnDelivery'">
+            <template v-if="pay_method != 'PayOnDelivery' && pay_method != 'MartPayOnDelivery'">
               前往付款頁面 
             </template>
             <template v-else>
@@ -1780,7 +2119,42 @@ export default {
       total: {},
       isSame: false,
       transport: '0', // 一般宅配1 到店自取2
+      transport_obj: {
+        0: '',
+        1: '一般宅配',
+        2: '到店自取',
+        'UNIMARTDelivery': '7-11 取貨付款',
+        'UNIMARTC2CDelivery': '7-11 取貨付款',
+        'UNIMART': '7-11 取貨不付款',
+        'UNIMARTC2C': '7-11 取貨不付款',
+        'UNIMARTFREEZEDelivery': '7-11冷凍 取貨付款',
+        'UNIMARTFREEZE': '7-11冷凍 取貨不付款',
+
+        'FAMIDelivery': '全家 取貨付款',
+        'FAMIC2CDelivery': '全家 取貨付款',
+        'FAMI': '全家 取貨不付款',
+        'FAMIC2C': '全家 取貨不付款',
+
+        'HILIFEDelivery': '萊爾富 取貨付款',
+        'HILIFEC2CDelivery': '萊爾富 取貨付款',
+        'HILIFE': '萊爾富 取貨不付款',
+        'HILIFEC2C': '萊爾富 取貨不付款',
+
+        'OKMARTC2CDelivery': 'OK超商 取貨付款',
+        'OKMARTC2C': 'OK超商 取貨不付款',
+      },
+      is_show_transport_options: false,
       pay_method: '0',
+      pay_method_obj: {
+        'CreditCard': '信用卡',
+        'ATM': 'ATM/網路ATM',
+        'PayCode': '超商代碼',
+        'PayBarCode': '超商條碼',
+        'PayOnDelivery': '取貨付款',
+        'LinePay': 'LINE Pay',
+        'MartPayOnDelivery': '超商取貨付款'
+      },
+      is_show_pay_method_options: false,
       is_click_finish_order: false,
       info: {
         purchaser_email:'',
@@ -1795,7 +2169,12 @@ export default {
         receiver_number_error: '',
         info_message:''
       },
+
+      personal_or_company: '',
+      is_show_personal_or_company_options: false,
       invoice_type: '0',
+      phone_barCode: '',
+      natural_barCode: '',
       invoice_title: '',
       invoice_uniNumber: '',
       orderIng: false,
@@ -1820,6 +2199,12 @@ export default {
         rules: {
           required: {
             message: '此項目為必填'
+          },
+          name: {
+            message: '請輸入全中文或全英文'
+          },
+          nameLength: {
+            message: '中文長度請介於2~5，英文長度請介於4~10'
           },
         },
         is_error: false,
@@ -1930,8 +2315,8 @@ export default {
       // bank: require('../assets/bank.json'),
 
       ECPay_form: '',
+      ECPay_store_form: '',
       
-      //  
       innerHeight: 0,
       picHeight: 0,
 
@@ -1945,7 +2330,9 @@ export default {
       //
       city_district: '',
       city_active: '',
+      is_show_city_options: false,
       district_active: '',
+      is_show_district_options: false,
       detail_address: '',
       is_save_address: false,
       has_address: false,
@@ -1961,7 +2348,7 @@ export default {
       protocol: '',
 
       //
-      webVersion: 'uniqm.com',
+      webVersion: 'common',
     }
   },
   watch:{
@@ -1974,14 +2361,18 @@ export default {
         this.info.receiver_name = ''
         this.info.receiver_number = '';
       }
-      this.validate('receiver_name', 'required')
+      this.validate('receiver_name', 'required', 'name', 'nameLength')
       this.validate('receiver_number', 'required')
     },
     //
-    transport(v) {
+    transport(newV, oldV) {
       this.getTotal(1);
-      if(v == 3) {
-        this.pay_method = 'PayOnDelivery' 
+      if(newV.indexOf('Delivery') > -1) this.pay_method = 'MartPayOnDelivery' 
+
+      if(this.productCompleted) {
+        this.storeid = ''
+        this.storename = ''
+        this.storeaddress = ''
       }
     },
     // selectProduct
@@ -2069,6 +2460,42 @@ export default {
       }
       return address;
     },
+
+    transport_number() {
+      let number = 0;
+      if(this.store.Shipping === '1') number += 2
+      if(this.store.Shipping === '2') number += 1
+      if(this.store.Shipping === '3') number += 1
+
+      if(this.store.UNIMARTDelivery || this.store.UNIMARTC2CDelivery) number += 1
+      if(this.store.UNIMART|| this.store.UNIMARTC2C) number += 1
+      if(this.store.UNIMARTFREEZEDelivery) number += 1
+      if(this.store.UNIMARTFREEZE) number += 1
+
+      if(this.store.HILIFEDelivery || this.store.HILIFEC2CDelivery) number += 1
+      if(this.store.HILIFE|| this.store.HILIFEC2C) number += 1
+
+      if(this.store.OKMARTC2C) number += 1
+      if(this.store.OKMARTC2CCDelivery) number += 1
+
+      return number
+    },
+
+    is_store() {
+      if(this.transport == 0) return undefined
+      else if(this.transport === '1' || this.transport === '2') return false
+      else return true
+    },
+    is_collection() {
+      if(this.transport == 0) return undefined
+      else if( this.transport.indexOf('Delivery') > -1) return true
+      else return false
+    },
+
+    is_other_invoice_type() {
+      if(this.store.PhoneCode === '1' || this.store.NatureCode === '1') return true
+      return false
+    }
   },
   methods: {
     login(func, arr) {
@@ -2150,7 +2577,7 @@ export default {
       });
     },
 
-    getStore(){
+    getStore() {
       const vm = this;
 
       const url = `${vm.protocol}//${vm.api}/interface/store/getStore`;
@@ -2173,6 +2600,48 @@ export default {
             store.paymethodOrder[item.name] = parseInt(item.order)
           })
         }
+        let CVSSetting = JSON.parse(store.CVSSetting)
+
+        if(store.ECStatus == 0) {
+          for(let key in CVSSetting) {
+            if(key.indexOf('Shipping') > -1) {
+              CVSSetting[key] = false
+            }
+          }
+        }
+        for(let key in CVSSetting) {
+          if(key.indexOf('Shipping') > -1) continue
+          let mart = key.replace('C2CC', '').replace('C2C', '').replace('FREEZE', '').replace('Delivery', '')
+          if(!CVSSetting[`${mart}Shipping`]) CVSSetting[key] = false
+          store[key] = CVSSetting[key]
+        }
+        console.log(store)
+
+        /*
+          FAMI
+          FAMIC2C
+          FAMIC2CDelivery
+          FAMIDelivery
+          FAMIShipping
+
+          HILIFE
+          HILIFEC2C
+          HILIFEC2CDelivery
+          HILIFEDelivery
+          HILIFEShipping
+          
+          OKMARTC2C
+          OKMARTC2CDelivery
+          OKMARTShipping
+          
+          UNIMART
+          UNIMARTC2C
+          UNIMARTC2CDelivery
+          UNIMARTDelivery
+          UNIMARTFREEZE
+          UNIMARTFREEZEDelivery
+          UNIMARTShipping
+        */
 
         vm.store = store;
         vm.arrangement = vm.store.Sort || "0";
@@ -2341,7 +2810,6 @@ export default {
           let value = item.split('=')[1]
           if(key && value) searchObj[key] = value
         })
-        // console.log(searchObj)
 
         // RtnMsg
         let RtnMsg = searchObj['RtnMsg']
@@ -2356,10 +2824,10 @@ export default {
           vm.showMessage('已收到您的付款！', true)
         }
 
-        // 7-11 取貨付款
-        let storeid = searchObj['storeid']
-        let storename = searchObj['storename']
-        let storeaddress = searchObj['storeaddress']
+        // 超商取貨付款
+        let storeid = searchObj['CVSStoreID']
+        let storename = searchObj['CVSStoreName']
+        let storeaddress = searchObj['CVSAddress']
 
         // spid
         let spid = searchObj['spid'];
@@ -2403,7 +2871,7 @@ export default {
           vm.showPage = 'cart'
         }
 
-        // 7-11 取貨付款
+        // 超商取貨付款
         vm.getConvenienceStore(storeid, storename, storeaddress)
 
         vm.$nextTick(() => {
@@ -2415,17 +2883,17 @@ export default {
         vm.login(vm.getProducts, [type]);
       });
     },
-    // 7-11
+    // 超商取貨付款
     getConvenienceStore(storeid, storename, storeaddress, spid) {
       let vm = this
       if(!storeid || !storename || !storeaddress) return
-
       vm.storeid = storeid
       vm.storename = decodeURI(storename)
       vm.storeaddress = decodeURI(storeaddress)
 
       if(spid) {
         window.history.replaceState({}, document.title, `${location.pathname}?spid=${spid}`);
+        vm.stepIndex = 2
       }
       else {
         window.history.replaceState({}, document.title, location.pathname);
@@ -2435,7 +2903,7 @@ export default {
 
       vm.returnInfo()
     },
-    getUserInfo(){
+    getUserInfo() {
       let vm = this;
 
       return new Promise((resolve, reject) => {
@@ -2457,7 +2925,7 @@ export default {
             vm.info.purchaser_name = vm.userInfo.Name;
             vm.info.purchaser_number = vm.userInfo.Phone2;
             vm.total_bonus = vm.userInfo.Wallet * 1
-
+            vm.userInfo.Adress = decodeURI(vm.userInfo.Adress)
             let address_obj = {};
             let address_arr = vm.userInfo.Adress.split('_#_');
             address_arr.length = address_arr.length - 1;
@@ -2469,6 +2937,13 @@ export default {
               }
             }
             vm.userInfo.address_obj = address_obj;
+            vm.phone_barCode   = vm.userInfo.PhoneCode;
+            vm.natural_barCode  = vm.userInfo.NatureCode;
+            if(vm.userInfo.ThreeLinkCode) {
+              let invoice_arr = vm.userInfo.ThreeLinkCode.split('|')
+              if(!vm.invoice_title) vm.invoice_title = invoice_arr[0] || ''
+              if(!vm.invoice_uniNumber) vm.invoice_uniNumber = invoice_arr[1] || ''
+            }
           }
           else {
             if( res.data.msg == '請先登入會員' ||
@@ -2980,16 +3455,35 @@ export default {
         }
         vm.site = JSON.parse(localStorage.getItem('site')) || [] ;
         const url = `${vm.protocol}//${vm.api}/interface/store/GetProductTotal?`;
-        const params = `id=${o.id}&qry=${o.qry}&additionalid=${o.additionalid}&additionalqry=${o.additionalqry}&specificationid=${o.specificationid}&specificationqty=${o.specificationqty}&code=${vm.useCodeSuccess}&shipping=${vm.transport == 0 ? 0 : vm.transport * 1 + 1}&type=${type}&Preview=${vm.site.Preview}&memberWallet=${vm.is_use_bonus ? vm.use_bonus : 0}`;
+
+        let formData = new FormData();
+        formData.append('id', o.id);
+        formData.append('qry', o.qry);
+        formData.append('additionalid', o.additionalid);
+        formData.append('additionalqry', o.additionalqry);
+        formData.append('specificationid', o.specificationid);
+        formData.append('specificationqty', o.specificationqty);
+        formData.append('code', vm.useCodeSuccess);
+        let shipping
+        if(vm.transport === '0') shipping = 3
+        else if(vm.transport === '1') shipping = 2
+        else if(vm.transport === '2') shipping = 3
+        else shipping = 4
+        formData.append('shipping', shipping);
+        if(shipping === 4) formData.append('Mart', vm.transport);
+        formData.append('type', type);
+        formData.append('Preview', vm.site.Preview);
+        formData.append('memberWallet', vm.is_use_bonus ? vm.use_bonus : 0);
+
         const config = {
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'multipart/form-data'
           }
         };
-        vm.$http.post(url, params, config).then((res) => {
+        vm.$http.post(url, formData, config).then((res) => {
 
           if(res.data.errormessage){
-            alert(res.data.errormessage)
+            console.log(res.data.errormessage)
             return;
           }
 
@@ -3031,25 +3525,33 @@ export default {
 
       vm.is_click_finish_order = true;
       vm.validate('purchaser_email', 'required', 'email') 
-      vm.validate('purchaser_name', 'required') 
+      vm.validate('purchaser_name', 'required', 'name', 'nameLength') 
       vm.validate('purchaser_number', 'required', 'phone') 
-      vm.validate('receiver_name', 'required') 
-      vm.validate('receiver_number', 'required') 
-      if(!vm.info.purchaser_email_error &&
+      vm.validate('receiver_name', 'required', 'name', 'nameLength') 
+      vm.validate('receiver_number', 'required')
+      if(
+        // 資訊驗證
+        !vm.info.purchaser_email_error &&
         !vm.info.purchaser_name_error &&
         !vm.info.purchaser_number_error &&
         !vm.info.receiver_name_error &&
         !vm.info.receiver_number_error &&
+        // 運送驗證
         vm.transport !== '0' &&
+        // 支付驗證
         vm.pay_method !== '0' &&
+        // 發票驗證
         (
           (vm.store.Receipt === '0') || 
-          ( vm.invoice_type === '1' || 
-            (vm.invoice_type==='2' && vm.invoice_title !== '' && vm.invoice_uniNumber !== '')
-          )
+          (vm.invoice_type === '1') ||
+          (vm.invoice_type === '2' && vm.invoice_title !== '' && vm.invoice_uniNumber !== '') ||
+          (vm.invoice_type === '3' && vm.phone_barCode !== '') ||
+          (vm.invoice_type === '4' && vm.natural_barCode !== '')
         ) &&
-        ( vm.transport == 1 ? (vm.city_active && vm.district_active && vm.detail_address) : true) &&
-        ( vm.transport == 3 ? vm.storeaddress != '' : true)
+        // 地址驗證
+        ( vm.transport === '1' ? (vm.city_active && vm.district_active && vm.detail_address) : true) &&
+        // 門市驗證
+        ( vm.is_store ? vm.storeid !== '' : true)
       ) {
         await vm.use_bonus_handler();
         vm.createOrder();
@@ -3095,16 +3597,17 @@ export default {
         this.bank = require('../assets/bank.json');
         this.isConfirm3 = true;
       }
-      else if(this.pay_method == 'PayOnDelivery') {
+      else if(this.pay_method == 'PayOnDelivery' || this.pay_method == 'MartPayOnDelivery') {
 
       }
       // ecpay
       else {
-        if(this.api.indexOf('demo.uniqcarttest') > -1){
+        if(this.webVersion === 'demo') {
           this.ECPay_form = `<form id="ECPay_form" action="https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
         } else {
           this.ECPay_form = `<form id="ECPay_form" action="https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5" method="post">`
         }
+
         for(let item in this.payResult){
           if(item === 'success' || item === 'message' || item === 'membered') continue
           // EncryptType TotalAmount item: number，other: string
@@ -3144,6 +3647,44 @@ export default {
           item.message = '';
           return true;
         }
+      }
+    },
+    name_verify(item) {
+      let regExp = /^[\u4e00-\u9fa5]+$|^[a-zA-Z]+$/
+      if(!regExp.test(item.value)) {
+        item.is_error = true;
+        item.message = item.rules.name.message;
+        return false;
+      }
+      else {
+        item.is_error = false;
+        item.message = '';
+        return true;
+      }
+    },
+    nameLength_verify(item) {
+      let chineseRegExp = /^[\u4e00-\u9fa5]+$/
+      let englishRegExp = /^[a-zA-Z]+$/
+      let is_error = false
+      if(chineseRegExp.test(item.value)) {
+        if(item.value.length > 5 || item.value.length < 2) {
+          is_error = true
+        }
+      } else if(englishRegExp.test(item.value)) {
+        if(item.value.length > 10 || item.value.length < 4) {
+          is_error = true
+        }
+      }
+
+      if(is_error) {
+        item.is_error = true;
+        item.message = item.rules.nameLength.message;
+        return false;
+      }
+      else {
+        item.is_error = false;
+        item.message = '';
+        return true;
       }
     },
     cellphone_verify(item) {
@@ -3396,6 +3937,8 @@ export default {
         formData.append('Site' , this.site.Site);
         formData.append('StoreName' , this.site.Name);
         formData.append('productName' , this.store.Name);
+        formData.append('Preview' , this.site.Preview);
+
         formData.append('ProductIdList' , o.id);
         formData.append('PriceList' , o.price);
         formData.append('AmountList' , o.qry);
@@ -3403,14 +3946,8 @@ export default {
         formData.append('ExtraPriceList' , o.additionalprice);
         formData.append('ExtraAmountList' , o.additionalqry);
         formData.append('ItemName' , o.ItemName);
-
         formData.append('SizeIdList' , o.specificationid);
-        // formData.append('SpecPriceList' , o.specificationprice);
         formData.append('SizeAmountList' , o.specificationqty);
-
-        formData.append('SendWay' , this.transport * 1);
-        formData.append('PayMethod' , this.pay_method);
-        formData.append('PayType' , this.store[this.pay_method]);
 
         formData.append('Email' , this.info.purchaser_email);
         formData.append('Name' , this.info.purchaser_name);
@@ -3418,44 +3955,73 @@ export default {
         formData.append('Phone2' , this.info.purchaser_number);
         formData.append('Receiver' , this.info.receiver_name);
         formData.append('ReceiverPhone' , this.info.receiver_number);
+        formData.append('Message' , this.info.info_message);
 
-        formData.append('Address' , this.receiver_address);
+        if(this.transport === '1' || this.transport === '2') {
+          formData.append('SendWay' , this.transport);
+          formData.append('PayMethod' , this.pay_method);
+          formData.append('PayType' , this.store[this.pay_method]);
+        }
+        else {
+          formData.append('SendWay' , 3);
+          formData.append('Mart' , this.transport);
+
+          if(this.transport.indexOf('Delivery') > -1) {
+            formData.append('PayMethod' , this.transport)
+            formData.append('PayType' , 1)
+          }
+          else {
+            formData.append('PayMethod' , this.pay_method)
+            formData.append('PayType' , this.store[this.pay_method])
+          }
+
+          // 0 代收 1 不代收
+          formData.append('IsCollection', this.transport.indexOf('Delivery') > -1 ? 0 : 1)
+        }
+
+        // 地址
+        if(this.is_store) formData.append('Address', encodeURI(`${this.storeid} - ${this.storename} - ${this.storeaddress}`));
+        else formData.append('Address' , encodeURI(this.receiver_address));
         if(this.userInfo.address_obj && Object.keys(this.userInfo.address_obj).length < 3 && !this.has_address && this.is_save_address){
           let id = new Date().getTime();
-          formData.append('saveAddressStr' , `${id}_ _${this.receiver_address.replace(/ /g, '_ _')}`);
-        } 
-        else {
-          formData.append('saveAddressStr' , '');
+          formData.append('saveAddressStr' , encodeURI(`${id}_ _${this.receiver_address.replace(/ /g, '_ _')}`) );
         }
+        else formData.append('saveAddressStr' , '');
+
+        // 郵遞區號
         if(this.city_active && this.district_active) {
           formData.append('ZipCode' , this.city_district[this.city_active][this.district_active]);
         }
-        else {
-          formData.append('ZipCode' , '');
-        }
-        
+        else formData.append('ZipCode' , '');
 
-        formData.append('Message' , this.info.info_message);
+        // 超商取貨付款
+        if(this.is_store) formData.append('StoreID' , this.storeid);
+        // 發票
+        formData.append('Type' , this.invoice_type * 1);
+        formData.append('Title' , this.invoice_title);
+        if(this.invoice_type === '3') {
+          formData.append('UniNumber' , this.phone_barCode);
+          formData.append('savePhoneCode' , this.phone_barCode);
+          formData.append('saveNatureCode' , '');
+        }
+        else if(this.invoice_type === '4') {
+          formData.append('UniNumber' , this.natural_barCode)
+          formData.append('savePhoneCode' , '');
+          formData.append('saveNatureCode' , this.natural_barCode);
+        }
+        else formData.append('UniNumber' , this.invoice_uniNumber);
+        
         formData.append('Discount' , this.total.Discount * 1);
         formData.append('Shipping' , this.total.Shipping * 1);
         formData.append('Total' , this.total.Sum * 1);
-        formData.append('DiscountPrice' , this.total.DiscountCode*1);
+        formData.append('DiscountPrice' , this.total.DiscountCode * 1);
+
         formData.append('DiscountCode' , this.useCodeSuccess);
-        formData.append('LogoUrl' , this.protocol + '//' + this.api + this.store.PayLogo);
-        formData.append('Type' , this.invoice_type * 1);
-        formData.append('Title' , this.invoice_title);
-        formData.append('UniNumber' , this.invoice_uniNumber);
-
-        // 7-11 取貨付款
-        if(this.transport == 3) {
-          formData.append('storeid' , this.storeid);
-          formData.append('storename' , this.storename);
-          formData.append('storeaddress' , this.storeaddress);
-        }
-
+        
         formData.append('MemberWallet' , this.use_bonus);
         formData.append('MemberBonus' , this.member_bonus);
-        formData.append('Preview' , this.site.Preview);
+
+        formData.append('LogoUrl' , this.protocol + '//' + this.api + this.store.PayLogo);
       }
       const config = {
         headers: {
@@ -4271,7 +4837,7 @@ export default {
         this.info.receiver_name = this.info.purchaser_name;
         this.info.receiver_number = this.info.purchaser_number;
 
-        this.validate('purchaser_name', 'required')
+        this.validate('purchaser_name', 'required', 'name', 'nameLength')
         this.validate('purchaser_number', 'required')
       }
     },
@@ -4432,7 +4998,7 @@ export default {
       this.showMessage('複製分享連結', true);
     },
 
-    // 7-11 取貨付款
+    // 超商取貨
     pickStore() {
       let order_info = {
         discountCode: this.discountCode,
@@ -4451,6 +5017,9 @@ export default {
         pay_method: this.pay_method,
   
         invoice_type: this.invoice_type,
+        personal_or_company: this.personal_or_company,
+        phone_barCode: this.phone_barCode,
+        natural_barCode: this.natural_barCode,
         invoice_title: this.invoice_title,
         invoice_uniNumber: this.invoice_uniNumber,
 
@@ -4458,7 +5027,41 @@ export default {
         use_bonus: this.use_bonus,
       }
       localStorage.setItem('order_info', JSON.stringify(order_info));
-      this.urlPush(`https://emap.presco.com.tw/c2cemap.ashx?url=${location.origin}/interface/store/SpmarketAddress${this.showPage == 'singleProduct' ? '?spid=' + this.selectProduct.ID : ''}`);
+
+      if(this.webVersion == 'demo') {
+        this.ECPay_store_form = `<form id="ECPay_store_form" action="https://logistics-stage.ecpay.com.tw/Express/map" method="post">`
+      } else {
+        this.ECPay_store_form = `<form id="ECPay_store_form" action="https://logistics.ecpay.com.tw/Express/map" method="post">`
+      }
+
+      let MerchantID
+      if(this.webVersion === 'demo') MerchantID = this.transport.indexOf('C2C') > -1 ? '2000933' : '2000132'
+      else MerchantID = this.store.ECStore
+      let LogisticsSubType = this.transport.replace('Delivery', '')
+      let IsCollection = this.transport.indexOf('Delivery') > -1 ? 'Y' : 'N'
+      let obj = {
+        MerchantID,
+        MerchantTradeNo: '',
+        LogisticsType: 'CVS',
+        LogisticsSubType,
+        IsCollection,
+        ServerReplyURL: `${location.origin}/interface/store/SpmarketAddress${this.showPage == 'singleProduct' ? '?spid=' + this.selectProduct.ID : ''}`,
+        ExtraData: '',
+        Device: ''
+      }
+
+      for(let key in obj) {
+        this.ECPay_store_form += `<input type="${key == 'Device' ? 'number' : 'text'}" name="${key}" value="${obj[key]}">`;
+      }
+      this.ECPay_store_form += `</form>`;
+
+      this.$nextTick(()=>{
+        let ECPay_store_form = document.querySelector('#ECPay_store_form');
+        ECPay_store_form.submit();
+      })
+
+      // 7-11
+      // this.urlPush(`https://emap.presco.com.tw/c2cemap.ashx?url=${location.origin}/interface/store/SpmarketAddress${this.showPage == 'singleProduct' ? '?spid=' + this.selectProduct.ID : ''}`);
     },
     returnInfo() {
       let order_info = JSON.parse(localStorage.getItem('order_info')) || {};
@@ -4479,6 +5082,9 @@ export default {
       this.pay_method = order_info.pay_method
     
       this.invoice_type = order_info.invoice_type
+      this.personal_or_company = order_info.personal_or_company
+      this.phone_barCode = order_info.phone_barCode
+      this.natural_barCode = order_info.natural_barCode
       this.invoice_title = order_info.invoice_title
       this.invoice_uniNumber = order_info.invoice_uniNumber
 
@@ -4522,23 +5128,27 @@ export default {
       let pageObj = {
         index: {
           'common': '/',
+          'demo': '/',
           'uniqm.com': '/',
           'uniqm.net': '/',
         },
         order: {
           'common': '/order.html',
+          'demo': '/order.html',
           'uniqm.com': '/shoppingOrder.html',
-          'uniqm.net': '/',
+          'uniqm.net': '',
         },
         user: {
           'common': '/user.html',
+          'demo': '/user.html',
           'uniqm.com': '/shoppingUser.html',
-          'uniqm.net': '/',
+          'uniqm.net': '',
         },
         info: {
           'common': '/user_info.html',
+          'demo': '/user_info.html',
           'uniqm.com': '/shoppingInfo.html',
-          'uniqm.net': '/',
+          'uniqm.net': '',
         },
       }
 
@@ -4561,7 +5171,32 @@ export default {
             vm.info[`${key}_error`] = '不得為空'
             return false
           }
-        } 
+        }
+
+        else if(item == 'name') {
+          let regExp = /^[\u4e00-\u9fa5]+$|^[a-zA-Z]+$/
+          if(!regExp.test(value)) {
+            vm.info[`${key}_error`] = '請輸入全中文或全英文'
+            return false;
+          }
+        }
+
+        else if(item == 'nameLength') {
+          let chineseRegExp = /^[\u4e00-\u9fa5]+$/
+          let englishRegExp = /^[a-zA-Z]+$/
+          if(chineseRegExp.test(value)) {
+            if(value.length > 5 || value.length < 2) {
+              vm.info[`${key}_error`] = '中文長度請介於2~5，英文長度請介於4~10'
+              return false;
+            }
+          } else if(englishRegExp.test(value)) {
+            if(value.length > 10 || value.length < 4) {
+              vm.info[`${key}_error`] = '中文長度請介於2~5，英文長度請介於4~10'
+              return false;
+            }
+          }
+        }
+
         else if(item == 'email') {
           let rep = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
           if(!rep.test(value)) {
