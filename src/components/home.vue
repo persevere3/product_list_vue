@@ -14,14 +14,20 @@
           <div class="pic">
             <div class="mainPic" :style="{backgroundImage :`url(${selectProduct.imgArr[selectProduct.mainImgIndex]})`}">
             </div>
-            <div class="swiper-container">
-              <div class="swiper-wrapper">
-                <div class="swiper-slide" v-for = "(item, index) in selectProduct.imgArr" :key="`${item}_${index}`"
-                  :class="{active:selectProduct.mainImgIndex === index}"
-                >
-                  <div class="border"></div>
-                  <img :src="item" @click="selectProduct.mainImgIndex = index" alt="">
+            <div class="allPic">
+              <div class="swiper-container">
+                <div class="swiper-wrapper">
+                  <div class="swiper-slide" v-for = "(item, index) in selectProduct.imgArr" :key="`${item}_${index}`"
+                    :class="{active:selectProduct.mainImgIndex === index}"
+                  >
+                    <div class="border"></div>
+                    <img :src="item" @click="selectProduct.mainImgIndex = index" alt="">
+                  </div>
                 </div>
+              </div>
+              <div class="controler">
+                <div class="prev" @click="swiper.slidePrev()"> <i class="fa-solid fa-caret-left"></i> </div>
+                <div class="next" @click="swiper.slideNext()"> <i class="fa-solid fa-caret-right"></i> </div>
               </div>
             </div>
           </div>
@@ -1486,14 +1492,20 @@
           <div class="pic">
             <div class="mainPic" :style="{backgroundImage :`url(${selectProduct.imgArr[selectProduct.mainImgIndex]})`}">
             </div>
-            <div class="swiper-container">
-              <div class="swiper-wrapper">
-                <div class="swiper-slide" v-for = "(item, index) in selectProduct.imgArr" :key="`${item}_${index}`"
-                  :class="{active:selectProduct.mainImgIndex === index}"
-                >
-                  <div class="border"></div>
-                  <img :src="item" @click="selectProduct.mainImgIndex = index" alt="">
+            <div class="allPic">
+              <div class="swiper-container">
+                <div class="swiper-wrapper">
+                  <div class="swiper-slide" v-for = "(item, index) in selectProduct.imgArr" :key="`${item}_${index}`"
+                    :class="{active:selectProduct.mainImgIndex === index}"
+                  >
+                    <div class="border"></div>
+                    <img :src="item" @click="selectProduct.mainImgIndex = index" alt="">
+                  </div>
                 </div>
+              </div>
+              <div class="controler">
+                <div class="prev" @click="swiper.slidePrev()"> <i class="fa-solid fa-caret-left"></i> </div>
+                <div class="next" @click="swiper.slideNext()"> <i class="fa-solid fa-caret-right"></i> </div>
               </div>
             </div>
           </div>
@@ -2060,7 +2072,7 @@ import DatePicker from 'vue2-datepicker';
 import 'vue2-datepicker/index.css';
 
 import Swiper from 'swiper';
-import 'swiper/css/swiper.min.css';
+import 'swiper/swiper.scss'
 
 export default {
   components: {
