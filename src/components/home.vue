@@ -25,7 +25,7 @@
                   </div>
                 </div>
               </div>
-              <div class="controler">
+              <div class="controler" v-show="selectProduct.imgArr.length > 3">
                 <div class="prev" @click="swiper.slidePrev()"> <i class="fa-solid fa-caret-left"></i> </div>
                 <div class="next" @click="swiper.slideNext()"> <i class="fa-solid fa-caret-right"></i> </div>
               </div>
@@ -1503,7 +1503,7 @@
                   </div>
                 </div>
               </div>
-              <div class="controler">
+              <div class="controler" v-show="selectProduct.imgArr.length > 3">
                 <div class="prev" @click="swiper.slidePrev()"> <i class="fa-solid fa-caret-left"></i> </div>
                 <div class="next" @click="swiper.slideNext()"> <i class="fa-solid fa-caret-right"></i> </div>
               </div>
