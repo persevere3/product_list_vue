@@ -2020,18 +2020,18 @@
               <!-- 多價格 products 主商品 info -->
               <template v-if="item.priceType === 'onePrice'">
                 <div class="price" v-if="parseInt(item.Price) > -1" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{ numberThousands(item.Price) }}</div>
-                <div class="price" v-else style="opacity: 0">NT$ {{ numberThousands(item.Price) }}</div>
+                <div class="price" v-else style="opacity: 0; font-size: 14px;">NT$ {{ numberThousands(item.Price) }}</div>
                 <div class="price">NT$ {{ numberThousands(item.NowPrice) }}</div>
               </template>
               <template v-else>
                 <template v-if="item.selectSpecItem && item.selectSpecItem.ID">
                   <div class="price" v-if="parseInt(item.selectSpecItem.ItemPrice) > -1" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{ numberThousands(item.selectSpecItem.ItemPrice) }}</div>
-                  <div class="price" v-else style="opacity: 0">NT$ {{ numberThousands(item.selectSpecItem.ItemPrice) }}</div>
+                  <div class="price" v-else style="opacity: 0; font-size: 14px;">NT$ {{ numberThousands(item.selectSpecItem.ItemPrice) }}</div>
                   <div class="price">NT$ {{ numberThousands(item.selectSpecItem.ItemNowPrice) }}</div>
                 </template>
                 <template v-else>
                   <div class="price" v-if="item.priceRange" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{ item.priceRange }}</div>
-                  <div class="price" v-else style="opacity: 0">NT$ {{ item.priceRange }}</div>
+                  <div class="price" v-else style="opacity: 0; font-size: 14px;">NT$ {{ item.priceRange }}</div>
                   <div class="price">NT$ {{ item.nowPriceRange }}</div>
                 </template>
               </template>
@@ -2426,7 +2426,7 @@ export default {
       protocol: '',
 
       //
-      webVersion: 'common',
+      webVersion: 'demo',
     }
   },
   watch:{
@@ -2851,11 +2851,6 @@ export default {
           let p = vm.products[i];
           let f = false;
 
-          let lowestPrice = 0
-          let highestPrice = 0
-          let lowestNowPrice = 0
-          let highestNowPrice = 0
-
           for(let k = 0; k < data2.length; k++) {
             if(data2[k].ProductID == p.ID){
               f = true;
@@ -2868,36 +2863,10 @@ export default {
 
               vm.$set(data2[k], 'buyQty', 0);
               p.specArr.push(data2[k]);
-
-              if(p.priceType === 'multiPrice') {
-                let { ItemPrice, ItemNowPrice } = data2[k]
-                if(!highestPrice) {
-                  highestPrice = ItemPrice
-                  lowestPrice = ItemPrice
-                  highestNowPrice = ItemNowPrice
-                  lowestNowPrice = ItemNowPrice
-                } else {
-                  if(ItemPrice > highestPrice) highestPrice = ItemPrice
-                  if(ItemPrice < lowestPrice) lowestPrice = ItemPrice
-                  if(ItemNowPrice > highestNowPrice) highestNowPrice = ItemNowPrice
-                  if(ItemNowPrice < lowestNowPrice) lowestNowPrice = ItemNowPrice
-
-                  if(lowestPrice < 0) lowestPrice = 0
-                  if(lowestNowPrice < 0) lowestNowPrice = 0
-                }
-              }
             }
           }
           if(!f) {
             p.buyQty = 0;
-          }
-
-          if(p.priceType === 'multiPrice') {
-            if(lowestPrice === highestPrice) p.priceRange = vm.numberThousands(lowestPrice)
-            else p.priceRange = `${vm.numberThousands(lowestPrice)} - ${vm.numberThousands(highestPrice)}`
-
-            if(lowestNowPrice === highestNowPrice) p.nowPriceRange = vm.numberThousands(lowestNowPrice)
-            else p.nowPriceRange = `${vm.numberThousands(lowestNowPrice)} - ${vm.numberThousands(highestNowPrice)}`
           }
 
           vm.$set(p, 'mainImgIndex', 0);
@@ -2913,6 +2882,30 @@ export default {
           vm.$set(p, 'allPicLength', c);
           vm.$set(p, 'isShowOption', 0);
         }
+
+        // 多價格
+        vm.products.forEach(product => {
+          if(product.priceType === 'multiPrice') {
+            // 建議售價
+            let itemPriceArr = product.specArr.map(spec => spec.ItemPrice * 1)
+            let lowestPrice = Math.min(...itemPriceArr)
+            let highestPrice = Math.max(...itemPriceArr)
+            // 所有規格都有填建議售價
+            if(lowestPrice > 0 && highestPrice > 0) {        
+              // 建議售價都一樣
+              if(lowestPrice === highestPrice) product.priceRange = vm.numberThousands(lowestPrice)
+              else product.priceRange = `${vm.numberThousands(lowestPrice)} - ${vm.numberThousands(highestPrice)}`
+            }
+
+            // 售價
+            let itemNowPriceArr = product.specArr.map(spec => spec.ItemNowPrice * 1)
+            let lowestNowPrice = Math.min(...itemNowPriceArr)
+            let highestNowPrice = Math.max(...itemNowPriceArr)
+            // 售價都一樣
+            if(lowestNowPrice === highestNowPrice) product.nowPriceRange = vm.numberThousands(lowestNowPrice)
+            else product.nowPriceRange = `${vm.numberThousands(lowestNowPrice)} - ${vm.numberThousands(highestNowPrice)}`
+          }
+        })
 
         let searchArr = location.search.substring(1).split('&')
         let searchObj = {}
@@ -3095,10 +3088,6 @@ export default {
         let data2 = res.data.data2;
         for( let i = 0; i < data.length; i++){
           let p = data[i]; 
-
-          let lowestNowPrice = 0
-          let highestNowPrice = 0
-
           for(let k = 0; k < data2.length; k++){
             if(data2[k].ProductID == p.ID){
               if(!p.selectSpecIndex){
@@ -3109,30 +3098,24 @@ export default {
               }
               vm.$set(data2[k], 'buyQty', 0);
               p.specArr.push(data2[k]);
-
-              if(p.PriceType === 'multiPrice') {
-                let { ItemNowPrice } = data2[k]
-                if(!lowestNowPrice) {
-                  lowestNowPrice = ItemNowPrice
-                  highestNowPrice = ItemNowPrice
-                } else {
-                  if(ItemNowPrice > lowestNowPrice) lowestNowPrice = ItemNowPrice
-                  if(ItemNowPrice < highestNowPrice) highestNowPrice = ItemNowPrice
-
-                  if(highestNowPrice < 0) highestNowPrice = 0
-                }
-              }
             }
           }
           if( !p.specArr ){
             p.Qty = 0;
           }
-
-          if(p.PriceType === 'multiPrice') {
-            if(highestNowPrice === lowestNowPrice) p.nowPriceRange = vm.numberThousands(highestNowPrice)
-            else p.nowPriceRange = `${vm.numberThousands(highestNowPrice)} - ${vm.numberThousands(lowestNowPrice)}`
-          }
         }
+
+        // 多價格
+        data.forEach(addPriceItem => {
+          if(addPriceItem.PriceType === 'multiPrice') {
+            let itemNowPriceArr = addPriceItem.specArr.map(spec => spec.ItemNowPrice * 1)
+            let lowestNowPrice = Math.min(...itemNowPriceArr)
+            let highestNowPrice = Math.max(...itemNowPriceArr)
+            // 只有1規格 or 售價都一樣
+            if(lowestNowPrice === highestNowPrice) addPriceItem.nowPriceRange = vm.numberThousands(lowestNowPrice)
+            else addPriceItem.nowPriceRange = `${vm.numberThousands(lowestNowPrice)} - ${vm.numberThousands(highestNowPrice)}`
+          }
+        })
 
         vm.$set(item, 'addPrice', data);
         if(type2){
