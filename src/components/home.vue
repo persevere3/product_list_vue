@@ -2089,18 +2089,32 @@
 
       <div class="pages" v-if="pageFilterProduct.length !== 0">
         <ul>
-          <li :class="{'pageDisabled':currentPage===1}" @click="pageChange(currentPage-1)">
-            Previous
+          <li :class="{pageDisabled: currentPage == 1}" 
+              @click="pageChange(1)"
+          >
+            <i class="fa fa-angle-double-left" aria-hidden="true"></i>
           </li>
-    
-          <li v-for="page in totalPage" :key="`page_${page}`" 
-              :class="{'liActive':currentPage===page}"
-              @click="pageChange(page)">
-            {{page}}
+          <li :class="{pageDisabled: currentPage < 2}" 
+              @click="pageChange(currentPage - 1)"
+          >
+            <i class="fa-solid fa-chevron-left"></i>
           </li>
-    
-          <li :class="{'pageDisabled':currentPage===totalPage}" @click="pageChange(currentPage+1)">
-            Next
+          <li v-for="item in totalPage"
+              v-show="is_show_page(item, totalPage)"
+              :class="{liActive: currentPage === item}" 
+              @click="pageChange(item)"
+          >
+            {{item}}
+          </li>
+          <li :class="{pageDisabled: currentPage > totalPage - 1}" 
+              @click="pageChange(currentPage + 1)" 
+          > 
+            <i class="fa-solid fa-chevron-right"></i> 
+          </li>
+          <li :class="{pageDisabled: currentPage == totalPage}" 
+              @click="pageChange(totalPage)" 
+          > 
+            <i class="fa fa-angle-double-right" aria-hidden="true"></i> 
           </li>
         </ul>
       </div>
@@ -5087,6 +5101,24 @@ export default {
     pageChange(p){
       p = p < 1 ? 1 : (p > this.totalPage ? this.totalPage : p);
       this.currentPage = p;
+    },
+
+    // 
+    is_show_page(item, totalpage_num) {
+      let showpage_num = 5
+
+      if(totalpage_num < showpage_num + 1) {
+        return item < totalpage_num + 1
+      }
+      else if(this.currentPage < (showpage_num / 2)) {
+        return item < showpage_num + 1
+      }
+      else if(this.currentPage > totalpage_num - (showpage_num / 2)) {
+        return item > (totalpage_num - 5) 
+      }
+      else {
+        return item >= (this.currentPage - 2) && item <= (this.currentPage + 2)
+      }
     },
 
     unescapeHTML(a){
