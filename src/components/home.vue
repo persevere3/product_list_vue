@@ -1739,7 +1739,7 @@
             </div>
             <div class="price_and_delete">
               <!-- 多價格 favorite 主商品 info -->
-              <div class="price" v-if="item.priceType === 'onePrice'"> NT${{ item.NowPrice }} </div>
+              <div class="price" v-if="item.priceType === 'onePrice'"> NT${{ numberThousands(item.NowPrice) }} </div>
               <div class="price" v-else> NT${{ item.nowPriceRange }} </div>
               <div class="delete" @click.stop="toggleFavorite(item.ID)">
                 <i class="fas fa-trash-alt"></i>
