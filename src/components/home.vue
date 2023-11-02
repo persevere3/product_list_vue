@@ -758,7 +758,7 @@
                 <span v-if="bonus_array.length">
                   (<span v-if="!user_account" > 會員 </span>
                   <span> 訂單完成後 </span>
-                  <template v-for="(item, index) in bonus_array" :key="index">
+                  <template v-for="(item, index) in bonus_array">
                     <template v-if="item.shipping">
                       <template v-if="item.lower == 0">
                         ，消費即送 {{ item.shipping }}% 購物金
@@ -1429,7 +1429,7 @@
               <span v-if="bonus_array.length">
                 (<span v-if="!user_account" > 會員 </span>
                 <span> 訂單完成後 </span>
-                <template v-for="(item, index) in bonus_array" :key="index">
+                <template v-for="(item, index) in bonus_array">
                   <template v-if="item.shipping">
                     <template v-if="item.lower == 0">
                       ，消費即送 {{ item.shipping }}% 購物金
@@ -1731,7 +1731,7 @@
 
     <div class="favorite_container" v-show="showPage === 'main' && Object.keys(favorite).length" :class="{hover : is_favorite_hover}">
       <ul class="favorite_items">
-        <template v-for="item in favorite" :key="item.ID">
+        <template v-for="item in favorite">
           <li @click.stop="showFavorite(item.ID)">
             <div class="img_and_name">
               <div class="img" :style="{backgroundImage: `url(${item.Img1})`}"></div>
@@ -2620,7 +2620,7 @@ export default {
           vm.login(vm.getSite);
           return;
         }
-
+        console.log(res)
         vm.site = res.data.data[0];
         if(!vm.site){
           return
@@ -5364,13 +5364,10 @@ export default {
       return true
     }
   },
-  created(){
-    const vm = this;
-    vm.api = location.host;
-    vm.protocol = location.protocol;
-  },
   mounted(){
     let vm = this;
+    vm.api = location.host;
+    vm.protocol = location.protocol;
     vm.getSite();
     vm.innerHeight = window.innerHeight;
     window.onresize = () => {
