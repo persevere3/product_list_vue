@@ -1,16 +1,11 @@
-// demo, common, uniqm.com, uniqm.net
-let webVersion = 'demo'
-
 const VueSSRServerPlugin = require("vue-server-renderer/server-plugin")
 const VueSSRClientPlugin = require("vue-server-renderer/client-plugin")
  
-//环境变量，决定入口是客户端还是服务端
+// 环境变量，决定入口是客户端还是服务端
 const TARGRT_NODE = process.env.WEBPACK_TARGET === "node"
 const target = TARGRT_NODE ? "server" : "client"
 
 module.exports = {
-  // publicPath: process.env.NODE_ENV === 'production' && (webVersion != 'uniqm.net') ? '/cart' : '/',
-
   css: {
     extract: false
   },
