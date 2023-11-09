@@ -2669,8 +2669,60 @@ export default {
       });
     },
 
-    getStore() {
+    getSeo() {
       const vm = this;
+      return new Promise((resolve) => {
+        // search
+        let search = location.search.substring(1)
+        let searchObj = {
+          id: '0',
+          store: '0'
+        }
+        if(search) {
+          let searchArr = search.split('&')
+          for(let item of searchArr) {
+            searchObj[item.split('=')[0]] = item.split('=')[1]
+          }
+        }
+
+        // pagetype
+        let pagetype = 1
+        if(location.pathname.indexOf('cart') > -1) pagetype = 0
+        else if (location.pathname === '/' || location.pathname.indexOf('index') > -1)  pagetype = 1
+        else if (location.pathname.indexOf('allProducts') > -1 || location.pathname.indexOf('category') > -1)  pagetype = 3
+        else if (location.pathname.indexOf('contact') > -1 )  pagetype = 5
+        else if (location.pathname.indexOf('rich') > -1 ) {
+          if(searchObj['cid'] == 0) pagetype = 3
+          else if(searchObj['cid'] == 1 || searchObj['cid'] == 2) pagetype = 4
+          else if(searchObj['cid'] == 3) pagetype = 2
+        }
+
+        const url = `${vm.protocol}//${vm.api}/interface/web/GetTitle`;
+        let o = `id=${searchObj['id']}&pagetype=${pagetype}&webid=${searchObj['store']}&WebPreview=${this.site.WebPreview}`;
+        const config = {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        };
+        vm.$http.post(url, o, config).then((res) => {
+          if(res.data.errormessage){
+            vm.login(vm.getSeo);
+            return;
+          }
+          res.data.data[0] ? document.title = res.data.data[0].title : ''
+          resolve()
+        })
+        .catch((err) => { 
+          console.error(err);
+          vm.login(vm.getSeo);
+          resolve()
+        });
+      })  
+    },
+    async getStore() {
+      const vm = this;
+
+      await vm.getSeo();
 
       const url = `${vm.protocol}//${vm.api}/interface/store/getStore`;
       let o = `Preview=${this.site.Preview}`;
@@ -2737,7 +2789,7 @@ export default {
 
         vm.store = store;
         vm.arrangement = vm.store.Sort || "0";
-        document.title = vm.store.Name;
+        document.title.trim() ? '' : document.title = vm.store.Name
       })
       .catch((err) => { 
         console.error(err);
