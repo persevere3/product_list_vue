@@ -2131,6 +2131,7 @@
           </li>
         </ul>
       </div>
+      <div style="text-align: center" v-if="webVersion == 'uniqm.net'"> 智聯微網科技有限公司 42872739 </div>
     </div>
 
     <div class="user_modal_container" v-if="is_userModal">
