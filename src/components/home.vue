@@ -2943,9 +2943,9 @@ export default {
         }
 
         // 超商取貨付款
-        let storeid = searchObj['CVSStoreID']
-        let storename = searchObj['CVSStoreName']
-        let storeaddress = searchObj['CVSAddress']
+        let storeid = searchObj['CVSStoreID'] || searchObj['storeid']
+        let storename = searchObj['CVSStoreName'] || searchObj['storename']
+        let storeaddress = searchObj['CVSAddress'] || searchObj['storeaddress']
 
         // spid
         let spid = searchObj['spid'];
