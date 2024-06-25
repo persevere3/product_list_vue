@@ -118,7 +118,7 @@
               <div class="content">
                 <div class="title">{{item.Name}}</div>
                 <!-- 多價格 singleProduct 加價購 info -->
-                <template v-if="item.PriceType === 'onePrice'">
+                <template v-if="item.priceType === 'onePrice'">
                   <div class="price">NT$ {{ numberThousands(item.Price) }}</div>
                 </template>
                 <template v-else>
@@ -298,7 +298,7 @@
                               <div class="specText" :class="{specTextShow:cartsSpecCheckedId == spec2.ID}"> {{spec2.Name}} </div>  
                             </div>
                             <!-- 多價格 singleProduct table 加價購 單價 -->
-                            <div class="td price" v-if="item2.PriceType === 'onePrice'">  NT$ {{numberThousands(item2.Price)}} </div>
+                            <div class="td price" v-if="item2.priceType === 'onePrice'">  NT$ {{numberThousands(item2.Price)}} </div>
                             <div class="td price" v-else>  NT$ {{ spec2.Price }} </div>
 
                             <div class="td qty">
@@ -312,7 +312,7 @@
                               <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
                             </div>
                             <!-- 多價格 singleProduct table 加價購 小計 -->
-                            <div class="td subtotal" v-if="item2.PriceType === 'onePrice'"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{numberThousands(item2.Price * (isNaN(spec2.buyQty) ? 0 : spec2.buyQty))}} </div>  </div>
+                            <div class="td subtotal" v-if="item2.priceType === 'onePrice'"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{numberThousands(item2.Price * (isNaN(spec2.buyQty) ? 0 : spec2.buyQty))}} </div>  </div>
                             <div class="td subtotal" v-else> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{numberThousands(spec2.Price * (isNaN(spec2.buyQty) ? 0 : spec2.buyQty))}} </div>  </div>
 
                             <div class="td delete">
@@ -970,7 +970,7 @@
                             <div class="specText" :class="{specTextShow:cartsSpecCheckedId == spec2.ID}"> {{spec2.Name}} </div>  
                           </div>
                           <!-- 多價格 cart table 加價購 單價 -->
-                          <div class="td price" v-if="item2.PriceType === 'onePrice'">  NT$ {{ numberThousands(item2.Price) }} </div>
+                          <div class="td price" v-if="item2.priceType === 'onePrice'">  NT$ {{ numberThousands(item2.Price) }} </div>
                           <div class="td price" v-else>  NT$ {{ numberThousands(spec2.ItemNowPrice) }} </div>
 
                           <div class="td qty">
@@ -984,7 +984,7 @@
                             <div class="discontinued" v-show="store.Enable === '0'">停售中</div>
                           </div>
                           <!-- 多價格 cart table 加價購 小計 -->
-                          <div class="td subtotal" v-if="item2.PriceType === 'onePrice'"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{numberThousands(item2.Price * (isNaN(spec2.buyQty) ? 0 : spec2.buyQty))}} </div>  </div>
+                          <div class="td subtotal" v-if="item2.priceType === 'onePrice'"> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{numberThousands(item2.Price * (isNaN(spec2.buyQty) ? 0 : spec2.buyQty))}} </div>  </div>
                           <div class="td subtotal" v-else> <div class="priceTitle">小計</div> <div class="priceText"> NT$ {{numberThousands(spec2.ItemNowPrice * (isNaN(spec2.buyQty) ? 0 : spec2.buyQty))}} </div>  </div>
                           <div class="td delete">
                             <div class="deleteButton" @click="getAmount( 3,  spec2.ID, updateCartsAddpriceQty_spec, [item, index2, 0, specIndex2], item.ID); ">
@@ -1646,7 +1646,7 @@
               <div class="content">
                 <div class="title">{{item.Name}}</div>
                 <!-- 多價格 selectProduct 加價購 info -->
-                <template v-if="item.PriceType === 'onePrice'">
+                <template v-if="item.priceType === 'onePrice'">
                   <div class="price">NT$ {{ numberThousands(item.Price) }}</div>
                 </template>
                 <template v-else>
@@ -2899,6 +2899,10 @@ export default {
 
         // 多價格
         vm.products.forEach(product => {
+          product.PriceType? product.priceType = product.PriceType : ''
+        })
+
+        vm.products.forEach(product => {
           if(product.priceType === 'multiPrice') {
             // 建議售價
             let itemPriceArr = product.specArr.map(spec => spec.ItemPrice * 1)
@@ -3121,7 +3125,11 @@ export default {
 
         // 多價格
         data.forEach(addPriceItem => {
-          if(addPriceItem.PriceType === 'multiPrice') {
+          addPriceItem.PriceType? addPriceItem.priceType = addPriceItem.PriceType : ''
+        })
+
+        data.forEach(addPriceItem => {
+          if(addPriceItem.priceType === 'multiPrice') {
             let itemNowPriceArr = addPriceItem.specArr.map(spec => spec.ItemNowPrice * 1)
             let lowestNowPrice = Math.min(...itemNowPriceArr)
             let highestNowPrice = Math.max(...itemNowPriceArr)
