@@ -838,7 +838,7 @@
             </div>
             
             <div class="buttonGroup">
-              <div class="button" @click="stepIndex = 1; getProducts()">上一步</div>
+              <div class="button" @click="stepIndex = 1; ajaxProducts()">上一步</div>
               <div class="button" @click="checkOrder()"><i  v-show="orderIng" class="fas fa-spinner fa-spin" style="margin-right: 5px"></i>完成訂單</div>
             </div>
           </div>
@@ -859,7 +859,7 @@
 
     <div class="cart" v-if="showPage === 'cart'" :style="`height:${innerHeight}px`">
       <div class="background" ref="cartScroll">
-        <div class="close"> <i class="fa fa-times" aria-hidden="true" @click="selectProduct = {}; showPage = 'main'; stepIndex = 1; getProducts();"></i> </div>
+        <div class="close"> <i class="fa fa-times" aria-hidden="true" @click="selectProduct = {}; showPage = 'main'; stepIndex = 1; ajaxProducts();"></i> </div>
         <div class="step">
           <div class="stepItem" :class="{stepItemActive:stepIndex === 1}">
             <div class="icon" >1</div>
@@ -1509,7 +1509,7 @@
           </div>
           
           <div class="buttonGroup">
-            <div class="button" @click="stepIndex = 1; getProducts()">上一步</div>
+            <div class="button" @click="stepIndex = 1; ajaxProducts()">上一步</div>
             <div class="button" @click="checkOrder()"><i  v-show="orderIng" class="fas fa-spinner fa-spin" style="margin-right: 5px"></i>完成訂單</div>
           </div>
         </div>
@@ -1616,7 +1616,7 @@
                 <div class="discontinued" v-show="selectProduct.Enable == 1 && selectProduct.Amount == 0">暫無庫存</div>
               </template>
 
-              <div class="goToCart" v-if="(selectProduct.specArr && selectProduct.selectSpecIndex != -1 && selectProduct.selectSpecItem.buyQty != 0 ) || (!selectProduct.specArr && selectProduct.buyQty != 0)" @click="getProducts(); showPage='cart'">
+              <div class="goToCart" v-if="(selectProduct.specArr && selectProduct.selectSpecIndex != -1 && selectProduct.selectSpecItem.buyQty != 0 ) || (!selectProduct.specArr && selectProduct.buyQty != 0)" @click="ajaxProducts(); showPage='cart'">
                 加入購物車
                 <i class="fa fa-shopping-cart" aria-hidden="true"></i>
               </div>
@@ -1715,7 +1715,7 @@
     <div class="flyImg" :style="`top: ${flyImgTop}px; left: ${flyImgLeft}px`" v-if="pageFilterProduct[flyImgIndex]" v-show="showflyImg">
       <img :src="pageFilterProduct[flyImgIndex].Img1" alt="">
     </div>
-    <div class="cartIcon" :class="{cartIconScale:cartIconScale}"  v-show="showPage === 'main'" @click="getProducts(); showPage = 'cart';">
+    <div class="cartIcon" :class="{cartIconScale:cartIconScale}"  v-show="showPage === 'main'" @click="ajaxProducts(); showPage = 'cart';">
       <i class="fa fa-shopping-cart fa-2x" aria-hidden="true"></i>
       <div class="num">
         {{cartsLength}}
@@ -2161,6 +2161,8 @@ export default {
   },
   data() {
     return {
+      cartData: {},
+
       site: {},
       store: {},
       categories: [],
@@ -2611,34 +2613,84 @@ export default {
       })
       .catch((err) => { console.error(err) });
     },
-    getSite() {
+
+    getInitialWebQuery() {
+      // search
+      let search = location.search.substring(1)
+      let searchObj = {
+        id: "0",
+        store: "0"
+      }
+      if (search) {
+        let searchArr = search.split("&")
+        for (let item of searchArr) {
+          searchObj[item.split("=")[0]] = item.split("=")[1]
+        }
+      }
+
+      // pagetype
+      let pagetype = 1
+      if (location.pathname.indexOf("cart") > -1) pagetype = 0
+      else if (
+        location.pathname === "/" ||
+        location.pathname.indexOf("index") > -1
+      )
+        pagetype = 1
+      else if (
+        location.pathname.indexOf("allProducts") > -1 ||
+        location.pathname.indexOf("category") > -1
+      )
+        pagetype = 3
+      else if (location.pathname.indexOf("contact") > -1) pagetype = 5
+      else if (location.pathname.indexOf("rich") > -1) {
+        if (searchObj["cid"] == 0) pagetype = 3
+        else if (searchObj["cid"] == 1 || searchObj["cid"] == 2) pagetype = 4
+        else if (searchObj["cid"] == 3) pagetype = 2
+      }
+
+      return { searchObj, pagetype }
+    },
+    addQuery (url, json) {
+      url += `?`;
+      for (const [key, value] of Object.entries(json)) {
+        url += `${key}=${value}&`;
+      }
+      return url;
+    },
+    // https://demo.uniqcarttest.com/interface/store/InitialStore?storepreview=1
+    initialCart() {
       const vm = this;
 
-      const url = `${vm.protocol}//${vm.api}/interface/store/GetSite`;
+      let { searchObj } = vm.getInitialWebQuery()
+      let data = {
+        storepreview: searchObj.preview || 1,
+      }
+
+      let url = `${vm.protocol}//${vm.api}/interface/store/InitialStore`;
+      url = this.addQuery(url, data)
+
       this.$http.get(url).then((res) => {
         if(res.data.errormessage){
-          vm.login(vm.getSite);
+          vm.login(vm.initialCart);
           return;
         }
 
-        vm.site = res.data.data[0];
-        if(!vm.site){
-          return
-        }
+        vm.cartData = res.data
+
+        vm.site = vm.cartData.GetSite.data[0];
+        if(!vm.site.Site) return
 
         localStorage.setItem('site', JSON.stringify(vm.site));
 
         // Line 登入
-        let account = location.search.split('account=')[1] && 
-        location.search.split('account=')[1].split('&')[0];
+        let account = searchObj.account
         if(account) {
           vm.user_account = account
           localStorage.setItem('user_account', vm.user_account)
         }
 
         // Line 綁定
-        let result = location.search.split('result=')[1] && 
-        location.search.split('result=')[1].split('&')[0];
+        let result = searchObj.result
         if(result) {
           result = JSON.parse(decodeURI(result))
           if(!result.status) alert(result.msg)
@@ -2657,7 +2709,6 @@ export default {
         }
 
         vm.getStore();
-        vm.getStore2();
         vm.getCategories();
         vm.getProducts();
 
@@ -2665,11 +2716,92 @@ export default {
       })
       .catch((err) => {
         console.error(err);
-        vm.login(vm.getSite);
+        vm.login(vm.initialCart);
       });
     },
 
+    storeHandler(store, isGA) {
+      let vm = this
+
+      store.paymethodOrder = {}
+      if(store.OrderPaymethod) {
+        store.OrderPaymethod = JSON.parse(store.OrderPaymethod)
+        store.OrderPaymethod.forEach(item => {
+          store.paymethodOrder[item.name] = parseInt(item.order)
+        })
+      }
+      let CVSSetting = JSON.parse(store.CVSSetting)
+
+      if(store.ECStatus == 0) {
+        for(let key in CVSSetting) {
+          if(key.indexOf('Shipping') > -1) {
+            CVSSetting[key] = false
+          }
+        }
+      }
+      for(let key in CVSSetting) {
+        if(key.indexOf('Shipping') > -1) continue
+        let mart = key.replace('C2CC', '').replace('C2C', '').replace('FREEZE', '').replace('Delivery', '')
+        if(!CVSSetting[`${mart}Shipping`]) CVSSetting[key] = false
+        store[key] = CVSSetting[key]
+      }
+      console.log(store)
+
+      /*
+        FAMI
+        FAMIC2C
+        FAMIC2CDelivery
+        FAMIDelivery
+        FAMIShipping
+
+        HILIFE
+        HILIFEC2C
+        HILIFEC2CDelivery
+        HILIFEDelivery
+        HILIFEShipping
+        
+        OKMARTC2C
+        OKMARTC2CDelivery
+        OKMARTShipping
+        
+        UNIMART
+        UNIMARTC2C
+        UNIMARTC2CDelivery
+        UNIMARTDelivery
+        UNIMARTFREEZE
+        UNIMARTFREEZEDelivery
+        UNIMARTShipping
+      */
+
+      vm.store = store;
+      vm.arrangement = vm.store.Sort || "0";
+      document.title = vm.store.Name;
+
+      // GA
+      if(isGA) {
+        let GAText = vm.store.GA;
+
+        if(GAText.indexOf('GTM-') > -1) {
+          let GTMID = GAText.split('GTM-')[1].split('\')')[0]
+
+          let noscript = document.createElement('noscript');
+          noscript.setAttribute('src', `https://www.googletagmanager.com/ns.html?id=GTM-${GTMID}`);
+          noscript.setAttribute('height', '0');
+          noscript.setAttribute('width', '0');
+          noscript.setAttribute('style', 'display:none; visibility:hidden');
+
+          document.querySelector('body').insertBefore(noscript, document.querySelector('#app'));
+        }
+
+        vm.appendScript(GAText, 'head');
+      }
+    },
     getStore() {
+      const vm = this;
+      let store = vm.cartData.GetStore.data[0]
+      vm.storeHandler(store, 'GA')
+    },
+    ajaxStore() {
       const vm = this;
 
       const url = `${vm.protocol}//${vm.api}/interface/store/getStore`;
@@ -2681,69 +2813,19 @@ export default {
       };
       this.$http.post(url, o, config).then((res) => {
         if(res.data.errormessage){
-          vm.login(vm.getStore);
+          vm.login(vm.ajaxStore);
           return;
         }
         let store = res.data.data[0]
-        store.paymethodOrder = {}
-        if(store.OrderPaymethod) {
-          store.OrderPaymethod = JSON.parse(store.OrderPaymethod)
-          store.OrderPaymethod.forEach(item => {
-            store.paymethodOrder[item.name] = parseInt(item.order)
-          })
-        }
-        let CVSSetting = JSON.parse(store.CVSSetting)
 
-        if(store.ECStatus == 0) {
-          for(let key in CVSSetting) {
-            if(key.indexOf('Shipping') > -1) {
-              CVSSetting[key] = false
-            }
-          }
-        }
-        for(let key in CVSSetting) {
-          if(key.indexOf('Shipping') > -1) continue
-          let mart = key.replace('C2CC', '').replace('C2C', '').replace('FREEZE', '').replace('Delivery', '')
-          if(!CVSSetting[`${mart}Shipping`]) CVSSetting[key] = false
-          store[key] = CVSSetting[key]
-        }
-        console.log(store)
-
-        /*
-          FAMI
-          FAMIC2C
-          FAMIC2CDelivery
-          FAMIDelivery
-          FAMIShipping
-
-          HILIFE
-          HILIFEC2C
-          HILIFEC2CDelivery
-          HILIFEDelivery
-          HILIFEShipping
-          
-          OKMARTC2C
-          OKMARTC2CDelivery
-          OKMARTShipping
-          
-          UNIMART
-          UNIMARTC2C
-          UNIMARTC2CDelivery
-          UNIMARTDelivery
-          UNIMARTFREEZE
-          UNIMARTFREEZEDelivery
-          UNIMARTShipping
-        */
-
-        vm.store = store;
-        vm.arrangement = vm.store.Sort || "0";
-        document.title = vm.store.Name;
+        vm.storeHandler(store)
       })
       .catch((err) => { 
         console.error(err);
-        vm.login(vm.getStore);
+        vm.login(vm.ajaxStore);
       });
     },
+
     appendScript(text, tag){
       if(!text){
         return
@@ -2782,59 +2864,21 @@ export default {
         document.querySelector(tag).appendChild(script_arr[i])
       }
     },
-    getStore2(){
-      const vm = this;
 
-      const url = `${vm.protocol}//${vm.api}/interface/web/getStore`;
-
-      let site_webPreview = (JSON.parse(localStorage.getItem('site')).WebPreview || '') ;
-
-      let formData = new FormData();
-      formData.append("WebPreview", site_webPreview);
-
-      const config = {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      };
-
-      this.$http.post(url, formData, config).then((res) => {
-        if(res.data.errormessage){
-          vm.login(vm.getStore2);
-          return;
-        }
-
-        let store2 = res.data.data[0]
-        let GAText = store2.GA;
-
-        if(GAText.indexOf('GTM-') > -1) {
-          let GTMID = GAText.split('GTM-')[1].split('\')')[0]
-
-          let noscript = document.createElement('noscript');
-          noscript.setAttribute('src', `https://www.googletagmanager.com/ns.html?id=GTM-${GTMID}`);
-          noscript.setAttribute('height', '0');
-          noscript.setAttribute('width', '0');
-          noscript.setAttribute('style', 'display:none; visibility:hidden');
-
-          document.querySelector('body').insertBefore(noscript, document.querySelector('#app'));
-        }
-
-        vm.appendScript(GAText, 'head');
-      })
-      .catch((err) => { 
-        console.error(err);
-        vm.login(vm.getStore2);
-      });
-    },
     getCategories() {
       const vm = this;
+      vm.categories =[{ID: "0", Name: "所有分類商品", Show: "1"}, ...vm.cartData.GetCategory.data];
+    },
+    ajaxCategories() {
+      const vm = this;
 
-      let o = `Preview=${this.site.Preview}`;
       const config = {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       };
+
+      let o = `Preview=${this.site.Preview}`;
 
       const url = `${vm.protocol}//${vm.api}/interface/store/GetCategory`;
       this.$http.post(url, o, config).then((res) => {
@@ -2842,169 +2886,175 @@ export default {
       })
       .catch((err) => { console.error(err) });
     },
-    getProducts(type) {
+
+    productsHandler(products, type) {
       const vm = this;
 
-      let o = `Preview=${this.site.Preview}`;
+      vm.products = products.data;
+      let data2 =  products.data2;
+      for(let i = 0; i < vm.products.length; i++){
+        let p = vm.products[i];
+        let f = false;
+
+        for(let k = 0; k < data2.length; k++) {
+          if(data2[k].ProductID == p.ID){
+            f = true;
+
+            if(!p.selectSpecIndex){
+              vm.$set(p, 'selectSpecIndex', '-1');
+              vm.$set(p, 'selectSpecItem', {});
+              vm.$set(p, 'specArr', []);
+            }
+
+            vm.$set(data2[k], 'buyQty', 0);
+            p.specArr.push(data2[k]);
+          }
+        }
+        if(!f) {
+          p.buyQty = 0;
+        }
+
+        vm.$set(p, 'mainImgIndex', 0);
+        let imgArr = [p.Img1, p.Img2, p.Img3, p.Img4, p.Img5].filter(img => img);
+        vm.$set(p, 'imgArr', imgArr);
+        vm.$set(p, 'categoryArr', [p.Category1, p.Category2, p.Category3, p.Category4, p.Category5]);
+        let c = 0;
+        for(let j = 0; j < p.imgArr.length; j++){
+          if(p.imgArr[j]){
+            c++
+          }
+        }
+        vm.$set(p, 'allPicLength', c);
+        vm.$set(p, 'isShowOption', 0);
+      }
+
+      // 多價格
+      vm.products.forEach(product => {
+        product.PriceType? product.priceType = product.PriceType : ''
+      })
+
+      vm.products.forEach(product => {
+        if(product.priceType === 'multiPrice') {
+          // 建議售價
+          let itemPriceArr = product.specArr.map(spec => spec.ItemPrice * 1)
+          let lowestPrice = Math.min(...itemPriceArr)
+          let highestPrice = Math.max(...itemPriceArr)
+          // 所有規格都有填建議售價
+          if(lowestPrice > 0 && highestPrice > 0) {        
+            // 建議售價都一樣
+            if(lowestPrice === highestPrice) product.priceRange = vm.numberThousands(lowestPrice)
+            else product.priceRange = `${vm.numberThousands(lowestPrice)} - ${vm.numberThousands(highestPrice)}`
+          }
+
+          // 售價
+          let itemNowPriceArr = product.specArr.map(spec => spec.ItemNowPrice * 1)
+          let lowestNowPrice = Math.min(...itemNowPriceArr)
+          let highestNowPrice = Math.max(...itemNowPriceArr)
+          // 售價都一樣
+          if(lowestNowPrice === highestNowPrice) product.nowPriceRange = vm.numberThousands(lowestNowPrice)
+          else product.nowPriceRange = `${vm.numberThousands(lowestNowPrice)} - ${vm.numberThousands(highestNowPrice)}`
+        }
+      })
+
+      let { searchObj } = vm.getInitialWebQuery()
+
+      // RtnMsg
+      let RtnMsg = searchObj['RtnMsg']
+      if(RtnMsg && RtnMsg == 'Succeeded') {
+        window.history.replaceState({}, document.title, location.pathname);
+        if(vm.user_account) {
+          localStorage.removeItem(`${vm.site.Name}@${vm.user_account}@carts`);
+        }
+        else {
+          localStorage.removeItem(`${vm.site.Name}@carts`);
+        }
+        vm.showMessage('已收到您的付款！', true)
+      }
+
+      // 超商取貨付款
+      let storeid = searchObj['CVSStoreID'] || searchObj['storeid']
+      let storename = searchObj['CVSStoreName'] || searchObj['storename']
+      let storeaddress = searchObj['CVSAddress'] || searchObj['storeaddress']
+
+      // spid
+      let spid = searchObj['spid'];
+      if(spid) {
+        for(let i = 0; i < vm.products.length; i++) {
+          if(vm.products[i].ID == spid) {
+            vm.selectProduct = vm.products[i]; 
+            vm.selectIndex = i;
+            vm.showPage = 'singleProduct';
+
+            // 7-11 取貨付款
+            vm.getConvenienceStore(storeid, storename, storeaddress, spid)
+            
+            vm.getCarts(type, '1');
+
+            vm.productCompleted = true;
+
+            return
+          }
+        }
+      }
+
+      vm.getFavorite();
+      vm.category = '0';
+      vm.getCarts(type, '1');
+
+      // id
+      let id = searchObj['id'];
+      if(id) {
+        for(let i = 0; i < vm.products.length; i++) {
+          if(vm.products[i].ID == id) {
+            vm.showSelect( vm.products[i], i);
+          }
+        }
+      }
+
+      // open_carts
+      let is_open_carts = searchObj['open_carts']
+      if(is_open_carts){
+        window.history.replaceState({}, document.title, location.pathname);
+        vm.showPage = 'cart'
+      }
+
+      // 超商取貨付款
+      vm.getConvenienceStore(storeid, storename, storeaddress)
+
+      vm.$nextTick(() => {
+        vm.productCompleted = true;
+      })
+    },
+    getProducts(type) {
+      const vm = this;
+      vm.productsHandler(vm.cartData.StoreLogin, type)
+    },
+    ajaxProducts(type) {
+      const vm = this;
+
       const config = {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       };
 
+      let o = `Preview=${this.site.Preview}`;
+
       const url = `${vm.protocol}//${vm.api}/interface/store/storeLogin`;
       this.$http.post(url, o, config).then( res => {
         if(res.data.errormessage){
-          vm.login(vm.getProducts, [type]);
+          vm.login(vm.ajaxProducts, [type]);
           return;
         }
 
-        vm.products = res.data.data;
-        let data2 =  res.data.data2;
-        for(let i = 0; i < vm.products.length; i++){
-          let p = vm.products[i];
-          let f = false;
-
-          for(let k = 0; k < data2.length; k++) {
-            if(data2[k].ProductID == p.ID){
-              f = true;
-
-              if(!p.selectSpecIndex){
-                vm.$set(p, 'selectSpecIndex', '-1');
-                vm.$set(p, 'selectSpecItem', {});
-                vm.$set(p, 'specArr', []);
-              }
-
-              vm.$set(data2[k], 'buyQty', 0);
-              p.specArr.push(data2[k]);
-            }
-          }
-          if(!f) {
-            p.buyQty = 0;
-          }
-
-          vm.$set(p, 'mainImgIndex', 0);
-          let imgArr = [p.Img1, p.Img2, p.Img3, p.Img4, p.Img5].filter(img => img);
-          vm.$set(p, 'imgArr', imgArr);
-          vm.$set(p, 'categoryArr', [p.Category1, p.Category2, p.Category3, p.Category4, p.Category5]);
-          let c = 0;
-          for(let j = 0; j < p.imgArr.length; j++){
-            if(p.imgArr[j]){
-              c++
-            }
-          }
-          vm.$set(p, 'allPicLength', c);
-          vm.$set(p, 'isShowOption', 0);
-        }
-
-        // 多價格
-        vm.products.forEach(product => {
-          product.PriceType? product.priceType = product.PriceType : ''
-        })
-
-        vm.products.forEach(product => {
-          if(product.priceType === 'multiPrice') {
-            // 建議售價
-            let itemPriceArr = product.specArr.map(spec => spec.ItemPrice * 1)
-            let lowestPrice = Math.min(...itemPriceArr)
-            let highestPrice = Math.max(...itemPriceArr)
-            // 所有規格都有填建議售價
-            if(lowestPrice > 0 && highestPrice > 0) {        
-              // 建議售價都一樣
-              if(lowestPrice === highestPrice) product.priceRange = vm.numberThousands(lowestPrice)
-              else product.priceRange = `${vm.numberThousands(lowestPrice)} - ${vm.numberThousands(highestPrice)}`
-            }
-
-            // 售價
-            let itemNowPriceArr = product.specArr.map(spec => spec.ItemNowPrice * 1)
-            let lowestNowPrice = Math.min(...itemNowPriceArr)
-            let highestNowPrice = Math.max(...itemNowPriceArr)
-            // 售價都一樣
-            if(lowestNowPrice === highestNowPrice) product.nowPriceRange = vm.numberThousands(lowestNowPrice)
-            else product.nowPriceRange = `${vm.numberThousands(lowestNowPrice)} - ${vm.numberThousands(highestNowPrice)}`
-          }
-        })
-
-        let searchArr = location.search.substring(1).split('&')
-        let searchObj = {}
-        searchArr.forEach(item => {
-          let key = item.split('=')[0];
-          let value = item.split('=')[1]
-          if(key && value) searchObj[key] = value
-        })
-
-        // RtnMsg
-        let RtnMsg = searchObj['RtnMsg']
-        if(RtnMsg && RtnMsg == 'Succeeded') {
-          window.history.replaceState({}, document.title, location.pathname);
-          if(vm.user_account) {
-            localStorage.removeItem(`${vm.site.Name}@${vm.user_account}@carts`);
-          }
-          else {
-            localStorage.removeItem(`${vm.site.Name}@carts`);
-          }
-          vm.showMessage('已收到您的付款！', true)
-        }
-
-        // 超商取貨付款
-        let storeid = searchObj['CVSStoreID'] || searchObj['storeid']
-        let storename = searchObj['CVSStoreName'] || searchObj['storename']
-        let storeaddress = searchObj['CVSAddress'] || searchObj['storeaddress']
-
-        // spid
-        let spid = searchObj['spid'];
-        if(spid) {
-          for(let i = 0; i < vm.products.length; i++) {
-            if(vm.products[i].ID == spid) {
-              vm.selectProduct = vm.products[i]; 
-              vm.selectIndex = i;
-              vm.showPage = 'singleProduct';
-
-              // 7-11 取貨付款
-              vm.getConvenienceStore(storeid, storename, storeaddress, spid)
-              
-              vm.getCarts(type, '1');
-
-              vm.productCompleted = true;
-
-              return
-            }
-          }
-        }
-
-        vm.getFavorite();
-        vm.category = '0';
-        vm.getCarts(type, '1');
-
-        // id
-        let id = searchObj['id'];
-        if(id) {
-          for(let i = 0; i < vm.products.length; i++) {
-            if(vm.products[i].ID == id) {
-              vm.showSelect( vm.products[i], i);
-            }
-          }
-        }
-
-        // open_carts
-        let is_open_carts = searchObj['open_carts']
-        if(is_open_carts){
-          window.history.replaceState({}, document.title, location.pathname);
-          vm.showPage = 'cart'
-        }
-
-        // 超商取貨付款
-        vm.getConvenienceStore(storeid, storename, storeaddress)
-
-        vm.$nextTick(() => {
-          vm.productCompleted = true;
-        })
+        vm.productsHandler(res.data, type)
       })
       .catch((err) => {
         console.error(err);
-        vm.login(vm.getProducts, [type]);
+        vm.login(vm.ajaxProducts, [type]);
       });
     },
+
     // 超商取貨付款
     getConvenienceStore(storeid, storename, storeaddress, spid) {
       let vm = this
@@ -3703,7 +3753,7 @@ export default {
         this.discountCode = '';
         this.useCodeSuccess = '';
         this.stepIndex= 1;
-        this.getProducts();
+        this.ajaxProducts();
         return
       }
 
@@ -3718,8 +3768,8 @@ export default {
 
       this.productCompleted = false;
 
-      this.getCategories();
-      this.getProducts();
+      this.ajaxCategories();
+      this.ajaxProducts();
       this.category = '0';
       this.currentPage = 1;
     },
@@ -4288,7 +4338,7 @@ export default {
 
       // 下架
       if(!data){
-        vm.getProducts();
+        vm.ajaxProducts();
         vm.showMessage(`抱歉，${itemStr}已下架`, false);
         return 0;
       }
@@ -4947,8 +4997,8 @@ export default {
 
     // carts step
     stepOneToTwo(){
-      this.getStore();
-      this.getProducts('1');
+      this.ajaxStore();
+      this.ajaxProducts('1');
       let newUser_account = localStorage.getItem('user_account');
       if(newUser_account) this.getUserInfo();
       if(newUser_account != this.user_account) {
@@ -5379,7 +5429,7 @@ export default {
   },
   mounted(){
     let vm = this;
-    vm.getSite();
+    vm.initialCart();
     vm.innerHeight = window.innerHeight;
     window.onresize = () => {
       vm.innerHeight = window.innerHeight;
