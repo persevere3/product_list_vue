@@ -312,6 +312,13 @@ input:focus, textarea:focus, select:focus{
         .price{
           font-size: 18px;
         }
+        .productDiscount {
+          display: inline-block;
+          padding: 3px 6px;
+          margin-bottom: 15px;
+          background: rgb(238, 77, 45, .8);
+          color: #fff;
+        }
         .spec{
           width: 100%;
           margin-bottom: 5px;
@@ -510,6 +517,7 @@ input:focus, textarea:focus, select:focus{
     }
     .addPrice{
       >.title{
+        margin-bottom: 10px;
         height: 30px;
         line-height: 30px;
         border-bottom: 1px solid #ccc;
@@ -1156,7 +1164,7 @@ input:focus, textarea:focus, select:focus{
           color: red;
         }
       }
-      .total{
+      .total, .productDiscountList{
         margin-bottom: 20px;
         background-color: rgba(63, 135, 166, 0.3);
         border-radius: 5px;
@@ -1997,6 +2005,16 @@ input:focus, textarea:focus, select:focus{
           background-position: center;
           position: relative;
           cursor: pointer;
+
+          .productDiscount {
+            display: inline-block;
+            padding: 3px 6px;
+            background: rgb(238, 77, 45, .8);
+            color: #fff;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+          }
           .detailButton{
             position: absolute;
             width: 100%;

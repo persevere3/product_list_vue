@@ -48,6 +48,8 @@
                   <div class="price">NT$ {{ selectProduct.nowPriceRange }}</div>
                 </template>
               </template>
+
+              <div class="productDiscount" v-if="selectProduct.productDiscount === 'FULL'"> 滿 {{ selectProduct.fullAmount }} 送 {{ selectProduct.fullRatio }} </div>
               
               <div class="title"> <div v-html="unescapeEnter(selectProduct.Content)"></div> </div>
 
@@ -368,6 +370,15 @@
                 <div class="button" @click="unDiscount">取消</div>
               </div>
               <div class="discountError" v-if="isDiscountMessage">{{discountMessage}}</div>
+            </div>
+
+            <div class="productDiscountList" v-show="productDiscountList.length">
+              <ul>
+                <li v-for="item in productDiscountList" :key="item.ID">
+                  <div class="before"> {{ item.Name }} (滿 {{item.fullAmount}} 送 {{item.fullRatio}}) </div>
+                  <div class="after"> {{ item.productDiscountText }} </div>
+                </li>
+              </ul>
             </div>
 
             <div class="total" v-show="total">
@@ -1041,6 +1052,15 @@
             <div class="discountError" v-if="isDiscountMessage">{{discountMessage}}</div>
           </div>
 
+          <div class="productDiscountList" v-show="productDiscountList.length">
+            <ul>
+              <li v-for="item in productDiscountList" :key="item.ID">
+                <div class="before"> {{ item.Name }} (滿 {{item.fullAmount}} 送 {{item.fullRatio}}) </div>
+                <div class="after"> {{ item.productDiscountText }} </div>
+              </li>
+            </ul>
+          </div>
+
           <div class="total" v-show="total">
             <ul>
               <li>
@@ -1570,6 +1590,8 @@
                   <div class="price">NT$ {{ selectProduct.nowPriceRange }}</div>
                 </template>
               </template>
+
+              <div class="productDiscount" v-if="selectProduct.productDiscount === 'FULL'"> 滿 {{ selectProduct.fullAmount }} 送 {{ selectProduct.fullRatio }} </div>
               
               <div class="title"> <div v-html="unescapeEnter(selectProduct.Content)"></div> </div>
 
@@ -2008,6 +2030,7 @@
           <li v-for="(item, index) in pageFilterProduct" :key="item.ID" >
             <div class="pic_div">
               <div class="pic" :style="{backgroundImage :`url(${item.Img1})`, height:`${picHeight}px`}" @click="showSelect(item, index)">
+                <div class="productDiscount" v-if="item.productDiscount === 'FULL'"> 滿 {{ item.fullAmount }} 送 {{ item.fullRatio }} </div>
                 <div class="detailButton">
                   查看詳情
                   <i class="fas fa-heart" :class="{is_favorite : favorite[item.ID]}" @click.stop="toggleFavorite(item.ID)"></i>
@@ -2589,6 +2612,23 @@ export default {
     is_other_invoice_type() {
       if(this.store.PhoneCode === '1' || this.store.NatureCode === '1') return true
       return false
+    },
+
+    productDiscountList() {
+      let list = []
+      for(let key in this.total.FreeItem) {
+        let productsItem = this.products.find(item => item.ID === key)
+        if(productsItem) {
+          productsItem.productDiscountNumber = this.total.FreeItem[key]
+          if(Number(productsItem.Enable) && Number(productsItem.productDiscountNumber) + productsItem.buyQty > Number(productsItem.Amount)){
+            productsItem.productDiscountText = `庫存不足，送${Number(productsItem.Amount) - productsItem.buyQty}`
+          } else {
+            productsItem.productDiscountText = `送 ${productsItem.productDiscountNumber}`
+          }
+          list.push(productsItem)
+        }
+      }
+      return list
     }
   },
   methods: {
@@ -3645,6 +3685,7 @@ export default {
         const url = `${vm.protocol}//${vm.api}/interface/store/GetProductTotal?`;
 
         let formData = new FormData();
+        formData.append('storeid', vm.site.Name)
         formData.append('id', o.id);
         formData.append('qry', o.qry);
         formData.append('additionalid', o.additionalid);
