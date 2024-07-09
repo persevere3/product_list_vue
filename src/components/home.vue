@@ -1,14 +1,14 @@
 <template>
   <div v-show="productCompleted" class="productContainer" @click.stop="is_favorite_hover = false">
 
-    <div class="notice_page" :style="`height:${innerHeight}px`" v-show="showPage === 'Content' || showPage === 'Description' || showPage === 'PrivacyPolicy'">
+    <div class="page notice_page" v-show="showPage === 'Content' || showPage === 'Description' || showPage === 'PrivacyPolicy'">
+      <div class="close" @click="selectProduct = {} ; showPage = 'main';"> <i class="fa fa-times" aria-hidden="true"></i> </div>
       <div class="background" >
-        <div class="close" @click="selectProduct = {} ; showPage = 'main';"> <i class="fa fa-times" aria-hidden="true"></i> </div>
         <div class="content ql-editor" ref='notice_page_content' v-html="unescapeHTML(store[showPage])"></div>
       </div>
     </div>
 
-    <div class="singleProduct" v-if="showPage === 'singleProduct'" :style="`height:${innerHeight}px`">
+    <div class="page singleProduct" v-if="showPage === 'singleProduct'">
       <div class="background">
         <div class="picContent">
           <div class="pic">
@@ -33,6 +33,9 @@
           </div>
           <div class="content">
               <div class="title">{{selectProduct.Name}}</div>
+              
+              <div class="title"> <div v-html="unescapeEnter(selectProduct.Content)"></div> </div>
+
               <!-- 多價格 singleProduct 主商品 info -->
               <template v-if="selectProduct.priceType === 'onePrice'">
                 <div class="price" v-if="parseInt(selectProduct.Price) > -1" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{ numberThousands(selectProduct.Price) }}</div>
@@ -50,8 +53,6 @@
               </template>
 
               <div class="productDiscount" v-if="selectProduct.productDiscount === 'FULL'"> 滿 {{ selectProduct.fullAmount }} 送 {{ selectProduct.fullRatio }} </div>
-              
-              <div class="title"> <div v-html="unescapeEnter(selectProduct.Content)"></div> </div>
 
               <!-- 有規格 -->
               <template v-if="selectProduct.specArr">
@@ -868,9 +869,9 @@
       </div>
     </div>
 
-    <div class="cart" v-if="showPage === 'cart'" :style="`height:${innerHeight}px`">
+    <div class="page cart" v-if="showPage === 'cart'">
+      <div class="close"> <i class="fa fa-times" aria-hidden="true" @click="selectProduct = {}; showPage = 'main'; stepIndex = 1; ajaxProducts();"></i> </div>
       <div class="background" ref="cartScroll">
-        <div class="close"> <i class="fa fa-times" aria-hidden="true" @click="selectProduct = {}; showPage = 'main'; stepIndex = 1; ajaxProducts();"></i> </div>
         <div class="step">
           <div class="stepItem" :class="{stepItemActive:stepIndex === 1}">
             <div class="icon" >1</div>
@@ -1549,9 +1550,9 @@
     <div class="ECPay_form_container" v-html="ECPay_form"></div>
     <div class="ECPay_form_container" v-html="ECPay_store_form"></div>
 
-    <div class="selectProduct" v-if="showPage === 'selectProduct'" :style="`height:${innerHeight}px`">
+    <div class="page selectProduct" v-if="showPage === 'selectProduct'">
+      <div class="close" @click="selectProduct = {} ; showPage = 'main' ;"> <i class="fa fa-times" aria-hidden="true"></i> </div>
       <div class="background">
-        <div class="close" @click="selectProduct = {} ; showPage = 'main' ;"> <i class="fa fa-times" aria-hidden="true"></i> </div>
         <div class="picContent">
           <div class="pic">
             <div class="mainPic" :style="{backgroundImage :`url(${selectProduct.imgArr[selectProduct.mainImgIndex]})`}">
@@ -1575,6 +1576,9 @@
           </div>
           <div class="content">
               <div class="title">{{selectProduct.Name}}</div>
+              
+              <div class="title"> <div v-html="unescapeEnter(selectProduct.Content)"></div> </div>
+
               <!-- 多價格 selectProduct 主商品 info -->
               <template v-if="selectProduct.priceType === 'onePrice'">
                 <div class="price" v-if="parseInt(selectProduct.Price) > -1" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{ numberThousands(selectProduct.Price) }}</div>
@@ -1592,8 +1596,6 @@
               </template>
 
               <div class="productDiscount" v-if="selectProduct.productDiscount === 'FULL'"> 滿 {{ selectProduct.fullAmount }} 送 {{ selectProduct.fullRatio }} </div>
-              
-              <div class="title"> <div v-html="unescapeEnter(selectProduct.Content)"></div> </div>
 
               <!-- 有規格 -->
               <template v-if="selectProduct.specArr">
@@ -1979,7 +1981,7 @@
       </div>
     </div>
 
-    <div class="main" v-if="showPage === 'main'">
+    <div class="main" v-if="showPage !== 'singleProduct'">
       <div class="logo_name">
         <img :src="store.Logo" class="logo" v-if="store.Logo" @click="urlPush(getPathname('index'))">
       </div>
@@ -2028,18 +2030,18 @@
       <div class="products" :class="{change:arrangement==1}">
         <ul>
           <li v-for="(item, index) in pageFilterProduct" :key="item.ID" >
-            <div class="pic_div">
-              <div class="pic" :style="{backgroundImage :`url(${item.Img1})`, height:`${picHeight}px`}" @click="showSelect(item, index)">
+            <div class="pic_div" @click="showSelect(item, index)">
+              <div class="pic" :style="{backgroundImage :`url(${item.Img1})`, height:`${picHeight}px`}">
                 <div class="productDiscount" v-if="item.productDiscount === 'FULL'"> 滿 {{ item.fullAmount }} 送 {{ item.fullRatio }} </div>
                 <div class="detailButton">
                   查看詳情
                   <i class="fas fa-heart" :class="{is_favorite : favorite[item.ID]}" @click.stop="toggleFavorite(item.ID)"></i>
                 </div>
               </div>
+              <div class="title">{{item.Name}}</div>
             </div>
 
             <div class="content">
-              <div class="title">{{item.Name}}</div>
               <!-- 多價格 products 主商品 info -->
               <template v-if="item.priceType === 'onePrice'">
                 <div class="price" v-if="parseInt(item.Price) > -1" style="color:#9e9e9e; text-decoration: line-through; font-size:14px">NT$ {{ numberThousands(item.Price) }}</div>
@@ -2434,7 +2436,6 @@ export default {
       ECPay_form: '',
       ECPay_store_form: '',
       
-      innerHeight: 0,
       picHeight: 0,
 
       //
@@ -5471,10 +5472,6 @@ export default {
   mounted(){
     let vm = this;
     vm.initialCart();
-    vm.innerHeight = window.innerHeight;
-    window.onresize = () => {
-      vm.innerHeight = window.innerHeight;
-    }
 
     vm.city_district = require('../assets/city_district.json');
   }
